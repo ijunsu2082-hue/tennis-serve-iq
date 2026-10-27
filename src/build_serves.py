@@ -4,7 +4,8 @@ Usage:
     python src/build_serves.py            # men + women -> output/serves.parquet
 
 Each charted point gives one row for the first serve, plus one row for the
-second serve if the first was a fault ("2nd" column is non-empty).
+second serve if the first serve was a fault. Every cleaning step prints how
+many rows it touched.
 """
 from pathlib import Path
 
@@ -17,10 +18,12 @@ OUT = ROOT / "output"
 
 SCORE_MAP = {"0": 0, "15": 1, "30": 2, "40": 3, "AD": 4}
 DIRECTION = {"4": "wide", "5": "body", "6": "T"}
-# A serve is a fault if the direction digit is followed (optionally after "+",
-# the serve-and-volley marker) by a fault code: n net, w wide, d deep,
-# x wide+deep, g foot fault, e unknown, ! shank, V time violation.
-FAULT_RE = r"^[^0-9]*[0-9]\+?[nwdxge!V]"
+# Fault codes: n net, w wide, d deep, x wide+deep, g foot fault, e unknown, ! shank, V time violation.
+FAULT_CHARS = "nwdxge!V"
+SURFACES = {"Hard", "Clay", "Grass", "Carpet"}
+# Whole-point codes that mean "no serve recorded": S/R = point to server/returner with no
+# details charted, P/Q = point penalty against server/returner.
+NO_SERVE_CODES = {"S", "R", "P", "Q"}
 
 
 def clean_hand(s):
@@ -28,46 +31,96 @@ def clean_hand(s):
     return s.where(s.isin(["R", "L"]))
 
 
-def load_matches(g):
+def load_matches(g, log):
     m = pd.read_csv(DATA / f"charting-{g}-matches.csv", dtype=str)
-    n_dup = m.duplicated("match_id").sum()
-    m = m.drop_duplicates("match_id", keep="first")
+    # A few rows are column-shifted (player names missing, so the names hold hands and the hand
+    # column holds the date). They come first among duplicated match_ids, so a plain keep-first
+    # would keep the broken row. Drop them; the good copy's blank date/hands are filled below.
+    shifted = m["Player 1"].isin(["R", "L"]) & m["Pl 1 hand"].fillna("").str.fullmatch(r"\d{8}")
+    log["matches_shifted_rows_dropped"] = int(shifted.sum())
+    m = m[~shifted].copy()
+    assert not m["match_id"].duplicated().any(), "duplicate match_id left after dropping shifted rows"
+    no_date = ~m["Date"].fillna("").str.fullmatch(r"\d{8}")
+    log["matches_date_from_match_id"] = int(no_date.sum())
+    m.loc[no_date, "Date"] = m.loc[no_date, "match_id"].str[:8]  # match_id starts with YYYYMMDD
+    bad_surface = ~m["Surface"].isin(SURFACES)
+    log["matches_bad_surface_set_na"] = int(bad_surface.sum())
+    m.loc[bad_surface, "Surface"] = pd.NA
     m = m[["match_id", "Player 1", "Player 2", "Pl 1 hand", "Pl 2 hand", "Date", "Surface"]].copy()
     m["Pl 1 hand"] = clean_hand(m["Pl 1 hand"])
     m["Pl 2 hand"] = clean_hand(m["Pl 2 hand"])
-    return m, n_dup
+    return fix_hands(m, log)
 
 
-def load_points(g):
+def fix_hands(m, log):
+    """Use each player's usual hand: some matches label a player wrongly, swapped, or blank."""
+    long = pd.concat([
+        m[["Player 1", "Pl 1 hand"]].set_axis(["player", "hand"], axis=1),
+        m[["Player 2", "Pl 2 hand"]].set_axis(["player", "hand"], axis=1),
+    ]).dropna()
+    counts = long.groupby(["player", "hand"]).size().unstack(fill_value=0)
+    n = counts.sum(axis=1)
+    top = counts.idxmax(axis=1)
+    share = counts.max(axis=1) / n
+    # Trust the majority hand when it is unanimous, or strong (>= 3 matches, >= 80% agree).
+    trusted = top[(share == 1) | ((n >= 3) & (share >= 0.8))]
+    for k in ["1", "2"]:
+        canon = m[f"Player {k}"].map(trusted)
+        old = m[f"Pl {k} hand"]
+        log[f"hand_p{k}_filled"] = int((old.isna() & canon.notna()).sum())
+        log[f"hand_p{k}_overridden"] = int((old.notna() & canon.notna() & (old != canon)).sum())
+        m[f"Pl {k} hand"] = canon.fillna(old).astype("string")
+    return m
+
+
+def load_points(g, log):
     files = sorted(DATA.glob(f"charting-{g}-points-*.csv"))
+    pts = pd.concat([pd.read_csv(f, dtype=str) for f in files], ignore_index=True)
+    log["points_raw"] = len(pts)
+    # Exact duplicate rows (a chart pasted twice) are safe to collapse.
+    pts = pts.drop_duplicates()
+    # Matches still having a repeated point number were charted twice and the charts disagree: drop them.
+    dup_ids = pts.loc[pts.duplicated(["match_id", "Pt"]), "match_id"].unique()
+    log["matches_dropped_double_charted"] = len(dup_ids)
+    pts = pts[~pts["match_id"].isin(dup_ids)]
     cols = ["match_id", "Pt", "Set1", "Set2", "Gm1", "Gm2", "Pts", "Svr", "1st", "2nd", "PtWinner"]
-    return pd.concat([pd.read_csv(f, dtype=str, usecols=cols) for f in files], ignore_index=True)
+    return pts[cols]
 
 
-def parse_direction(s):
-    """First digit after any leading non-digit codes (lets 'c', etc.). 4/5/6 -> wide/body/T, else NA."""
-    digit = s.str.extract(r"^[^0-9]*([0-9])", expand=False)
-    return digit.map(DIRECTION).astype("string")
+def parse_serve(codes):
+    """Parse serve codes -> (direction, outcome) where outcome is 'fault', 'in' or 'unknown'.
+
+    Leading lets ('c') are skipped. If the next char is a digit, it is the direction
+    (4 wide, 5 body, 6 T; 0 or others = unknown) and the char after it (skipping the
+    '+', '^', ';' markers) says fault vs in play. A code starting with a fault letter
+    is a fault with unknown direction.
+    """
+    body = codes.fillna("").str.strip().str.replace(r"^c+", "", regex=True)
+    first = body.str[:1]
+    starts_digit = first.str.isdigit().fillna(False).astype(bool)
+    direction = first.where(starts_digit).map(DIRECTION).astype("string")
+    after = body.str[1:].str.lstrip("+^;").str[:1]
+    outcome = pd.Series("unknown", index=codes.index)
+    outcome[starts_digit & after.isin(list(FAULT_CHARS))] = "fault"
+    outcome[starts_digit & (after != "") & ~after.isin(list(FAULT_CHARS))] = "in"
+    outcome[~starts_digit & first.isin(list(FAULT_CHARS))] = "fault"
+    return direction, outcome
 
 
 def build(g):
     log = {}
-    matches, log["dup_match_rows_in_matches_file"] = load_matches(g)
-    pts = load_points(g)
-    log["points_raw"] = len(pts)
+    matches = load_matches(g, log)
+    pts = load_points(g, log)
 
-    # Some matches were charted twice under one match_id; the two charts disagree, so drop them.
-    dup_ids = pts.loc[pts.duplicated(["match_id", "Pt"]), "match_id"].unique()
-    log["matches_dropped_double_charted"] = len(dup_ids)
-    pts = pts[~pts["match_id"].isin(dup_ids)]
-
-    # Drop points with an unusable server / winner code.
     ok = pts["Svr"].isin(["1", "2"]) & pts["PtWinner"].isin(["1", "2"])
     log["points_dropped_bad_svr_or_winner"] = int((~ok).sum())
     pts = pts[ok]
-
     pts = pts.merge(matches, on="match_id", how="inner", validate="many_to_one")
-    log["points_after_cleaning"] = len(pts)
+
+    no_serve = pts["1st"].fillna("").str.strip().isin(NO_SERVE_CODES)
+    log["points_dropped_no_serve_recorded (1st = S/R/P/Q)"] = int(no_serve.sum())
+    pts = pts[~no_serve].reset_index(drop=True)
+    log["points_used"] = len(pts)
     log["matches_used"] = pts["match_id"].nunique()
 
     # --- Score, tiebreak, side, break point ---
@@ -82,15 +135,13 @@ def build(g):
     tb_point = (numeric & ~regular).astype(bool)
     is_tb = tb_point.groupby(game_key, dropna=False).transform("any").astype(bool)
 
-    srv_pts = np.where(is_tb, pd.to_numeric(a, errors="coerce"), a.map(SCORE_MAP))
-    ret_pts = np.where(is_tb, pd.to_numeric(b, errors="coerce"), b.map(SCORE_MAP))
-    srv_pts = pd.Series(srv_pts, index=pts.index, dtype="float")
-    ret_pts = pd.Series(ret_pts, index=pts.index, dtype="float")
-    bad_score = srv_pts.isna() | ret_pts.isna()
+    srv_pts = pd.Series(np.where(is_tb, pd.to_numeric(a, errors="coerce"), a.map(SCORE_MAP)), dtype="float")
+    ret_pts = pd.Series(np.where(is_tb, pd.to_numeric(b, errors="coerce"), b.map(SCORE_MAP)), dtype="float")
+    bad_score = (srv_pts.isna() | ret_pts.isna()).values
     log["points_dropped_unparseable_score"] = int(bad_score.sum())
 
     total = srv_pts + ret_pts
-    side = pd.Series(np.where(total % 2 == 0, "deuce", "ad"), index=pts.index)
+    side = np.where(total % 2 == 0, "deuce", "ad")
     bp = (~is_tb) & (ret_pts >= 3) & (ret_pts > srv_pts)
 
     svr1 = pts["Svr"] == "1"
@@ -108,35 +159,52 @@ def build(g):
         "srv_pts": srv_pts.astype("Int16"),
         "ret_pts": ret_pts.astype("Int16"),
         "side": side,
-        "is_tiebreak": is_tb.astype(bool),
-        "is_break_point": bp.astype(bool),
-        "srv_won": pts["PtWinner"] == pts["Svr"],
+        "is_tiebreak": is_tb.values,
+        "is_break_point": bp.values,
+        "srv_won": (pts["PtWinner"] == pts["Svr"]).values,
     })
-    base = base[~bad_score.values]
-    first_s = pts.loc[~bad_score.values, "1st"].fillna("")
-    second_s = pts.loc[~bad_score.values, "2nd"].fillna("")
-    has_2nd = second_s.str.strip() != ""
+    keep = ~bad_score
+    base, pts = base[keep], pts[keep]
+
+    code1 = pts["1st"].fillna("")
+    code2 = pts["2nd"].fillna("").str.strip()
+    # Free-text notes sometimes land in "2nd" (e.g. "Play suspended- resumed ..."): not a serve.
+    note_in_2nd = code2.str.contains(r"\s")
+    log["2nd_free_text_ignored"] = int(note_in_2nd.sum())
+    has_2nd = (code2 != "") & ~note_in_2nd
+
+    dir1, out1 = parse_serve(code1)
+    dir2, out2 = parse_serve(code2)
+    # First serve in/out comes from its own code; "2nd" being filled is only the fallback.
+    first_in = np.where(out1 == "fault", False, np.where(out1 == "in", True, ~has_2nd))
+    phantom_2nd = has_2nd & (out1 == "in")
+    log["2nd_dropped_because_1st_was_in_play"] = int(phantom_2nd.sum())
+    log["1st_fault_with_no_2nd_recorded"] = int(((out1 == "fault") & ~has_2nd).sum())
+    make_2nd = has_2nd & ~phantom_2nd
 
     s1 = base.copy()
     s1["serve_num"] = 1
-    s1["direction"] = parse_direction(first_s).values
-    s1["serve_in"] = (~has_2nd).values  # 1st serve is in unless a 2nd serve was hit
-    s1["code"] = first_s.values
+    s1["direction"] = dir1.values
+    s1["serve_in"] = pd.array(first_in, dtype="boolean")
+    s1["code"] = code1.values
 
-    s2 = base[has_2nd.values].copy()
+    s2 = base[make_2nd.values].copy()
     s2["serve_num"] = 2
-    s2["direction"] = parse_direction(second_s[has_2nd]).values
-    s2["serve_in"] = (~second_s[has_2nd].str.contains(FAULT_RE, regex=True)).values
-    s2["code"] = second_s[has_2nd].values
+    s2["direction"] = dir2[make_2nd].values
+    s2["serve_in"] = pd.array(out2[make_2nd].map({"in": True, "fault": False, "unknown": pd.NA}), dtype="boolean")
+    s2["code"] = code2[make_2nd].values
+    log["2nd_serve_in_unknown"] = int(s2["serve_in"].isna().sum())
 
     out = pd.concat([s1, s2], ignore_index=True)
     out["serve_num"] = out["serve_num"].astype("int8")
     for c in ["server_hand", "returner_hand"]:
         out[c] = out[c].astype("string")
     out["matchup"] = (out["server_hand"] + "v" + out["returner_hand"]).astype("string")  # e.g. "RvL"
+    assert (out["server"] != out["returner"]).all(), "server == returner somewhere"
     log["serves_total"] = len(out)
     log["serves_missing_direction"] = int(out["direction"].isna().sum())
     log["serves_missing_hand"] = int(out["matchup"].isna().sum())
+    log["serves_missing_surface"] = int(out["surface"].isna().sum())
     log["tiebreak_serves"] = int(out["is_tiebreak"].sum())
     return out.sort_values(["match_id", "pt", "serve_num"]).reset_index(drop=True), log
 
