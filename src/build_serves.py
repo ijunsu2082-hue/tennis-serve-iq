@@ -20,6 +20,8 @@ SCORE_MAP = {"0": 0, "15": 1, "30": 2, "40": 3, "AD": 4}
 DIRECTION = {"4": "wide", "5": "body", "6": "T"}
 # Fault codes: n net, w wide, d deep, x wide+deep, g foot fault, e unknown, ! shank, V time violation.
 FAULT_CHARS = "nwdxge!V"
+# Rally shot letters (forehand, backhand, slices, volleys, lobs, drop shots, ...; q = unknown shot).
+SHOT_CHARS = "fbrsvzopuylmhijktq"
 SURFACES = {"Hard", "Clay", "Grass", "Carpet"}
 # Whole-point codes that mean "no serve recorded": S/R = point to server/returner with no
 # details charted, P/Q = point penalty against server/returner.
@@ -58,19 +60,36 @@ def fix_hands(m, log):
         m[["Player 1", "Pl 1 hand"]].set_axis(["player", "hand"], axis=1),
         m[["Player 2", "Pl 2 hand"]].set_axis(["player", "hand"], axis=1),
     ]).dropna()
-    counts = long.groupby(["player", "hand"]).size().unstack(fill_value=0)
-    n = counts.sum(axis=1)
-    top = counts.idxmax(axis=1)
-    share = counts.max(axis=1) / n
-    # Trust the majority hand when it is unanimous, or strong (>= 3 matches, >= 80% agree).
-    trusted = top[(share == 1) | ((n >= 3) & (share >= 0.8))]
+    trusted = trusted_hands(long)
+    old = m[["Pl 1 hand", "Pl 2 hand"]].copy()
     for k in ["1", "2"]:
         canon = m[f"Player {k}"].map(trusted)
-        old = m[f"Pl {k} hand"]
-        log[f"hand_p{k}_filled"] = int((old.isna() & canon.notna()).sum())
-        log[f"hand_p{k}_overridden"] = int((old.notna() & canon.notna() & (old != canon)).sum())
-        m[f"Pl {k} hand"] = canon.fillna(old).astype("string")
+        log[f"hand_p{k}_filled"] = int((old[f"Pl {k} hand"].isna() & canon.notna()).sum())
+        log[f"hand_p{k}_overridden"] = int((old[f"Pl {k} hand"].notna() & canon.notna()
+                                            & (old[f"Pl {k} hand"] != canon)).sum())
+        m[f"Pl {k} hand"] = canon.fillna(old[f"Pl {k} hand"]).astype("string")
+    # Pass 2: an override usually means the two labels in that match were swapped, so the
+    # other player's label there is suspect too. Re-vote without those matches and, for players
+    # in them, use the hand if the remaining labels are unanimous.
+    suspect = (old.ne(m[["Pl 1 hand", "Pl 2 hand"]]) & old.notna()).any(axis=1)
+    clean = long[~long.index.isin(m.index[suspect])]
+    unanimous = clean.groupby("player")["hand"].agg(lambda h: h.iloc[0] if h.nunique() == 1 else None).dropna()
+    changed = 0
+    for k in ["1", "2"]:
+        fix = suspect & m[f"Player {k}"].isin(unanimous.index)
+        new = m.loc[fix, f"Player {k}"].map(unanimous)
+        changed += int((new != m.loc[fix, f"Pl {k} hand"]).sum())
+        m.loc[fix, f"Pl {k} hand"] = new
+    log["hand_fixed_in_swapped_matches"] = changed
     return m
+
+
+def trusted_hands(long):
+    """player -> hand when the labels are unanimous, or strong (>= 3 matches, >= 80% agree)."""
+    counts = long.groupby(["player", "hand"]).size().unstack(fill_value=0)
+    n = counts.sum(axis=1)
+    share = counts.max(axis=1) / n
+    return counts.idxmax(axis=1)[(share == 1) | ((n >= 3) & (share >= 0.8))]
 
 
 def load_points(g, log):
@@ -87,23 +106,36 @@ def load_points(g, log):
     return pts[cols]
 
 
+def is_fault_char(ch):
+    # Fault letters are sometimes typed in uppercase ("6W"); 'V' (time violation) is uppercase by design.
+    return ch.isin(list(FAULT_CHARS)) | ch.isin(list("NWDXGE"))
+
+
 def parse_serve(codes):
     """Parse serve codes -> (direction, outcome) where outcome is 'fault', 'in' or 'unknown'.
 
-    Leading lets ('c') are skipped. If the next char is a digit, it is the direction
-    (4 wide, 5 body, 6 T; 0 or others = unknown) and the char after it (skipping the
-    '+', '^', ';' markers) says fault vs in play. A code starting with a fault letter
-    is a fault with unknown direction.
+    Leading lets ('c') and markers ('+', '^', ';') are skipped. If the next char is a digit,
+    it is the direction (4 wide, 5 body, 6 T; 0 or others = unknown) and the char after it
+    (skipping markers and a net-cord 'c') says fault vs in play.
+    A code starting with a letter has no direction digit:
+      fault letter alone or + digit ("n", "g", "n4") -> fault ("n4": direction 4)
+      fault letter then rally shots ("wf#", "eqf2...")  -> in (direction unknown)
+      rally shot letter first ("fb2...", "rb1w#")       -> in (direction unknown)
     """
-    body = codes.fillna("").str.strip().str.replace(r"^c+", "", regex=True)
+    body = codes.fillna("").str.strip().str.replace(r"^[c+^;]+", "", regex=True)
     first = body.str[:1]
     starts_digit = first.str.isdigit().fillna(False).astype(bool)
-    direction = first.where(starts_digit).map(DIRECTION).astype("string")
-    after = body.str[1:].str.lstrip("+^;").str[:1]
+    after = body.str[1:].str.lstrip("+^;c").str[:1]
+    fault_first = ~starts_digit & is_fault_char(first)
+    letter_digit = body.str.extract(r"^[nwdxge]([0-9])", expand=False)
+    direction = first.where(starts_digit).fillna(letter_digit).map(DIRECTION).astype("string")
+    rally_after_fault = fault_first & body.str[1:].str.contains(f"[{SHOT_CHARS}]")
     outcome = pd.Series("unknown", index=codes.index)
-    outcome[starts_digit & after.isin(list(FAULT_CHARS))] = "fault"
-    outcome[starts_digit & (after != "") & ~after.isin(list(FAULT_CHARS))] = "in"
-    outcome[~starts_digit & first.isin(list(FAULT_CHARS))] = "fault"
+    outcome[starts_digit & is_fault_char(after)] = "fault"
+    outcome[starts_digit & (after != "") & ~is_fault_char(after)] = "in"
+    outcome[fault_first & ~rally_after_fault] = "fault"
+    outcome[rally_after_fault] = "in"
+    outcome[~starts_digit & first.isin(list(SHOT_CHARS))] = "in"
     return direction, outcome
 
 
@@ -117,7 +149,8 @@ def build(g):
     pts = pts[ok]
     pts = pts.merge(matches, on="match_id", how="inner", validate="many_to_one")
 
-    no_serve = pts["1st"].fillna("").str.strip().isin(NO_SERVE_CODES)
+    # "1st" == "1st" is a stray copy of the header row.
+    no_serve = pts["1st"].fillna("").str.strip().isin(NO_SERVE_CODES | {"1st"})
     log["points_dropped_no_serve_recorded (1st = S/R/P/Q)"] = int(no_serve.sum())
     pts = pts[~no_serve].reset_index(drop=True)
     log["points_used"] = len(pts)
@@ -166,7 +199,7 @@ def build(g):
     keep = ~bad_score
     base, pts = base[keep], pts[keep]
 
-    code1 = pts["1st"].fillna("")
+    code1 = pts["1st"].fillna("").str.strip()
     code2 = pts["2nd"].fillna("").str.strip()
     # Free-text notes sometimes land in "2nd" (e.g. "Play suspended- resumed ..."): not a serve.
     note_in_2nd = code2.str.contains(r"\s")
@@ -175,6 +208,14 @@ def build(g):
 
     dir1, out1 = parse_serve(code1)
     dir2, out2 = parse_serve(code2)
+    # If "1st" shows a finished point (ace / winner / error: * # @) the 1st serve was in and a
+    # filled "2nd" is a charting slip. If "1st" is an unfinished fragment ("6b") but "2nd" is a
+    # real serve, the 2nd column wins and the 1st serve was a fault.
+    complete1 = code1.str.contains(r"[*#@]")
+    real_serve2 = code2.str.replace(r"^[c+^;]+", "", regex=True).str[:1].str.contains(r"[0-9nwdxgeV]")
+    fragment_then_serve = has_2nd & (out1 == "in") & ~complete1 & real_serve2
+    out1 = out1.mask(fragment_then_serve, "fault")
+    log["1st_fragment_treated_as_fault"] = int(fragment_then_serve.sum())
     # First serve in/out comes from its own code; "2nd" being filled is only the fallback.
     first_in = np.where(out1 == "fault", False, np.where(out1 == "in", True, ~has_2nd))
     phantom_2nd = has_2nd & (out1 == "in")

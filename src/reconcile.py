@@ -3,9 +3,9 @@
 Reference layout (per match_id x player), confirmed against the data:
   row "1": first serves IN, by side x direction (deuce/ad x wide/middle/t)
   row "2": ALL second serves (in or out), by side x direction
-  err_*  : faults by type (split over rows "1" and "2"; their sum is all faults).
-           There is no column for shanks ('!') or time violations ('V'), so those are
-           left out of the fault check.
+  err_*  : faults by type. Almost all sit on row "2" (a handful on row "1"), and the sum
+           over both rows is all faults. There is no column for shanks ('!') or time
+           violations ('V'), so those are left out of the fault check.
 The reference includes tiebreak points, so we compare with tiebreaks included.
 
 Usage:
@@ -29,17 +29,18 @@ def my_counts(serves, mask):
     return c.reindex(columns=CELLS, fill_value=0)
 
 
-def compare(mine, ref, label):
+def compare(mine, ref, label, tb_pairs):
     """mine/ref: indexed by (match_id, player), columns = the 6 side x direction cells."""
     idx = ref.index.union(mine.index)
     mine = mine.reindex(idx, fill_value=0)[CELLS]
     ref = ref.reindex(idx, fill_value=0)[CELLS]
     exact = (mine.values == ref.values).all(axis=1)
     # A "side swap" pair has the right count per direction but 1+ serves on the other court.
-    # This comes from the reference's own side rule in long tiebreaks (e.g. "8-6" counted as ad).
+    # This comes from the reference's own side rule in long tiebreaks (e.g. "8-6" counted as ad),
+    # so it only counts as a swap if that server served in a tiebreak in that match.
     per_dir = lambda df: df[[f"deuce_{d}" for d in DIR_NAME.values()]].values + \
         df[[f"ad_{d}" for d in DIR_NAME.values()]].values
-    swap_only = ~exact & (per_dir(mine) == per_dir(ref)).all(axis=1)
+    swap_only = ~exact & (per_dir(mine) == per_dir(ref)).all(axis=1) & idx.isin(tb_pairs)
     ratio = mine.sum() / ref.sum()
     print(f"  {label}: exact match in {exact.mean():.1%} of {len(idx):,} match-player pairs; "
           f"another {swap_only.mean():.1%} differ only by a deuce/ad swap; "
@@ -53,17 +54,26 @@ def main():
         sv = serves[serves["gender"] == g]
         ref = pd.read_csv(ROOT / "data" / f"charting-{g}-stats-ServeDirection.csv", dtype={"row": str})
         ref = ref.drop_duplicates(["match_id", "player", "row"]).rename(columns={"player": "server"})
-        my_ids = set(sv["match_id"])
+        my_ids, ref_ids = set(sv["match_id"]), set(ref["match_id"])
         print(f"\n=== {g}: {len(my_ids):,} matches in my data; "
-              f"{len(my_ids - set(ref['match_id'])):,} of them have no reference rows (skipped) ===")
+              f"{len(my_ids - ref_ids):,} of them have no reference rows (skipped) ===")
+        # Reference matches we do not have, and why.
+        pts_ids = pd.concat([pd.read_csv(f, dtype=str, usecols=["match_id", "Pt"])
+                             for f in sorted((ROOT / "data").glob(f"charting-{g}-points-*.csv"))])
+        double = set(pts_ids.loc[pts_ids.duplicated(["match_id", "Pt"]), "match_id"])
+        lost = ref_ids - my_ids
+        print(f"  reference matches not in my data: {len(lost)} "
+              f"(double-charted, dropped: {len(lost & double)}; no points charted: "
+              f"{len(lost - set(pts_ids['match_id']))}; other: {len(lost & set(pts_ids['match_id']) - double)})")
         ref = ref[ref["match_id"].isin(my_ids)]
-        sv = sv[sv["match_id"].isin(set(ref["match_id"]))]
+        sv = sv[sv["match_id"].isin(ref_ids)]
         r1 = ref[ref["row"] == "1"].set_index(["match_id", "server"])
         r2 = ref[ref["row"] == "2"].set_index(["match_id", "server"])
+        tb_pairs = pd.MultiIndex.from_frame(sv.loc[sv["is_tiebreak"], ["match_id", "server"]].drop_duplicates())
 
         first, second = sv["serve_num"] == 1, sv["serve_num"] == 2
-        compare(my_counts(sv, second), r2, 'row "2" = all 2nd serves')
-        compare(my_counts(sv, first & sv["serve_in"].fillna(False)), r1, 'row "1" = 1st serves in')
+        compare(my_counts(sv, second), r2, 'row "2" = all 2nd serves', tb_pairs)
+        compare(my_counts(sv, first & sv["serve_in"].fillna(False)), r1, 'row "1" = 1st serves in', tb_pairs)
 
         # Fault identity: our faults (minus shanks / time violations) == sum of err_* over rows 1+2.
         faults = sv["serve_in"].eq(False) & ~sv["code"].str.contains(SHANK_OR_TIME)
