@@ -40,7 +40,7 @@ streamlit run app/streamlit_app.py
 ```
 
 The app reads only the small precomputed tables in `app/data/` (1.5 MB), so it runs without the raw data.
-Tested on Python 3.9 and 3.12.
+Tested locally on Python 3.9.6.
 
 **Deploy:** on [share.streamlit.io](https://share.streamlit.io), create an app from this repository with main
 file `app/streamlit_app.py`.
@@ -103,3 +103,5 @@ Data: [The Tennis Abstract Match Charting Project](https://github.com/JeffSackma
 by Jeff Sackmann and contributors, licensed
 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The derived tables in `app/data/`
 are shared under the same license. Non-commercial use only.
+
+Code in this repository (`app/`, `src/`) is released under the MIT License; see `LICENSE`.
