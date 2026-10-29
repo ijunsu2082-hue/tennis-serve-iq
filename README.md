@@ -61,7 +61,7 @@ python src/app_data.py       # -> app/data/: per-player tables and tests for the
   (wide / body / T), in or fault, score, court side, break point, who won the point, and both players'
   handedness. Cleaning steps (duplicate charts, slips in the codes, swapped handedness labels, no-ad deciding
   points) are documented in `src/build_serves.py` and print their counts when run.
-- **Verified.** Totals match the project's own per-match serve-direction stats exactly for 98.7–99.6% of
+- **Verified.** Totals match the project's own per-match serve-direction stats exactly for 99.0–99.6% of
   player-matches (the rest differ by a serve or two, mostly where we treat a point differently on purpose,
   e.g. no-ad deciding points, where the court is unknown). An independent re-parse of every serve code
   agreed on every direction, and 30 random points were checked by hand.
