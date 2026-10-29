@@ -1,0 +1,9 @@
+gender,side,metric,players,corr
+m,ad,guess,249,0.6885
+m,ad,edge,249,0.06889
+m,deuce,guess,249,0.6384
+m,deuce,edge,249,0.1696
+w,ad,guess,198,0.6442
+w,ad,edge,198,-0.02178
+w,deuce,guess,198,0.5744
+w,deuce,edge,198,0.09067
