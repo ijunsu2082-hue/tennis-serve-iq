@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from build_serves import NAME_ALIASES
+
 ROOT = Path(__file__).resolve().parent.parent
 CELLS = [f"{s}_{d}" for s in ["deuce", "ad"] for d in ["wide", "middle", "t"]]
 ERR = ["err_net", "err_wide", "err_deep", "err_wide_deep", "err_foot", "err_unknown"]
@@ -32,8 +34,8 @@ def my_counts(serves, mask):
 def compare(mine, ref, label, tb_pairs):
     """mine/ref: indexed by (match_id, player), columns = the 6 side x direction cells."""
     idx = ref.index.union(mine.index)
-    mine = mine.reindex(idx, fill_value=0)[CELLS]
-    ref = ref.reindex(idx, fill_value=0)[CELLS]
+    mine = mine[CELLS].reindex(idx, fill_value=0)
+    ref = ref[CELLS].reindex(idx, fill_value=0)
     exact = (mine.values == ref.values).all(axis=1)
     # A "side swap" pair has the right count per direction but 1+ serves on the other court.
     # This comes from the reference's own side rule in long tiebreaks (e.g. "8-6" counted as ad),
@@ -54,6 +56,7 @@ def main():
         sv = serves[serves["gender"] == g]
         ref = pd.read_csv(ROOT / "data" / f"charting-{g}-stats-ServeDirection.csv", dtype={"row": str})
         ref = ref.drop_duplicates(["match_id", "player", "row"]).rename(columns={"player": "server"})
+        ref["server"] = ref["server"].replace(NAME_ALIASES)
         my_ids, ref_ids = set(sv["match_id"]), set(ref["match_id"])
         print(f"\n=== {g}: {len(my_ids):,} matches in my data; "
               f"{len(my_ids - ref_ids):,} of them have no reference rows (skipped) ===")

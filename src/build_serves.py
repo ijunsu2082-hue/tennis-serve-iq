@@ -26,6 +26,11 @@ SURFACES = {"Hard", "Clay", "Grass", "Carpet"}
 # Whole-point codes that mean "no serve recorded": S/R = point to server/returner with no
 # details charted, P/Q = point penalty against server/returner.
 NO_SERVE_CODES = {"S", "R", "P", "Q"}
+# The same player under two names.
+NAME_ALIASES = {"Marcelo Tomas Barrios Vera": "Tomas Barrios Vera"}
+# A match with at most this many repeated point numbers is one chart with a few slips: keep the more
+# detailed copy of each repeated point. More than this means two disagreeing charts: drop the match.
+MAX_REPEATED_POINTS = 3
 
 
 def clean_hand(s):
@@ -49,6 +54,9 @@ def load_matches(g, log):
     log["matches_bad_surface_set_na"] = int(bad_surface.sum())
     m.loc[bad_surface, "Surface"] = pd.NA
     m = m[["match_id", "Player 1", "Player 2", "Pl 1 hand", "Pl 2 hand", "Date", "Surface"]].copy()
+    for k in ["Player 1", "Player 2"]:
+        log["names_aliased"] = log.get("names_aliased", 0) + int(m[k].isin(NAME_ALIASES).sum())
+        m[k] = m[k].replace(NAME_ALIASES)
     m["Pl 1 hand"] = clean_hand(m["Pl 1 hand"])
     m["Pl 2 hand"] = clean_hand(m["Pl 2 hand"])
     return fix_hands(m, log)
@@ -98,10 +106,20 @@ def load_points(g, log):
     log["points_raw"] = len(pts)
     # Exact duplicate rows (a chart pasted twice) are safe to collapse.
     pts = pts.drop_duplicates()
-    # Matches still having a repeated point number were charted twice and the charts disagree: drop them.
-    dup_ids = pts.loc[pts.duplicated(["match_id", "Pt"]), "match_id"].unique()
-    log["matches_dropped_double_charted"] = len(dup_ids)
-    pts = pts[~pts["match_id"].isin(dup_ids)]
+    # Repeated point numbers left after that: a few in a match are slips (one copy "S", the other the
+    # full code) -> keep the copy with the longer code. Many mean the match was charted twice and the
+    # charts disagree -> drop the match.
+    rep = pts.duplicated(["match_id", "Pt"], keep=False)
+    n_rep = pts[rep].drop_duplicates(["match_id", "Pt"]).groupby("match_id").size()
+    drop_ids = n_rep.index[n_rep > MAX_REPEATED_POINTS]
+    log["matches_dropped_double_charted"] = len(drop_ids)
+    pts = pts[~pts["match_id"].isin(drop_ids)]
+    detail = (pts["1st"].fillna("").str.strip().str.len() + pts["2nd"].fillna("").str.strip().str.len()
+              - 1000 * pts["1st"].fillna("").str.strip().isin(NO_SERVE_CODES))
+    before = len(pts)
+    pts = (pts.assign(_detail=detail).sort_values("_detail", ascending=False, kind="stable")
+              .drop_duplicates(["match_id", "Pt"]).drop(columns="_detail").sort_index())
+    log["repeated_points_resolved_keep_detailed"] = before - len(pts)
     cols = ["match_id", "Pt", "Set1", "Set2", "Gm1", "Gm2", "Pts", "Svr", "1st", "2nd", "PtWinner"]
     return pts[cols]
 
@@ -148,6 +166,15 @@ def build(g):
     log["points_dropped_bad_svr_or_winner"] = int((~ok).sum())
     pts = pts[ok]
     pts = pts.merge(matches, on="match_id", how="inner", validate="many_to_one")
+    # The same match uploaded twice under different match_ids (e.g. a tournament renamed, a stray space):
+    # same date, same two players, identical point codes. Keep the first.
+    sig = pts.groupby("match_id", sort=True).agg(
+        date=("Date", "first"), p1=("Player 1", "first"), p2=("Player 2", "first"),
+        codes=("1st", lambda c: "|".join(c.fillna(""))))
+    sig["pair"] = [" & ".join(sorted(x)) for x in zip(sig.p1, sig.p2)]
+    dup_match = sig.duplicated(["date", "pair", "codes"])
+    log["matches_dropped_uploaded_twice"] = int(dup_match.sum())
+    pts = pts[~pts["match_id"].isin(sig.index[dup_match])]
 
     # "1st" == "1st" is a stray copy of the header row.
     no_serve = pts["1st"].fillna("").str.strip().isin(NO_SERVE_CODES | {"1st"})
@@ -174,8 +201,19 @@ def build(g):
     log["points_dropped_unparseable_score"] = int(bad_score.sum())
 
     total = srv_pts + ret_pts
-    side = np.where(total % 2 == 0, "deuce", "ad")
+    side = pd.Series(np.where(total % 2 == 0, "deuce", "ad"), dtype="object")
     bp = (~is_tb) & (ret_pts >= 3) & (ret_pts > srv_pts)
+    # No-ad scoring (e.g. Next Gen Finals): 40-40 is a deciding point. It is a break point, and the
+    # returner picks the court, so the side is unknown. A match is no-ad if it never shows "AD" and
+    # some regular game ends at 40-40.
+    deuce_pt = (~is_tb) & (srv_pts == 3) & (ret_pts == 3)
+    last_in_game = ~pd.Series(list(zip(*game_key))).duplicated(keep="last").values
+    no_ad_match = pd.Series(deuce_pt.values & last_in_game).groupby(pts["match_id"].values).transform("any").values
+    has_ad = pts["Pts"].fillna("").str.contains("AD").groupby(pts["match_id"]).transform("any").values
+    deciding = deuce_pt.values & no_ad_match & ~has_ad
+    log["no_ad_deciding_points"] = int(deciding.sum())
+    bp = bp | deciding
+    side[deciding] = None
 
     svr1 = pts["Svr"] == "1"
     base = pd.DataFrame({
