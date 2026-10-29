@@ -18,7 +18,8 @@ Outputs (output/):
   baseline_within_server.csv  within-server comparisons (fixed effects)
   baseline_serial.csv         do servers repeat or switch direction more than chance?
 
-Excluded: tiebreak points, serves with unknown direction or handedness.
+Excluded: tiebreak points, serves with unknown direction or handedness, and no-ad deciding
+points (the returner picks the court, so the side is unknown).
 
 Usage:
     python src/baseline.py
@@ -108,7 +109,8 @@ def win_tests(d):
 
 def load():
     s = pd.read_parquet(OUT / "serves.parquet")
-    s = s[~s["is_tiebreak"] & s["direction"].notna() & s["matchup"].notna()].copy()
+    # side is unknown only on no-ad deciding points (the returner picks the court)
+    s = s[~s["is_tiebreak"] & s["direction"].notna() & s["matchup"].notna() & s["side"].notna()].copy()
     for c in ["direction", "matchup", "side", "gender"]:
         s[c] = s[c].astype(str)
     s["srv_won"] = s["srv_won"].astype(bool)
