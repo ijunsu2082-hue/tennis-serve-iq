@@ -1,0 +1,65 @@
+gender,serve_num,question,fixed_effect,coef_pp,lo_pp,hi_pp,n
+m,1,win body minus win wide,server x side x matchup x break point,-4.388860624816889,-4.87487717828579,-3.9028440713479875,1217628
+m,1,win T minus win wide,server x side x matchup x break point,-0.12763192321919142,-0.34909668164073193,0.09383283520234906,1217628
+m,1,serve in body minus serve in wide,server x side x matchup x break point,9.894626924920741,9.327775195440239,10.461478654401246,1217628
+m,1,serve in T minus serve in wide,server x side x matchup x break point,-2.2117714331978964,-2.701057484702243,-1.7224853816935497,1217628
+m,1,break_point: change in wide share,server x side x matchup,1.8270547290687618,1.124365424693383,2.529744033444141,1217628
+m,1,game_point: change in wide share,server x side x matchup,0.4424792024875967,-0.11661743735709726,1.0015758423322907,1217628
+m,1,break_point: change in wide share,match x server x side,1.7056054065932948,1.0112726612300826,2.399938151956507,1217628
+m,1,game_point: change in wide share,match x server x side,0.4807443510769642,-0.07876703564740142,1.04025573780133,1217628
+m,1,break_point: change in body share,server x side x matchup,-0.8863244249457947,-1.2159442717951015,-0.5567045780964879,1217628
+m,1,game_point: change in body share,server x side x matchup,-0.5513062819045623,-0.8969933565812944,-0.20561920722783023,1217628
+m,1,break_point: change in body share,match x server x side,-1.139407122071892,-1.4412849717932674,-0.8375292723505166,1217628
+m,1,game_point: change in body share,match x server x side,-0.49707301948663585,-0.8411921839580968,-0.1529538550151749,1217628
+m,1,break_point: change in T share,server x side x matchup,-0.9407303041229659,-1.6472610441690603,-0.23419956407687154,1217628
+m,1,game_point: change in T share,server x side x matchup,0.10882707941696537,-0.6270131953436814,0.8446673541776122,1217628
+m,1,break_point: change in T share,match x server x side,-0.5661982845214032,-1.2804409395011909,0.1480443704583846,1217628
+m,1,game_point: change in T share,match x server x side,0.016328668409671426,-0.7112094390620726,0.7438667758814155,1217628
+m,2,win body minus win wide,server x side x matchup x break point,-0.6040585027382948,-1.1219597950807922,-0.0861572103957973,463975
+m,2,win T minus win wide,server x side x matchup x break point,-1.1999975535327243,-1.5928162374489498,-0.8071788696164987,463975
+m,2,serve in body minus serve in wide,server x side x matchup x break point,2.3845727974749886,2.045078392332403,2.724067202617574,463975
+m,2,serve in T minus serve in wide,server x side x matchup x break point,-1.892374366416136,-2.2762132349525452,-1.5085354978797272,463975
+m,2,break_point: change in wide share,server x side x matchup,1.4389806557284601,0.7399234565203573,2.1380378549365626,463975
+m,2,game_point: change in wide share,server x side x matchup,-0.25903859762160664,-0.874477727568317,0.3564005323251036,463975
+m,2,break_point: change in wide share,match x server x side,0.847817420149297,0.14363297151665666,1.5520018687819372,463975
+m,2,game_point: change in wide share,match x server x side,-0.2126868974803609,-0.853372782898328,0.4279989879376062,463975
+m,2,break_point: change in body share,server x side x matchup,-1.8501163649655952,-2.5832794617221566,-1.116953268209034,463975
+m,2,game_point: change in body share,server x side x matchup,-2.1099080064024123,-2.6569334815343533,-1.5628825312704713,463975
+m,2,break_point: change in body share,match x server x side,-1.7572711712390179,-2.4141665097342098,-1.1003758327438262,463975
+m,2,game_point: change in body share,match x server x side,-2.1496250558431953,-2.7091082760575556,-1.5901418356288346,463975
+m,2,break_point: change in T share,server x side x matchup,0.4111357092371347,-0.22977098613272337,1.0520424046069927,463975
+m,2,game_point: change in T share,server x side x matchup,2.3689466040240132,1.7565945450350777,2.981298663012949,463975
+m,2,break_point: change in T share,match x server x side,0.9094537510897224,0.3059306421805112,1.5129768599989335,463975
+m,2,game_point: change in T share,match x server x side,2.3623119533235593,1.7715255387685112,2.9530983678786074,463975
+w,1,win body minus win wide,server x side x matchup x break point,-4.092881472844662,-4.529360163718088,-3.6564027819712375,576385
+w,1,win T minus win wide,server x side x matchup x break point,-0.41315063943346025,-0.768871472702788,-0.05742980616413253,576385
+w,1,serve in body minus serve in wide,server x side x matchup x break point,8.511887652881025,7.969858056285167,9.053917249476884,576385
+w,1,serve in T minus serve in wide,server x side x matchup x break point,-2.9648756707676425,-3.539354689883149,-2.3903966516521358,576385
+w,1,break_point: change in wide share,server x side x matchup,1.0443024558410108,0.4506768518311823,1.6379280598508394,576385
+w,1,game_point: change in wide share,server x side x matchup,0.5632902051221095,-0.04382131072446184,1.1704017209686808,576385
+w,1,break_point: change in wide share,match x server x side,1.1861456721671777,0.5778974754821979,1.7943938688521577,576385
+w,1,game_point: change in wide share,match x server x side,0.55010183081681,-0.04480361048701713,1.145007272120637,576385
+w,1,break_point: change in body share,server x side x matchup,-1.674748497199949,-2.1580064507465897,-1.1914905436533076,576385
+w,1,game_point: change in body share,server x side x matchup,-1.779083102982932,-2.150389287113529,-1.4077769188523352,576385
+w,1,break_point: change in body share,match x server x side,-1.9984752700970227,-2.491582002746872,-1.505368537447174,576385
+w,1,game_point: change in body share,match x server x side,-1.670965461976167,-2.047242040585746,-1.2946888833665877,576385
+w,1,break_point: change in T share,server x side x matchup,0.630446041358938,0.1200170900499965,1.1408749926678796,576385
+w,1,game_point: change in T share,server x side x matchup,1.215792897860824,0.6121785464677382,1.8194072492539095,576385
+w,1,break_point: change in T share,match x server x side,0.8123295979298435,0.3005766675795915,1.3240825282800954,576385
+w,1,game_point: change in T share,match x server x side,1.1208636311593587,0.5264475326999098,1.7152797296188076,576385
+w,2,win body minus win wide,server x side x matchup x break point,-0.7607222952455004,-1.2447303747082517,-0.27671421578274924,215833
+w,2,win T minus win wide,server x side x matchup x break point,-1.766095914981093,-2.405753169549014,-1.1264386604131722,215833
+w,2,serve in body minus serve in wide,server x side x matchup x break point,3.9826587879890107,3.4919241525336924,4.473393423444329,215833
+w,2,serve in T minus serve in wide,server x side x matchup x break point,-2.5380411982610966,-3.092157362058071,-1.9839250344641224,215833
+w,2,break_point: change in wide share,server x side x matchup,0.9787973122512326,0.2675974092739326,1.6899972152285323,215833
+w,2,game_point: change in wide share,server x side x matchup,0.28525805857412095,-0.2497845672352626,0.8203006843835046,215833
+w,2,break_point: change in wide share,match x server x side,0.7363430147660226,0.02507419574565243,1.4476118337863928,215833
+w,2,game_point: change in wide share,match x server x side,0.15389299505603662,-0.404532754718725,0.7123187448307983,215833
+w,2,break_point: change in body share,server x side x matchup,-1.4328330263786702,-2.1836482023895503,-0.6820178503677898,215833
+w,2,game_point: change in body share,server x side x matchup,-2.164604196671444,-2.836439232026167,-1.4927691613167215,215833
+w,2,break_point: change in body share,match x server x side,-1.259232267032406,-1.9620464447068637,-0.5564180893579486,215833
+w,2,game_point: change in body share,match x server x side,-2.0351824499970785,-2.7121561535923604,-1.3582087464017967,215833
+w,2,break_point: change in T share,server x side x matchup,0.45403571412743793,-0.17388793093952165,1.0819593591943975,215833
+w,2,game_point: change in T share,server x side x matchup,1.8793461380973213,1.3511684100559511,2.4075238661386913,215833
+w,2,break_point: change in T share,match x server x side,0.5228892522663816,-0.10644903643139553,1.152227540964159,215833
+w,2,game_point: change in T share,match x server x side,1.8812894549410437,1.333460678864943,2.4291182310171444,215833
