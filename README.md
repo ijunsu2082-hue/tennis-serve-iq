@@ -31,6 +31,11 @@ measure.** The dashboard shows which players are the exceptions and gives a retu
   split-half test showing predictability is a trait and its cost is noise; serial patterns.
 - **How it works:** methods and limits in plain English.
 
+## Live app
+
+**https://serve-iq.streamlit.app** — no install needed. It runs on Streamlit's free tier, which puts the app to
+sleep when nobody has used it for a while; if you see a "wake up" button, click it and wait about a minute.
+
 ## Run it
 
 ```bash
@@ -40,10 +45,10 @@ streamlit run app/streamlit_app.py
 ```
 
 The app reads only the small precomputed tables in `app/data/` (1.5 MB), so it runs without the raw data.
-Tested locally on Python 3.9.6.
+Tested locally on Python 3.9.6; deployed on Streamlit Community Cloud with Python 3.12.
 
 **Deploy:** on [share.streamlit.io](https://share.streamlit.io), create an app from this repository with main
-file `app/streamlit_app.py`.
+file `app/streamlit_app.py` and Python 3.12 under Advanced settings (the pinned numpy and scipy have no Python 3.13+ wheels).
 
 ## Rebuild everything from the raw data
 
