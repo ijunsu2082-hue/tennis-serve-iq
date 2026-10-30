@@ -61,7 +61,8 @@ Streamlit tier puts the backup app to sleep when nobody has used it for a while;
 button, click it and wait about a minute.
 
 Static site: serve the `site/` folder with any static server, for example
-`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`.
+`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`. The main page is the dashboard; `method.html`
+holds the full method, every formula, the limits and the photo credits.
 
 Deploy the Streamlit app: on [share.streamlit.io](https://share.streamlit.io), create an app from this
 repository with main file `app/streamlit_app.py` and Python 3.12 under Advanced settings (the pinned numpy
@@ -244,6 +245,7 @@ src/reconcile.py       checks the rebuild against the project's own totals
 src/baseline.py        league-wide baseline, clustered CIs, within-server effects
 src/app_data.py        per-player tables, tests and stability checks for the app
 src/export_site.py     data files for the static site
+scripts/fetch_images.py  downloads the freely licensed photos and writes site/data/images.json
 ```
 
 ## Data and license
@@ -254,3 +256,7 @@ by Jeff Sackmann and contributors, licensed
 are shared under the same license. Non-commercial use only.
 
 Code in this repository (`app/`, `src/`) is released under the MIT License; see `LICENSE`.
+
+Photos in `site/img/` come from Wikimedia Commons under their own free licenses (CC BY, CC BY-SA or public
+domain). Each author and license is listed on the site's Method page under Photo credits and in
+`site/data/images.json`.

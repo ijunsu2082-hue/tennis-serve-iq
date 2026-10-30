@@ -1,0 +1,209 @@
+/* Serve IQ hero (#top) and How it works (#how). Uses only base.css tokens. */
+
+/* ============================================================ hero */
+
+.hero { position: relative; }
+.hero-stage {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: clamp(520px, calc(100svh - var(--nav-h) - 40px), 720px);
+  display: flex; align-items: center;
+  padding: clamp(56px, 9vw, 104px) 0 calc(var(--kpi-overlap) + clamp(56px, 7vw, 88px));
+  --kpi-overlap: 72px;
+  background: var(--navy);
+}
+.hero-media { position: absolute; inset: 0; z-index: -3; overflow: hidden; }
+.hero-img {
+  position: absolute; left: 0; top: -24%; width: 100%; height: 134%;
+  object-fit: cover; object-position: 62% 40%;
+  will-change: transform;
+  animation: hero-img-in 1200ms ease both;
+}
+@keyframes hero-img-in { from { opacity: 0; } to { opacity: 1; } }
+/* left-weighted navy shade for the copy, a bottom fade into the KPI strip */
+.hero-shade {
+  position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 16, 34, 0.96) 0%, rgba(8, 22, 46, 0.86) 34%, rgba(10, 26, 51, 0.42) 62%, rgba(10, 26, 51, 0.12) 100%),
+    linear-gradient(0deg, rgba(6, 14, 28, 0.92) 0%, rgba(6, 14, 28, 0) 42%),
+    linear-gradient(180deg, rgba(6, 14, 28, 0.45) 0%, rgba(6, 14, 28, 0) 22%);
+}
+
+.hero-inner { position: relative; width: 100%; }
+.hero-copy { max-width: 40rem; }
+.hero-eyebrow { color: var(--ball); margin-bottom: var(--sp-4); }
+.hero-title {
+  margin: 0; font-size: clamp(64px, 11vw, 136px); line-height: 0.86; letter-spacing: 0.01em;
+  color: #fff; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
+}
+.hero-iq { color: var(--ball); }
+.hero-sub {
+  margin: var(--sp-5) 0 0; max-width: 30em;
+  font-size: clamp(17px, 1.6vw, 21px); line-height: 1.45; font-weight: 500; color: #dfe6f1;
+}
+/* reserve two lines so the bound player count never reflows the centered hero when data arrives */
+.hero-sub { min-height: calc(2 * 1.45em); }
+.hero-num { font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
+.hero-actions .btn { min-height: 48px; padding: 12px 22px; }
+.hero-ghost { color: #fff; border-color: rgba(255, 255, 255, 0.55); background: rgba(10, 26, 51, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hero-ghost:hover { background: rgba(255, 255, 255, 0.14); border-color: #fff; }
+
+.hero-credit {
+  position: absolute; right: var(--gutter); bottom: calc(var(--kpi-overlap) + 14px); z-index: 1;
+  max-width: min(60%, 420px); padding: 4px 10px; border-radius: var(--r-pill);
+  font-size: var(--fs-2xs); font-weight: 500; line-height: 1.4; color: #d3dcea;
+  background: rgba(6, 14, 28, 0.55); text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-credit:hover { color: #fff; text-decoration: underline; }
+.hero-credit-short { display: none; }
+
+/* KPI strip overlapping the bottom of the photo band */
+.hero-kpis { position: relative; z-index: 2; margin-top: calc(-1 * var(--kpi-overlap, 72px)); --kpi-overlap: 72px; }
+.kpi-strip {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: var(--sp-4); grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.hero-kpi { padding: clamp(16px, 2vw, 22px) clamp(16px, 2vw, 22px) clamp(16px, 2vw, 20px); box-shadow: var(--shadow-lg); gap: var(--sp-2); }
+.kpi-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px; margin-bottom: var(--sp-1);
+  background: var(--court-wash); color: var(--court);
+}
+.kpi-icon svg { width: 20px; height: 20px; }
+.hero-kpi .kpi-value { font-size: clamp(38px, 4.4vw, 56px); letter-spacing: 0.005em; white-space: nowrap; min-height: 0.9em; }
+.kpi-of { font-size: 0.42em; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; margin-left: 2px; }
+.hero-kpi .kpi-label { font-size: var(--fs-sm); text-wrap: balance; }
+.hero-kpi .info { top: 14px; right: 14px; }
+
+@media (max-width: 1023px) {
+  .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* tablet landscape: slide the photo so the player stands right of the copy column */
+@media (min-width: 640px) and (max-width: 1100px) and (min-aspect-ratio: 1/1) {
+  .hero-img { top: -12%; height: 120%; object-position: 8% 40%; }
+}
+/* tablet portrait: photo across the top, copy anchored at the bottom, as on phones */
+@media (min-width: 640px) and (max-width: 1100px) and (max-aspect-ratio: 1/1) {
+  .hero-stage { align-items: flex-end; }
+  .hero-img { top: -14%; height: 82%; object-position: 50% 30%; }
+  .hero-shade {
+    background:
+      linear-gradient(0deg, rgb(6, 14, 28) 0%, rgba(6, 14, 28, 0.96) 38%, rgba(6, 14, 28, 0.55) 58%, rgba(10, 26, 51, 0.12) 80%, rgba(10, 26, 51, 0.3) 100%),
+      linear-gradient(90deg, rgba(6, 16, 34, 0.45) 0%, rgba(6, 16, 34, 0) 70%);
+  }
+}
+@media (max-width: 639px) {
+  .hero-stage {
+    --kpi-overlap: 48px;
+    align-items: flex-end;
+    min-height: clamp(520px, calc(100svh - var(--nav-h) - 120px), 640px);
+    padding-top: 72px;
+  }
+  .hero-kpis { --kpi-overlap: 48px; }
+  .hero-img { top: -14%; height: 66%; object-position: 52% 30%; }
+  .hero-shade {
+    background:
+      linear-gradient(0deg, rgb(6, 14, 28) 0%, rgba(6, 14, 28, 0.97) 32%, rgba(6, 14, 28, 0.62) 56%, rgba(10, 26, 51, 0.18) 82%, rgba(10, 26, 51, 0.3) 100%),
+      linear-gradient(90deg, rgba(6, 16, 34, 0.55) 0%, rgba(6, 16, 34, 0) 70%);
+  }
+  .hero-actions { margin-top: var(--sp-5); }
+  .hero-actions .btn { flex: 1 1 auto; }
+  .hero-credit { max-width: calc(100% - 2 * var(--gutter)); bottom: calc(var(--kpi-overlap) + 12px); }
+  .hero-credit-full { display: none; }
+  .hero-credit-short { display: inline; }
+  .kpi-strip { gap: var(--sp-3); }
+  .hero-kpi { padding: 14px; }
+  .hero-kpi .info { top: 10px; right: 10px; }
+  .kpi-icon { width: 32px; height: 32px; }
+  .kpi-icon svg { width: 18px; height: 18px; }
+  .hero-kpi .kpi-value { font-size: clamp(30px, 9vw, 40px); }
+  .hero-kpi .kpi-label { font-size: var(--fs-xs); padding-right: 0; }
+}
+
+/* ============================================================ how it works */
+
+.how { position: relative; isolation: isolate; overflow: hidden; border-bottom: 1px solid rgba(216, 242, 28, 0.28); }
+.section + .how.section { padding-top: clamp(64px, 9vw, 112px); }
+.how-media { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.how-img {
+  position: absolute; left: 0; top: -16%; width: 100%; height: 132%;
+  object-fit: cover; object-position: 50% 50%;
+  filter: saturate(0.85) contrast(1.05);
+  will-change: transform;
+}
+.how-shade {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 45%, rgba(19, 41, 77, 0.38) 0%, rgba(8, 22, 46, 0.62) 70%),
+    linear-gradient(180deg, rgba(6, 14, 28, 0.82) 0%, rgba(8, 22, 46, 0.3) 38%, rgba(8, 22, 46, 0.3) 62%, rgba(6, 14, 28, 0.86) 100%);
+}
+.how-head { margin-bottom: clamp(28px, 4vw, 44px); }
+.how-head h2 { color: #fff; }
+.how .eyebrow { color: var(--ball); }
+
+.how-steps {
+  list-style: none; margin: 0; padding: 0; counter-reset: how;
+  display: grid; gap: var(--sp-4); grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
+}
+.how-step {
+  position: relative; z-index: 1; counter-increment: how;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: clamp(20px, 2.4vw, 28px);
+  border-radius: var(--r);
+  background: rgba(19, 41, 77, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+  transition: transform 200ms var(--ease), border-color 200ms ease;
+}
+.how-step:hover { transform: translateY(-3px); border-color: rgba(216, 242, 28, 0.45); }
+.how-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-2); }
+.how-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--ball); color: var(--ball-ink);
+  box-shadow: 0 6px 18px rgba(216, 242, 28, 0.22);
+}
+.how-icon svg { width: 28px; height: 28px; }
+.how-top::after {
+  content: counter(how, decimal-leading-zero);
+  font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 1;
+  color: rgba(255, 255, 255, 0.34); font-variant-numeric: tabular-nums;
+}
+.how-title { margin: 0; font-family: var(--font-display); font-size: clamp(24px, 2.4vw, 30px); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #fff; line-height: 1; }
+.how-text { margin: 0; color: #d3dcea; font-size: var(--fs-base); line-height: 1.5; }
+.how-stat {
+  margin: auto 0 0; padding-top: var(--sp-4); border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px;
+}
+.how-stat-v { min-height: 1em; font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ball); font-variant-numeric: tabular-nums; }
+.how-stat-l { font-size: var(--fs-sm); color: var(--navy-muted); font-weight: 600; }
+.how-cta { margin-top: clamp(28px, 4vw, 44px); display: flex; justify-content: center; }
+@media (min-width: 768px) and (max-width: 1023px) {
+  .how-steps { gap: var(--sp-3); }
+  .how-step { padding: 18px; }
+  .how-title { font-size: 22px; }
+  .how-text { font-size: var(--fs-sm); }
+  .how-stat { flex-direction: column; align-items: flex-start; }
+  .how-stat-v { font-size: 26px; }
+  .how-top::after { font-size: 34px; }
+}
+.how-cta .btn { min-height: 52px; padding: 14px 26px; white-space: normal; text-align: center; text-wrap: balance; }
+.how-info { align-self: center; }
+
+@media (max-width: 767px) {
+  .how-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+}
+@media (max-width: 639px) {
+  .how-cta .btn { width: 100%; }
+  .how-top::after { font-size: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-img { animation: none; }
+}
+@media (forced-colors: active) {
+  .hero-shade, .how-shade { display: none; }
+}

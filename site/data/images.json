@@ -1,0 +1,622 @@
+{
+ "players": {
+  "Alex De Minaur": {
+   "author": "Barcex",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Alex_de_Minaur_2024.jpg",
+   "src": "img/players/alex-de-minaur.webp"
+  },
+  "Alexander Bublik": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Sascha_Bublik_(2023_DC_Open)_05_(cropped).jpg",
+   "src": "img/players/alexander-bublik.webp"
+  },
+  "Alexander Zverev": {
+   "author": "Rick Munroe",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Alexander_Zverev_(cropped).jpg",
+   "src": "img/players/alexander-zverev.webp"
+  },
+  "Amanda Anisimova": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Amanda_Anisimova_(2024_DC_Open)_05_(cropped4).jpg",
+   "src": "img/players/amanda-anisimova.webp"
+  },
+  "Andre Agassi": {
+   "author": "Shinya Suzuki from New York, U.S.A.",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Andre_Agassi_(2011).jpg",
+   "src": "img/players/andre-agassi.webp"
+  },
+  "Andrey Rublev": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Andrey_Rublev_(2023_US_Open)_02_(cropped).jpg",
+   "src": "img/players/andrey-rublev.webp"
+  },
+  "Andy Murray": {
+   "author": "Brendan Dennis",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2015_Australian_Open_-_Andy_Murray_12_(cropped).jpg",
+   "src": "img/players/andy-murray.webp"
+  },
+  "Andy Roddick": {
+   "author": "Carine06",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Roddick_2012_(cropped).jpg",
+   "src": "img/players/andy-roddick.webp"
+  },
+  "Angelique Kerber": {
+   "author": "Rob Keating from Canberra, Australia, Australia",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Australian_Open_2020_(49836755508)_(cropped).jpg",
+   "src": "img/players/angelique-kerber.webp"
+  },
+  "Arantxa Rus": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Rus_WMQ23_(53061698736).jpg",
+   "src": "img/players/arantxa-rus.webp"
+  },
+  "Aryna Sabalenka": {
+   "author": "Rick Munroe",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Aryna_Sabalenka_Miami_Open_Final.jpg",
+   "src": "img/players/aryna-sabalenka.webp"
+  },
+  "Belinda Bencic": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Belinda_Bencic_(2023_DC_Open)_01a_(cropped).jpg",
+   "src": "img/players/belinda-bencic.webp"
+  },
+  "Bianca Andreescu": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Bianca_Andreescu_(2026_US_Open)_06_(cropped).jpg",
+   "src": "img/players/bianca-andreescu.webp"
+  },
+  "Boris Becker": {
+   "author": "Barcex",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Boris_Becker_-_240422_174721_(cropped).jpg",
+   "src": "img/players/boris-becker.webp"
+  },
+  "Botic Van De Zandschulp": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Van_de_Zandschulp_MCM22_(11)_(52036444288).jpg",
+   "src": "img/players/botic-van-de-zandschulp.webp"
+  },
+  "Carlos Alcaraz": {
+   "author": "Barcex",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Carlos_Alcaraz_-_240422_192324_(cropped).jpg",
+   "src": "img/players/carlos-alcaraz.webp"
+  },
+  "Caroline Wozniacki": {
+   "author": "Andrew Campbell",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Caroline_Wozniacki_(35449695422).jpg",
+   "src": "img/players/caroline-wozniacki.webp"
+  },
+  "Casper Ruud": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Ruud_RG22_(58)_(52144535415).jpg",
+   "src": "img/players/casper-ruud.webp"
+  },
+  "Coco Gauff": {
+   "author": "Rick Munroe",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Coco_Gauff_Miami_Open.jpg",
+   "src": "img/players/coco-gauff.webp"
+  },
+  "Daniil Medvedev": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Daniil_Medvedev_(2025_DC_Open)_05_(cropped).jpg",
+   "src": "img/players/daniil-medvedev.webp"
+  },
+  "Daria Kasatkina": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Daria_Kasatkina_(2024_DC_Open)_07.jpg",
+   "src": "img/players/daria-kasatkina.webp"
+  },
+  "David Ferrer": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Ferrer_US16_(21)_(29749609722).jpg",
+   "src": "img/players/david-ferrer.webp"
+  },
+  "David Goffin": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:David_Goffin_(2024_DC_Open)_03_(cropped).jpg",
+   "src": "img/players/david-goffin.webp"
+  },
+  "Denis Shapovalov": {
+   "author": "Peter Arnold",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Denis_Shapovalov,_Swiss_Indoors_Basel_2025_(cropped).jpg",
+   "src": "img/players/denis-shapovalov.webp"
+  },
+  "Dominic Thiem": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Thiem_MCM23_(61)_(52883593873).jpg",
+   "src": "img/players/dominic-thiem.webp"
+  },
+  "Donna Vekic": {
+   "author": "Peter Menzel",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Donna_Veki%C4%87_(52171230817)_(cropped).jpg",
+   "src": "img/players/donna-vekic.webp"
+  },
+  "Ekaterina Alexandrova": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Alexandrova_RG22_(41)_(52143062592)_(cropped).jpg",
+   "src": "img/players/ekaterina-alexandrova.webp"
+  },
+  "Elena Rybakina": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Elena_Rybakina_(2025_DC_Open)_11_(cropped).jpg",
+   "src": "img/players/elena-rybakina.webp"
+  },
+  "Elina Svitolina": {
+   "author": "Nuță Lucian",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Elina_Svitolina_at_Sports_Festival_2026.jpg",
+   "src": "img/players/elina-svitolina.webp"
+  },
+  "Emma Raducanu": {
+   "author": "Nuță Lucian from Cluj-Napoca, Romania",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Transylvania_Open_2026_-_Emma_Raducanu_vs_Greet_Minnen_6-0,_6-4_-_01.02.2026_(55076013277)_(cropped).jpg",
+   "src": "img/players/emma-raducanu.webp"
+  },
+  "Eugenie Bouchard": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Bouchard_WMQ23_(53061135097).jpg",
+   "src": "img/players/eugenie-bouchard.webp"
+  },
+  "Felix Auger Aliassime": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:F%C3%A9lix_Auger-Aliassime_(2023_DC_Open)_01_(cropped).jpg",
+   "src": "img/players/felix-auger-aliassime.webp"
+  },
+  "Gael Monfils": {
+   "author": "Nuță Lucian",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Ga%C3%ABl_Monfils_at_Sports_Festival_2026.jpg",
+   "src": "img/players/gael-monfils.webp"
+  },
+  "Garbine Muguruza": {
+   "author": "Barcex",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Garbi%C3%B1e_Muguruza_-_240422_182821-2_(cropped).jpg",
+   "src": "img/players/garbine-muguruza.webp"
+  },
+  "Grigor Dimitrov": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Grigor_Dimitrov_(2023_DC_Open)_01.jpg",
+   "src": "img/players/grigor-dimitrov.webp"
+  },
+  "Hubert Hurkacz": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Hurkacz_RG19_(10)_(48199235282).jpg",
+   "src": "img/players/hubert-hurkacz.webp"
+  },
+  "Iga Swiatek": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Iga_Swiatek_2023_Cropped_%2B_Retouched.jpg",
+   "src": "img/players/iga-swiatek.webp"
+  },
+  "Iva Jovic": {
+   "author": "Raffaele Di Buono",
+   "license": "Public domain",
+   "license_url": "https://commons.wikimedia.org/wiki/Help:Public_domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Iva_Jovic,_Roma_7_May_2026_(cropped_v2).jpg",
+   "src": "img/players/iva-jovic.webp"
+  },
+  "Ivan Lendl": {
+   "author": "Charlie Cowins",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Ivan_Lendl_(cropped).jpg",
+   "src": "img/players/ivan-lendl.webp"
+  },
+  "Jannik Sinner": {
+   "author": "The White House",
+   "license": "Public domain",
+   "license_url": "https://commons.wikimedia.org/wiki/Help:Public_domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Jannik_Sinner_2025_US_Open.jpg",
+   "src": "img/players/jannik-sinner.webp"
+  },
+  "Jessica Pegula": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Jessica_Pegula_(2025_DC_Open)_01_(cropped).jpg",
+   "src": "img/players/jessica-pegula.webp"
+  },
+  "Jo Wilfried Tsonga": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Tsonga_RG21_(46)_(51376816939).jpg",
+   "src": "img/players/jo-wilfried-tsonga.webp"
+  },
+  "John Isner": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Isner_WM19_(18)_(48522000702).jpg",
+   "src": "img/players/john-isner.webp"
+  },
+  "John Mcenroe": {
+   "author": "Eurosport",
+   "license": "CC BY 3.0",
+   "license_url": "https://creativecommons.org/licenses/by/3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:John_McEnroe_005.png",
+   "src": "img/players/john-mcenroe.webp"
+  },
+  "Juan Martin Del Potro": {
+   "author": "Kate",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Juan_Martin_Del_Potro_-_Queen%27s_Club_2011.jpg",
+   "src": "img/players/juan-martin-del-potro.webp"
+  },
+  "Justine Henin": {
+   "author": "AndonicO at English Wikipedia (original), Vinkje83 (derivative work)",
+   "license": "CC BY-SA 3.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Justine_Henin_Miami_(cropped).jpg",
+   "src": "img/players/justine-henin.webp"
+  },
+  "Karen Khachanov": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Karen_Khachanov_(2024_DC_Open)_02.jpg",
+   "src": "img/players/karen-khachanov.webp"
+  },
+  "Karolina Muchova": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Karol%C3%ADna_Muchov%C3%A1_(2023_US_Open)_25_(cropped2).jpg",
+   "src": "img/players/karolina-muchova.webp"
+  },
+  "Karolina Pliskova": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Karol%C3%ADna_Pl%C3%AD%C5%A1kov%C3%A1_(2024_DC_Open)_07_(cropped).jpg",
+   "src": "img/players/karolina-pliskova.webp"
+  },
+  "Kei Nishikori": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Nishikori_RG18_(56)_(42077294635).jpg",
+   "src": "img/players/kei-nishikori.webp"
+  },
+  "Kiki Bertens": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Bertens_WM19_(12)_(48521869636).jpg",
+   "src": "img/players/kiki-bertens.webp"
+  },
+  "Lleyton Hewitt": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Hewitt_WM16_(12)_(28385918786).jpg",
+   "src": "img/players/lleyton-hewitt.webp"
+  },
+  "Lorenzo Musetti": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Musetti_MCM23_(11)_(52883593753).jpg",
+   "src": "img/players/lorenzo-musetti.webp"
+  },
+  "Madison Keys": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Madison_Keys_(2023_DC_Open)_01a_(cropped2).jpg",
+   "src": "img/players/madison-keys.webp"
+  },
+  "Magda Linette": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Magda_Linette_(2025_DC_Open)_01_(cropped).jpg",
+   "src": "img/players/magda-linette.webp"
+  },
+  "Marat Safin": {
+   "author": "Tennis-8.com",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Marat_Safin,_2006_(cropped).jpg",
+   "src": "img/players/marat-safin.webp"
+  },
+  "Maria Sakkari": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Maria_Sakkari_(2025_DC_Open)_02_(cropped).jpg",
+   "src": "img/players/maria-sakkari.webp"
+  },
+  "Maria Sharapova": {
+   "author": "Collision Conf",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Collision_2024_-_VR7_1035_(53801820852)_(cropped).jpg",
+   "src": "img/players/maria-sharapova.webp"
+  },
+  "Marin Cilic": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Cilic_MCM22_(22)_(52036669749).jpg",
+   "src": "img/players/marin-cilic.webp"
+  },
+  "Marta Kostyuk": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Marta_Kostyuk_(2023_US_Open)_20_(cropped).jpg",
+   "src": "img/players/marta-kostyuk.webp"
+  },
+  "Matteo Berrettini": {
+   "author": "Vbrunophotog",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Matteo_Berrettini_at_2025_Miami_Open_01_(cropped)_(cropped).jpg",
+   "src": "img/players/matteo-berrettini.webp"
+  },
+  "Milos Raonic": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Raonic_WM17_(54)_(35793471790).jpg",
+   "src": "img/players/milos-raonic.webp"
+  },
+  "Mirra Andreeva": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Mirra_Andreeva_WMQ23_(cropped).jpg",
+   "src": "img/players/mirra-andreeva.webp"
+  },
+  "Naomi Osaka": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Naomi_Osaka_(2025_DC_Open)_01_(cropped).jpg",
+   "src": "img/players/naomi-osaka.webp"
+  },
+  "Nick Kyrgios": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Kyrgios_WM19_(75)_(48521949772).jpg",
+   "src": "img/players/nick-kyrgios.webp"
+  },
+  "Novak Djokovic": {
+   "author": "Andymiah",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg",
+   "src": "img/players/novak-djokovic.webp"
+  },
+  "Pete Sampras": {
+   "author": "Shinya Suzuki",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pete_Sampras_Champions_Shootout_2.jpg",
+   "src": "img/players/pete-sampras.webp"
+  },
+  "Petra Kvitova": {
+   "author": "Peter Menzel",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Petra_Kvitov%C3%A1_Maud_Watson_trophy_2018.jpg",
+   "src": "img/players/petra-kvitova.webp"
+  },
+  "Rafael Nadal": {
+   "author": "Barcex",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Rafael_Nadal_en_2024_(cropped).jpg",
+   "src": "img/players/rafael-nadal.webp"
+  },
+  "Richard Gasquet": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Gasquet_BOR22_(52084213479).jpg",
+   "src": "img/players/richard-gasquet.webp"
+  },
+  "Roger Federer": {
+   "author": "Tatiana from Moscow, Russia",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Roger_Federer_2015_(cropped).jpg",
+   "src": "img/players/roger-federer.webp"
+  },
+  "Serena Williams": {
+   "author": "AndrewHenkelman",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Serena-Smiling-2020.png",
+   "src": "img/players/serena-williams.webp"
+  },
+  "Sofia Kenin": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Sofia_Kenin_(2025_DC_Open)_05_(edited_and_cropped).jpg",
+   "src": "img/players/sofia-kenin.webp"
+  },
+  "Stan Wawrinka": {
+   "author": "Skyscraper2010",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Stan_Wawrinka_at_the_media_conference_ahead_of_the_Swiss_Indoors_Basel_2026_(his_final_tournament)_DSC01852_(cropped).jpg",
+   "src": "img/players/stan-wawrinka.webp"
+  },
+  "Stefan Edberg": {
+   "author": "Robin Fritzson",
+   "license": "CC BY 3.0",
+   "license_url": "https://creativecommons.org/licenses/by/3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Stefan_Edberg_2012-04-25_001.jpg",
+   "src": "img/players/stefan-edberg.webp"
+  },
+  "Stefanos Tsitsipas": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Tsitsipas_S._MCM22_(cropped).jpg",
+   "src": "img/players/stefanos-tsitsipas.webp"
+  },
+  "Steffi Graf": {
+   "author": "Mark Henckel from Hamburg-Altona, Deutschland (original), César (derivative work)",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Steffi_Graf_in_Hamburg_2010_(cropped).jpg",
+   "src": "img/players/steffi-graf.webp"
+  },
+  "Tallon Griekspoor": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Griekspoor_RG22_(1)_(52144112028).jpg",
+   "src": "img/players/tallon-griekspoor.webp"
+  },
+  "Taylor Fritz": {
+   "author": "Rickmunroe01",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Taylor_Fritz_-_Delray_Beach_Open_Final_Round_(cropped).jpg",
+   "src": "img/players/taylor-fritz.webp"
+  },
+  "Tomas Berdych": {
+   "author": "si.robi",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Berdych_WM19_(9)_(48521867956).jpg",
+   "src": "img/players/tomas-berdych.webp"
+  },
+  "Tommy Paul": {
+   "author": "robbiesaurus from Smithtown, NY, USA",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Tommy_Paul_(USA)_(21635302405).jpg",
+   "src": "img/players/tommy-paul.webp"
+  },
+  "Venus Williams": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Venus_Williams_(2025_DC_Open)_crop.jpg",
+   "src": "img/players/venus-williams.webp"
+  },
+  "Victoria Azarenka": {
+   "author": "Hameltion",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Victoria_Azarenka_(2024_DC_Open)_02_(cropped).jpg",
+   "src": "img/players/victoria-azarenka.webp"
+  },
+  "Yevgeny Kafelnikov": {
+   "author": "Министерство спорта Республики Татарстан",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Yevgeny_Kafelnikov_in_2023_-_01_(cropped).jpg",
+   "src": "img/players/yevgeny-kafelnikov.webp"
+  }
+ },
+ "scenes": {
+  "ball": {
+   "author": "Santeri Viinamäki",
+   "license": "CC BY-SA 4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Tennis_ball_on_tennis_court_20170619.jpg",
+   "src": "img/scenes/ball.webp"
+  },
+  "court": {
+   "author": "dronepicr",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_tennis_courts_in_Cologne,_Germany_(50390585946).jpg",
+   "src": "img/scenes/court.webp"
+  },
+  "hero": {
+   "author": "Christopher Johnson from Tokyo, Japan",
+   "license": "CC BY-SA 2.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Rafael_Nadal_saque_-_9775_Japan_Open_Tennis_Tokio_2010.jpg",
+   "src": "img/scenes/hero.webp"
+  },
+  "stadium": {
+   "author": "Chris Czermak",
+   "license": "CC BY 2.0",
+   "license_url": "https://creativecommons.org/licenses/by/2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:O2_Arena_during_the_Nitto_ATP_Tour_Finals_2019_in_London_(49052218447).jpg",
+   "src": "img/scenes/stadium.webp"
+  }
+ }
+}
