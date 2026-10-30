@@ -37,6 +37,8 @@
 //     - Henin quick pick (ad): the typical-pro split note and the averaged bar
 //     - every quick pick passes the scouting-edge gate (computed here)
 //     - clicking a lane on the court itself (not a button) makes the call
+//     - #explore: one dot per 1st-serve player-side, the filled count equals the gated count computed here, only
+//       live dots take focus, the Women filter shows the women's sides, and Enter on a live dot loads it
 //     - #match: the strip has one item per point in data/match.json, and the claim prints named of served
 //   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to
 //     serve-iq.streamlit.app, every .needs-data part is hidden.
@@ -482,6 +484,31 @@ try {
     await page.waitForTimeout(150);
     st = await state(page);
     check(`${tag}: clicking a lane on the court makes the call`, hit.n === 3 && st.resultShown, { hit, shown: st.resultShown });
+
+    // explorer: one dot per 1st-serve player-side; filled = gated edge; Enter on a live dot loads it
+    const allSides = [];
+    for (const n of DATA.players.rows.map((r) => r[DATA.players.fields.indexOf('server')])) {
+      if (!DATA.mix.data[genderOf(n) + '|' + n + '|1']) continue;
+      for (const s of SIDES) { const e = edge(n, s); allSides.push({ n, s, filled: test(n, s).q_mix < Q && e.clear && e.value > 0 }); }
+    }
+    const wantFilled = allSides.filter((x) => x.filled).length;
+    const ex = await page.evaluate(() => ({ dots: document.querySelectorAll('#scatter circle.dot').length,
+      filled: [...document.querySelectorAll('#scatter circle.dot')].filter((c) => c.getAttribute('fill') === '#0a62d6').length,
+      live: document.querySelectorAll('#scatter circle.dot.live[tabindex="0"]').length, cap: document.getElementById('scatter-cap')?.textContent || '' }));
+    check(`${tag}: explorer has ${allSides.length} dots and ${wantFilled} filled (computed here); only live dots take focus`,
+      ex.dots === allSides.length && ex.filled === wantFilled && ex.live > 0 && ex.live < ex.dots && ex.cap.includes(fInt(wantFilled)), ex);
+    await page.locator('#seg-tour button[data-tour="w"]').click();
+    const nW = await page.evaluate(() => document.querySelectorAll('#scatter circle.dot').length);
+    const wantW = allSides.filter((x) => genderOf(x.n) === 'w').length;
+    check(`${tag}: the Women filter shows ${wantW} dots`, nW === wantW, { nW, wantW });
+    await page.locator('#seg-tour button[data-tour="all"]').click();
+    const target = await page.evaluate(() => { const c = document.querySelector('#scatter circle.dot.live'); return c ? { name: c.dataset.name, side: c.dataset.side } : null; });
+    await page.locator('#scatter circle.dot.live').first().focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    st = await state(page);
+    check(`${tag}: Enter on a live dot loads that player and side into the court (${target && target.name}, ${target && target.side})`,
+      !!target && st.prompt.includes(target.name.split(' ').pop()) && st.prompt.includes(`from the ${target.side} side`) && !st.resultShown, { target, prompt: st.prompt });
 
     // match model section
     const mt = MATCH.totals;

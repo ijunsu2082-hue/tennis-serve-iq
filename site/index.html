@@ -81,6 +81,24 @@
   </div>
 </section>
 
+<section id="explore" class="explore needs-data" aria-labelledby="explore-h">
+  <div class="wrap">
+    <div class="explore-top">
+      <h2 class="sec-h" id="explore-h">Find the sides worth scouting</h2>
+      <div class="seg" id="seg-tour" role="group" aria-label="Tour">
+        <button type="button" data-tour="all" aria-pressed="true">Both tours</button>
+        <button type="button" data-tour="m" aria-pressed="false">Men</button>
+        <button type="button" data-tour="w" aria-pressed="false">Women</button>
+      </div>
+    </div>
+    <div class="panel chart scatter-box">
+      <svg id="scatter" viewBox="0 0 1000 350" role="group" aria-label="Every player's first serve, by side"></svg>
+      <p class="scatter-read" id="scatter-read" aria-live="polite"></p>
+      <p class="scatter-cap" id="scatter-cap"></p>
+    </div>
+  </div>
+</section>
+
 <section id="video" class="video needs-data" aria-labelledby="video-h">
   <div class="wrap">
     <h2 class="sec-h" id="video-h">Scout it from video</h2>

@@ -253,8 +253,8 @@ def missing(check, rel):
 # v6 layout
 SITE_FILES = (["index.html", "method.html", "data/serveiq.json", "data/images.json", "data/match.json"]
               + [f"css/{n}.css" for n in ["site", "method"]]
-              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "match", "method"]])
-OPTIONAL_FILES = ["js/explore.js"]
+              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "explore", "match", "method"]])
+OPTIONAL_FILES = []
 # files and folders that must be gone: v2 (app.js, styles.css), v3 (the section css/js and scene photos),
 # v4 (findings.js, anim.js), the v5 drafts (strip.js, bars.js), v5's numbers.js and the design drafts folder
 LEGACY_FILES = (["app.js", "styles.css"]

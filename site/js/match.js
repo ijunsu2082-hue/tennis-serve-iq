@@ -39,8 +39,8 @@ function strip(points) {
     const tag = cls === "same" ? "Same lane" : cls === "blank" ? "Left blank" : cls === "diff" ? "Different" : "No serve in";
     return "<li class='pt " + cls + "'><span class='pn tnum'>Point " + fInt(p.n) + "</span>" +
       "<span class='ps'>" + esc(p.server) + ", " + esc(p.side) + ", " + (p.serve === 2 ? "2nd" : "1st") + " serve</span>" +
-      "<span class='pl'><small>Model</small>" + (p.model ? LANE[p.model] : "blank") + "</span>" +
-      "<span class='pl'><small>Chart by eye</small>" + (p.chart ? LANE[p.chart] : "none") + "</span>" +
+      "<span class='pl'>Model: <b>" + (p.model ? LANE[p.model] : "blank") + "</b></span>" +
+      "<span class='pl'>By eye: <b>" + (p.chart ? LANE[p.chart] : "none") + "</b></span>" +
       "<span class='pt-tag'>" + tag + "</span></li>";
   }).join("") + "</ol>";
 }
