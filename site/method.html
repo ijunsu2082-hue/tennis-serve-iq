@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Serve IQ Method</title>
-<meta name="description" content="How Serve IQ counts serves: the data, all 13 formulas, what the charts can and cannot see, limits, licenses and photo credits.">
+<meta name="description" content="How Serve IQ counts serves: the data, all 14 formulas, what the charts can and cannot see, limits, licenses and photo credits.">
 <meta name="theme-color" content="#0b1d42">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%233b6fb6%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
@@ -60,7 +60,7 @@
 
   <section id="m-formulas" aria-labelledby="m-formulas-h">
     <h2 id="m-formulas-h">The formulas</h2>
-    <p>These are the <span class="tnum" data-value="13">13</span> <span class="m-stat-label">formulas</span> the code runs, each with a link to the code.</p>
+    <p>These are the <span class="tnum" data-value="14">14</span> <span class="m-stat-label">formulas</span> the code runs, each with a link to the code.</p>
 
     <h3 id="m-hypo">The idea being tested</h3>
     <div class="fx tex" data-display><code>w_{\text{wide}} = w_{\text{body}} = w_{T}</code></div>
@@ -164,6 +164,22 @@
       <p>Each player's matches are shuffled once (seed 0) and the first half goes to half A. The favorite-target share f and the T-minus-wide win edge e are computed in each half from plain proportions on 1st serves, and correlated across players within tour and side. This is one split, with no confidence interval and no Spearman-Brown correction.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>stability</code> in src/app_data.py</a></p>
     </details>
+    <details class="fcard" id="f14">
+      <summary><span class="fnum">14</span> <span class="fname">Serves needed to spot a lean</span></summary>
+      <div class="fx tex" data-display><code>d=p_1-p_2,\qquad n=\frac{z^2\,(p_1+p_2-d^2)}{d^2},\quad z=1.96,\qquad m=n\cdot\frac{\text{matches}}{\text{serves}}</code></div>
+      <p>p<sub>1</sub> and p<sub>2</sub> are the two largest lane shares on one side, on all points. The difference of two shares from the same serves has variance (p<sub>1</sub> + p<sub>2</sub> - d<sup>2</sup>) / n, so n is the number of serves at which the favorite's lead is as wide as its <span data-b="ci"></span> range (z from the normal curve). m turns that into matches at that side's own serves per match. It is a rule of thumb from the observed shares, not a power calculation.</p>
+      <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/export_match.py"><code>need</code> in src/export_match.py</a> and <code>need</code> in site/js/tool.js</p>
+    </details>
+  </section>
+
+  <section id="m-call" aria-labelledby="m-call-h">
+    <h2 id="m-call-h">How a call is scored</h2>
+    <p>A call scores the share of that player's charted serves, from that side and in that situation, that went to the lane picked. Nothing is drawn at random, so the same call always scores the same. The typical pro's lane is the lane with the largest share for a typical pro facing the same returners; when its top two lanes are within three points of each other, both count and the bar averages the player's shares in them. The scouting edge is shown only when the favorite's <span data-b="ci"></span> range sits above the range of every other typical-pro lane. The charts record where the serve went, never what the returner did.</p>
+  </section>
+
+  <section id="m-video" aria-labelledby="m-video-h">
+    <h2 id="m-video-h">Match model: how serves are charted from video</h2>
+    <p>The match model in the match_model folder reads a broadcast video. The score bug gives the server, the side, break points and the point winner; detected court lines put the ball bounce in meters; the bounce is then sorted into equal thirds of the service box width, measured from the center line, as out wide, at the body or down the middle. Without a bounce it falls back to the receiver's position, with lower confidence. Volunteers who chart pro matches judge the lane by eye, and the two methods have not been compared on the same serves. The accuracy shown on the main page comes from the demo clip the rules were tuned on, so it is not a blind test. The model needs a Mac and a broadcast score bug, and it uses Ultralytics under the GNU AGPLv3.</p>
   </section>
 
   <section id="m-see" aria-labelledby="m-see-h">

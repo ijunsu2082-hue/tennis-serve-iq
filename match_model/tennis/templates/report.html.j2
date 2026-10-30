@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ names.A }} v {{ names.B }}</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1b1b1a;--mut:#6d6a63;--rule:#cfcabe;--rule2:#e8e4da;--pa:#1e3a5f;--pb:#9c3d1c;
+--flag:#b23a2e;--low:#f2e8cc;--good:#2e6b3a;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#171716;--ink:#e6e3db;--mut:#9a968c;--rule:#45423b;--rule2:#2b2a27;
+--pa:#9dbbe0;--pb:#e49c7a;--flag:#e3796b;--low:#3b3423;--good:#7fbf8b;color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:15px/1.5 "Iowan Old Style","Palatino Linotype",Palatino,Charter,Georgia,serif}
+.sans,table,.toc,.filters,figcaption,.meta,button,select,svg text{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.page{max-width:1060px;margin:0 auto;padding:28px 16px 48px}
+a{color:inherit}
+.pa{color:var(--pa)}.pb{color:var(--pb)}
+
+/* masthead */
+.kicker{font:600 11px/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mut);margin:0 0 10px}
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;
+  border-bottom:2px solid var(--ink);padding-bottom:14px}
+h1{font-size:40px;line-height:1.05;font-weight:600;margin:0;letter-spacing:-.01em}
+h1 .v{font-style:italic;font-weight:400;color:var(--mut);font-size:.62em;margin:0 .3em;vertical-align:.08em}
+table.line{border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+table.line td{padding:3px 0 3px 14px;text-align:right}
+table.line td.n{padding-left:0;text-align:left;font-weight:600;min-width:7em}
+table.line tr+tr td{border-top:1px solid var(--rule)}
+table.line td.w{font-weight:700}
+table.line .mk{color:var(--mut);font-weight:400;font-size:12px;margin-left:6px}
+.facts{color:var(--mut);margin:10px 0 0;max-width:46em}
+.toc{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13px;padding:10px 0;border-bottom:1px solid var(--rule);margin-bottom:8px}
+.toc a{text-decoration:none;color:var(--mut)}.toc a:hover{color:var(--ink);text-decoration:underline}
+
+/* sections */
+section{padding-top:26px;break-inside:avoid-page}
+h2{font-size:22px;font-weight:600;margin:0 0 4px}
+h3{font-size:16px;font-weight:600;margin:18px 0 6px}
+.lede{color:var(--mut);margin:0 0 14px;max-width:46em}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px 40px}
+.cols>*{min-width:0}
+@media (max-width:760px){.cols{grid-template-columns:1fr}h1{font-size:30px}}
+.note{font-size:13px;color:var(--mut);max-width:52em}
+
+/* scouting notes */
+ol.notes{margin:0;padding:0 0 0 1.4em}
+ol.notes li{margin:0 0 10px;padding-left:2px}
+.kind{font:700 10.5px/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;letter-spacing:.08em;
+  text-transform:uppercase;margin-right:6px;color:var(--mut)}
+.kind.weakness{color:var(--flag)}.kind.strength{color:var(--good)}
+.meta{display:block;font-size:12px;color:var(--mut);margin-top:1px}
+ul.plan{margin:0;padding:0 0 0 1.4em;list-style:none}
+ul.plan li{margin:0 0 10px}
+ul.plan li::before{content:"\2192";display:inline-block;width:1.4em;margin-left:-1.4em;color:var(--mut)}
+.none{color:var(--mut);font-style:italic}
+
+/* tables */
+table.t{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+table.t th,table.t td{padding:5px 8px;text-align:left;vertical-align:baseline;border-bottom:1px solid var(--rule2)}
+table.t thead th{font-size:12px;font-weight:600;color:var(--mut);border-bottom:1px solid var(--ink);background:var(--paper)}
+table.t td.num,table.t th.num{text-align:right}
+table.t td.b{font-weight:700}
+table.t small{color:var(--mut);font-size:11.5px}
+table.box{max-width:640px}
+table.box td:first-child{width:52%}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* figures */
+figure{margin:0}
+figcaption{font-size:12.5px;color:var(--mut);margin-top:4px}
+.courts{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px;max-width:760px}
+@media (max-width:560px){.courts{grid-template-columns:1fr}}
+.courts figure.A{color:var(--pa)}.courts figure.B{color:var(--pb)}
+.courts figure h4{font:600 13px/1.3 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--ink);margin:0 0 4px}
+svg{display:block;width:100%;height:auto}
+svg text{font-size:10.5px;fill:var(--ink)}
+.court .zone{fill:currentColor}
+.court .line{fill:none;stroke:var(--ink);stroke-width:1.2}
+.court .net{stroke:var(--ink);stroke-width:2.5}
+.court .zl,.court .zc,.court .zp,.court .zw,.court .side{text-anchor:middle}
+.court .zl{fill:var(--mut);font-size:9.5px}
+.court .zc{font-size:14px;font-weight:700}
+.court .zp{font-size:10px}
+.court .zw{fill:var(--mut);font-size:9.5px}
+.court .side{fill:var(--mut);font-size:10px}
+.court .bin{fill:var(--ink)}
+.court .fx{stroke:var(--flag);stroke-width:1.6}
+.chart .axis{stroke:var(--rule);stroke-width:1}
+.chart .setline{stroke:var(--rule);stroke-dasharray:3 3}
+.chart .gapline{stroke:var(--mut);stroke-width:1.5;stroke-dasharray:1 3}
+.chart .mline{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.chart .lab{fill:var(--mut);font-size:11px}
+.chart .lab.pa{fill:var(--pa)}.chart .lab.pb{fill:var(--pb)}
+.chart .bpc{fill:var(--flag)}.chart .bps{fill:var(--paper);stroke:var(--flag);stroke-width:1.6}
+.split{display:flex;height:9px;min-width:120px;border:1px solid var(--rule)}
+.split i{display:block;height:100%}
+.split .a{background:var(--pa)}.split .b{background:var(--pb)}
+.key{display:inline-block;width:9px;height:9px;vertical-align:baseline;margin:0 4px 0 12px}
+.key.dot{border-radius:50%;background:var(--ink)}
+.key.x{background:none;color:var(--flag);width:auto;margin-right:2px;font-weight:700}
+.key.ring{border-radius:50%;border:1.6px solid var(--flag)}
+.key.fill{border-radius:50%;background:var(--flag)}
+
+/* point by point */
+table.pts{font-size:12.5px}
+table.pts td{white-space:nowrap}
+table.pts tr.gaprow td{color:var(--mut);font-style:italic;text-align:center;padding:4px;border-bottom:1px dashed var(--rule)}
+.flag{font:700 10.5px/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--flag);
+  letter-spacing:.04em;margin-right:4px}
+td.lc{background:var(--low)}
+.lcsw{display:inline-block;width:22px;height:11px;background:var(--low);vertical-align:middle;border:1px solid var(--rule)}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.wA{color:var(--pa);font-weight:700}.wB{color:var(--pb);font-weight:700}
+.rv{color:var(--mut)}
+a.ts{text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:2px}
+a.ts:hover{text-decoration-color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;font-size:13px;margin:4px 0 8px;color:var(--mut)}
+select{font-size:13px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:1px 4px}
+#player{position:sticky;top:0;z-index:5;display:none;background:var(--paper);border-bottom:1px solid var(--ink);padding:8px 0;margin-top:8px}
+#player video{width:100%;max-height:42vh;background:#000}
+#player .bar{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mut);margin-top:4px}
+button{font-size:12.5px;background:none;color:var(--ink);border:1px solid var(--rule);padding:2px 10px;cursor:pointer}
+tr.warn td:first-child{color:var(--flag)}
+footer{margin-top:36px;padding-top:10px;border-top:1px solid var(--rule);font-size:12px;color:var(--mut)}
+
+@media print{
+  :root{--paper:#fff;--ink:#000;--mut:#555;--rule:#bbb;--rule2:#ddd;--low:#f2e8cc;color-scheme:light}
+  .page{max-width:none;padding:0}
+  #player,.toc,.filters,button,.noprint{display:none!important}
+  td.lc{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .court .zone,.split i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  section{padding-top:18px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="kicker">Match report{% if meta.event %} · {{ meta.event }}{% endif %}{% if meta.round %} · {{ meta.round }}{% endif %}{% if meta.date %} · {{ meta.date }}{% endif %}</p>
+<header class="mast">
+  <h1><span class="pa">{{ names.A }}</span><span class="v">v</span><span class="pb">{{ names.B }}</span></h1>
+  <table class="line" aria-label="Score">
+    {% for P in ['A','B'] %}{% set i = 0 if P=='A' else 1 %}
+    <tr><td class="n {{ 'pa' if P=='A' else 'pb' }}">{{ names[P] }}{% if score.winner == P %}<span class="mk">won</span>{% endif %}</td>
+      {% for s in score.sets %}<td class="{{ 'w' if s[i] > s[1-i] else '' }}">{{ s[i] }}</td>{% endfor %}
+      {% if score.current %}<td>{{ score.current.games[i] }}</td>{% endif %}
+    </tr>
+    {% endfor %}
+  </table>
+</header>
+{% set hand_word = {'R': 'right-handed', 'L': 'left-handed'} %}
+<p class="facts">{{ format_desc }}.{% if hands.A and hands.B %} {{ names.A }} {{ hand_word.get(hands.A, hands.A) }}, {{ names.B }} {{ hand_word.get(hands.B, hands.B) }}.{% endif %}
+  {{ n_points }} points charted from {{ video_name }}{% if duration %} ({{ duration }}){% endif %};
+  {% if meta.has_scorebug %}the score is read from the broadcast score bug.{% else %}no score bug, so the score is replayed from the detected point winners.{% endif %}</p>
+
+<nav class="toc">
+  <a href="#notes">Scouting notes</a><a href="#stats">Match statistics</a><a href="#serve">Serve placement</a>
+  <a href="#endings">How points ended</a><a href="#flow">Point flow</a><a href="#points">Point by point</a><a href="#quality">About the data</a>
+</nav>
+
+<div id="player" class="noprint">
+  <video id="vid" controls preload="none" playsinline></video>
+  <div class="bar"><span id="vlabel"></span><button onclick="closePlayer()">Close</button></div>
+</div>
+
+<section id="notes">
+  <h2>Scouting notes</h2>
+  {% if not (insights.A or insights.B or recs.A or recs.B) %}
+  <p class="lede">Nothing to report yet. A pattern needs at least 5 points behind it and a gap of 15 percentage points; {{ n_points }} points is too few. A full match usually gives plenty.</p>
+  {% else %}
+  <p class="lede">Patterns that held up over at least 5 points with a gap of 15 percentage points or more. Fewer than 10 points is a small sample; read those as leads to watch for, not conclusions.</p>
+  <div class="cols">
+  {% for P in ['A','B'] %}
+    <div>
+      <h3 class="{{ 'pa' if P=='A' else 'pb' }}">{{ names[P] }}</h3>
+      {% if insights[P] %}
+      <ol class="notes">
+        {% for i in insights[P] %}
+        <li><span class="kind {{ i.kind }}">{{ i.kind }}</span>{{ i.text }}
+          <span class="meta">{{ i.confidence }} confidence{% if i.small_sample %}, small sample{% endif %}{% if i.low_confidence %}, not yet checked by hand{% endif %}</span></li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="none">Nothing stands out yet. More points are needed.</p>{% endif %}
+      <h3>Plan for {{ names[P] }}</h3>
+      {% if recs[P] %}
+      <ul class="plan">
+        {% for r in recs[P] %}<li>{{ r.text }}<span class="meta">{{ r.basis }}</span></li>{% endfor %}
+      </ul>
+      {% else %}<p class="none">Not enough evidence for a plan yet.</p>{% endif %}
+    </div>
+  {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section id="stats">
+  <h2>Match statistics</h2>
+  <div class="scroll"><table class="t box">
+    <thead><tr><th></th><th class="num pa">{{ names.A }}</th><th class="num pb">{{ names.B }}</th></tr></thead>
+    <tbody>
+    {% for r in key_rows %}
+    <tr><td>{{ r.label }}</td><td class="num {{ 'b' if r.hl=='A' else '' }}">{{ r.a|safe }}</td><td class="num {{ 'b' if r.hl=='B' else '' }}">{{ r.b|safe }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="note">Percentages only count points where the needed field was detected; the count is in brackets. The better figure is in bold.</p>
+</section>
+
+<section id="serve">
+  <h2>Serve placement</h2>
+  <p class="lede">Each court is drawn from behind the server, net at the bottom. In each zone: serves landed there, share of serves to that side, and points the server won.</p>
+  {% for P in ['A','B'] %}
+  <h3 class="{{ 'pa' if P=='A' else 'pb' }}">{{ names[P] }} serving</h3>
+  <div class="courts">
+    {% for sn in ['1','2'] %}
+    <figure class="{{ P }}">
+      <h4>{{ '1st' if sn=='1' else '2nd' }} serve</h4>
+      {{ serve[P][sn].svg|safe_svg }}
+      <figcaption>{% if serve[P][sn].faults %}Faults: {{ serve[P][sn].faults }}.{% else %}No faults with a tracked bounce.{% endif %}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <p class="note">Marks show tracked bounces:<span class="key dot"></span>in<span class="key x">×</span>fault.</p>
+</section>
+
+<section id="endings">
+  <h2>How points ended</h2>
+  <div class="cols">
+    <div>
+      <h3>By wing</h3>
+      <div class="scroll"><table class="t">
+        <thead><tr><th></th><th class="num pa" colspan="2">{{ names.A }}</th><th class="num pb" colspan="2">{{ names.B }}</th></tr>
+          <tr><th></th><th class="num">FH</th><th class="num">BH</th><th class="num">FH</th><th class="num">BH</th></tr></thead>
+        <tbody>
+        {% for r in wing_rows %}
+        <tr><td>{{ r.label }}</td><td class="num">{{ r.A[0] }}</td><td class="num">{{ r.A[1] }}</td><td class="num">{{ r.B[0] }}</td><td class="num">{{ r.B[1] }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <p class="note">Only points where the wing of the last shot was seen.</p>
+    </div>
+    <div>
+      <h3>By rally length</h3>
+      <div class="scroll"><table class="t">
+        <thead><tr><th>Shots</th><th class="num pa">{{ names.A }}</th><th class="num pb">{{ names.B }}</th><th></th></tr></thead>
+        <tbody>
+        {% for r in rally_rows %}
+        <tr><td>{{ r.label }}</td><td class="num">{{ r.A }}</td><td class="num">{{ r.B }}</td>
+          <td>{% if r.n %}<span class="split" title="{{ names.A }} won {{ r.A }} of {{ r.n }}"><i class="a" style="width:{{ '%.0f'|format(r.pct_a) }}%"></i><i class="b" style="width:{{ '%.0f'|format(100 - r.pct_a) }}%"></i></span>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <p class="note">Points won, counting the serve as shot one. Double faults left out.</p>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <h2>Point flow</h2>
+  <figure>
+    {{ momentum_svg|safe_svg }}
+    <figcaption>Running difference in points won.<span class="key fill"></span>break, set or match point won<span class="key ring"></span>saved. A dotted line marks points missing from the video.</figcaption>
+  </figure>
+</section>
+
+<section id="points">
+  <h2>Point by point</h2>
+  <div class="filters noprint">
+    <label><input type="checkbox" id="fPress"> break, set and match points</label>
+    <label><input type="checkbox" id="fLow"> needs checking</label>
+    <label>Server <select id="fSrv"><option value="">both</option><option value="A">{{ names.A }}</option><option value="B">{{ names.B }}</option></select></label>
+  </div>
+  <div class="scroll"><table class="t pts" id="ptab">
+    <thead><tr><th>#</th><th>Set</th><th>Games</th><th>Points</th><th>Server</th><th>Side</th><th></th>
+      <th>1st serve</th><th>2nd serve</th><th>Return</th><th class="num">Shots</th><th>Ending</th><th>Won</th><th>Code</th><th>Video</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      {% if r.gap %}<tr class="gaprow" data-gap="1"><td colspan="15">points missing here (video cut or score jump)</td></tr>{% endif %}
+      <tr data-srv="{{ r.server }}" data-press="{{ 1 if r.tags else 0 }}" data-low="{{ 1 if (r.low.winner or r.low.serves or r.low.ret or r.low.rally or r.low.ending) else 0 }}">
+        <td>{{ r.id }}{% if r.reviewed %} <span class="rv" title="checked by hand">✓</span>{% elif r.edited %} <span class="rv" title="edited by hand">✎</span>{% endif %}</td>
+        <td>{{ r.set_no }}</td><td>{{ r.games }}</td><td>{{ r.points }}{% if r.in_tb %} <small>tb</small>{% endif %}</td>
+        <td class="{{ 'wA' if r.server=='A' else 'wB' }}">{{ names[r.server] if r.server in names else r.server }}</td><td>{{ r.side }}</td>
+        <td>{% for t in r.tags %}<span class="flag">{{ t }}</span>{% endfor %}</td>
+        <td class="{{ 'lc' if r.low.serves else '' }}">{{ r.s1 }}</td><td class="{{ 'lc' if r.low.serves else '' }}">{{ r.s2 }}</td>
+        <td class="{{ 'lc' if r.low.ret else '' }}">{{ r.ret }}</td><td class="num {{ 'lc' if r.low.rally else '' }}">{{ r.rally }}</td>
+        <td class="{{ 'lc' if r.low.ending else '' }}">{{ r.ending }}</td>
+        <td class="{{ 'lc' if r.low.winner else '' }} {{ 'wA' if r.winner=='A' else ('wB' if r.winner=='B' else '') }}" title="source: {{ r.winner_src }}">{{ names[r.winner] if r.winner in names else r.winner }}</td>
+        <td class="code">{{ r.mcp }}</td>
+        <td>{% if r.href %}<a class="ts" href="{{ r.href }}" data-t="{{ '%.1f'|format(r.t) }}">{{ r.t_label }}</a>{% else %}{{ r.t_label }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="note"><span class="lcsw"></span> confidence under {{ low_conf }} and not checked by hand. ✓ checked, ✎ edited. Scores are before the point, {{ names.A }} first.
+    Code follows the Match Charting Project: serve 4 wide, 5 body, 6 T; f/b forehand/backhand, v volley, q shot not identified; * winner, @ unforced error, # forced error; n net, w wide, d deep.</p>
+</section>
+
+<section id="quality">
+  <h2>About the data</h2>
+  <div class="scroll"><table class="t">
+    <thead><tr><th>Field</th><th class="num">Detected</th><th class="num">Coverage</th><th class="num">Mean confidence</th><th class="num">Needs checking</th></tr></thead>
+    <tbody>
+    {% for q in quality %}
+    <tr class="{{ 'warn' if q.warn else '' }}"><td>{{ q.field }}</td><td class="num">{{ q.known }}/{{ q.total }}</td>
+      <td class="num">{{ '%.0f'|format(q.pct) if q.pct is not none else '–' }}%</td>
+      <td class="num">{{ '%.2f'|format(q.mean_conf) if q.mean_conf is not none else '–' }}</td><td class="num">{{ q.low }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="note">
+    Point winners by source: {% for k, v in winner_sources.items() %}{{ k }} {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}.
+    Gaps in the video: {{ stats.n_gaps }}. Checked by hand: {{ stats.n_reviewed }}; edited: {{ stats.n_edited }}.
+    Fields marked in red were detected on fewer than half the points or with low confidence, so treat numbers built on them as rough.
+    Forced versus unforced error is the hardest call for the computer (and often for people); confirm it in the review tool.
+  </p>
+</section>
+
+<footer class="sans">Generated {{ meta.generated_at or '' }}{% if meta.runtime_s %} in {{ '%.0f'|format(meta.runtime_s) }} s{% endif %} · pipeline {{ meta.pipeline_version or '?' }}</footer>
+</div>
+<script>
+(function(){
+  var href = {{ (video_href or '')|tojson }};
+  var vid = document.getElementById('vid'), pl = document.getElementById('player');
+  window.closePlayer = function(){ vid.pause(); pl.style.display='none'; };
+  vid.addEventListener('error', function(){ pl.style.display='none'; window.__videoFailed = true; });
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a.ts');
+    if (!a || !href || window.__videoFailed) return;
+    e.preventDefault();
+    if (!vid.getAttribute('src')) vid.src = href;
+    pl.style.display = 'block';
+    var t = parseFloat(a.getAttribute('data-t')) || 0;
+    var go = function(){ vid.currentTime = t; vid.play().catch(function(){}); };
+    if (vid.readyState >= 1) go(); else vid.addEventListener('loadedmetadata', go, {once:true});
+    document.getElementById('vlabel').textContent = 'Point ' + a.closest('tr').cells[0].textContent.trim() + ', ' + a.textContent;
+    pl.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+  function applyFilters(){
+    var p = document.getElementById('fPress').checked, l = document.getElementById('fLow').checked,
+        s = document.getElementById('fSrv').value, any = p || l || s;
+    document.querySelectorAll('#ptab tbody tr').forEach(function(tr){
+      if (tr.dataset.gap) { tr.style.display = any ? 'none' : ''; return; }
+      var ok = (!p || tr.dataset.press === '1') && (!l || tr.dataset.low === '1') && (!s || tr.dataset.srv === s);
+      tr.style.display = ok ? '' : 'none';
+    });
+  }
+  ['fPress','fLow','fSrv'].forEach(function(id){ document.getElementById(id).addEventListener('change', applyFilters); });
+})();
+</script>
+</body>
+</html>

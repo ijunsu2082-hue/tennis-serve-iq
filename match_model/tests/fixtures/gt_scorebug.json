@@ -1,0 +1,2024 @@
+{
+ "video": "videoplayback.mp4",
+ "description": "Ground truth for the TennisTV score bug of Sinner vs Alcaraz, Beijing 2024 final (deciding-set tiebreak highlight). Every label was read by eye from upscaled crops of accurately decoded frames (read_frame).",
+ "conventions": {
+  "sets": "one [top_row, bottom_row] pair per completed set (contracts.py example), superscripts ignored",
+  "points": "strings; hidden points column = ['0','0']",
+  "server": "row index of the serve dot (0 = top row)",
+  "t": "seconds, true presentation time (read_frame accurate seek)",
+  "sequence": "distinct score states in order; [t_lo, t_hi] = window in which the change happens, by eye"
+ },
+ "box": [
+  128,
+  604,
+  378,
+  665
+ ],
+ "box_note": "x0,y0,x1,y1 (exclusive) of the full-width bug (with points column), measured from pixel transitions at t=60/400",
+ "names": [
+  "SINNER",
+  "ALCARAZ"
+ ],
+ "superscripts": {
+  "set1_bottom": 6
+ },
+ "frames": [
+  {
+   "t": 4.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main",
+   "note": "TB 0-0: points column hidden"
+  },
+  {
+   "t": 9.0,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main",
+   "note": "TB 0-0: points column hidden"
+  },
+  {
+   "t": 14.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other",
+   "note": "in-arena scoreboard visible top-left"
+  },
+  {
+   "t": 23.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 32.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup",
+   "note": "player stats card above bug"
+  },
+  {
+   "t": 42.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 51.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 61.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 70.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 79.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 89.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 98.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 108.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 117.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 126.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 136.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 145.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 155.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 164.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 173.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 183.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 192.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 202.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 211.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 220.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 230.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 239.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 249.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 258.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 267.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 277.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 286.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 296.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 305.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 314.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 324.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 333.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 343.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 352.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 361.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 371.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 380.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 390.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 399.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 408.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 418.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 427.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 437.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 446.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 455.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 465.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 474.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 484.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 493.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 502.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 512.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 521.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 531.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 540.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 549.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 559.3,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 568.7,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "6"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup"
+  },
+  {
+   "t": 578.1,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "6"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "other"
+  },
+  {
+   "t": 587.5,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "6"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "closeup",
+   "note": "'3 CHAMPIONSHIP POINTS' banner directly above the bug"
+  },
+  {
+   "t": 596.9,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "6"
+   ],
+   "server": 1,
+   "in_tb": true,
+   "shot": "main"
+  },
+  {
+   "t": 602.6,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    7
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": false,
+   "shot": "other",
+   "note": "match over: final set shown as games 6-7, points column hidden"
+  },
+  {
+   "t": 603.4,
+   "present": true,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    7
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 1,
+   "in_tb": false,
+   "shot": "other",
+   "note": "match over: final set shown as games 6-7, points column hidden"
+  },
+  {
+   "t": 605.5,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 606.3,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 607.3,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 615.1,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 615.7,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 625.1,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 633.9,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 634.5,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 643.9,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 648.2,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 653.3,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  },
+  {
+   "t": 660.5,
+   "present": false,
+   "note": "bug gone (celebration / ceremony / outro)"
+  }
+ ],
+ "sequence": [
+  {
+   "t_lo": 0.0,
+   "t_hi": 0.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 0
+  },
+  {
+   "t_lo": 12.9,
+   "t_hi": 13.5,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "1",
+    "0"
+   ],
+   "server": 1
+  },
+  {
+   "t_lo": 56.9,
+   "t_hi": 59.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "2",
+    "0"
+   ],
+   "server": 1
+  },
+  {
+   "t_lo": 210.1,
+   "t_hi": 210.5,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "0"
+   ],
+   "server": 0
+  },
+  {
+   "t_lo": 274.9,
+   "t_hi": 277.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "1"
+   ],
+   "server": 0
+  },
+  {
+   "t_lo": 334.9,
+   "t_hi": 337.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "2"
+   ],
+   "server": 1
+  },
+  {
+   "t_lo": 380.9,
+   "t_hi": 383.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "3"
+   ],
+   "server": 1
+  },
+  {
+   "t_lo": 438.9,
+   "t_hi": 441.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "4"
+   ],
+   "server": 0
+  },
+  {
+   "t_lo": 508.9,
+   "t_hi": 511.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "5"
+   ],
+   "server": 0
+  },
+  {
+   "t_lo": 558.9,
+   "t_hi": 561.0,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    6
+   ],
+   "points": [
+    "3",
+    "6"
+   ],
+   "server": 1
+  },
+  {
+   "t_lo": 600.9,
+   "t_hi": 601.3,
+   "sets": [
+    [
+     7,
+     6
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "games": [
+    6,
+    7
+   ],
+   "points": [
+    "0",
+    "0"
+   ],
+   "server": 1
+  }
+ ]
+}

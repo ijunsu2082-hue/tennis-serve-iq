@@ -1,0 +1,131 @@
+{
+ "players": [
+  "Sinner",
+  "Alcaraz"
+ ],
+ "points": [
+  {
+   "n": 1,
+   "server": "Sinner",
+   "side": "deuce",
+   "serve": 1,
+   "model": null,
+   "chart": "wide",
+   "same": null,
+   "winner_same": true
+  },
+  {
+   "n": 2,
+   "server": "Alcaraz",
+   "side": "ad",
+   "serve": 1,
+   "model": "body",
+   "chart": "body",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 3,
+   "server": "Alcaraz",
+   "side": "deuce",
+   "serve": 2,
+   "model": null,
+   "chart": "body",
+   "same": null,
+   "winner_same": true
+  },
+  {
+   "n": 4,
+   "server": "Sinner",
+   "side": "ad",
+   "serve": 2,
+   "model": "T",
+   "chart": "T",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 5,
+   "server": "Sinner",
+   "side": "deuce",
+   "serve": 2,
+   "model": "T",
+   "chart": "T",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 6,
+   "server": "Alcaraz",
+   "side": "ad",
+   "serve": 1,
+   "model": "T",
+   "chart": "T",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 7,
+   "server": "Alcaraz",
+   "side": "deuce",
+   "serve": 1,
+   "model": "T",
+   "chart": "T",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 8,
+   "server": "Sinner",
+   "side": "ad",
+   "serve": 2,
+   "model": "body",
+   "chart": "body",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 9,
+   "server": "Sinner",
+   "side": "deuce",
+   "serve": 2,
+   "model": "body",
+   "chart": "body",
+   "same": true,
+   "winner_same": true
+  },
+  {
+   "n": 10,
+   "server": "Alcaraz",
+   "side": "ad",
+   "serve": 1,
+   "model": "wide",
+   "chart": "wide",
+   "same": true,
+   "winner_same": true
+  }
+ ],
+ "totals": {
+  "points": 10,
+  "served": 10,
+  "named": 8,
+  "matched": 8,
+  "winners": 10,
+  "break_points": 0
+ },
+ "need": {
+  "z": 1.96,
+  "sides": 891,
+  "serves_q": [
+   112.31,
+   375.43,
+   1533.4
+  ],
+  "matches_q": [
+   2.9703,
+   9.6105,
+   40.362
+  ],
+  "serves_per_match": 37.133
+ }
+}

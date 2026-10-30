@@ -6,3 +6,13 @@
 __pycache__/
 .DS_Store
 .netlify
+
+# match model: never publish video, weights, caches or the local venv
+match_model/.venv/
+match_model/models/
+match_model/**/*.mp4
+match_model/**/*.pt
+match_model/out/*/cache/
+match_model/out/*/report.html
+match_model/out/*/match_auto.json
+match_model/inbox/

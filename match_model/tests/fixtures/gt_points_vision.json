@@ -1,0 +1,785 @@
+{
+ "description": "Hand-charted ground truth for the 10 tiebreak points of videoplayback.mp4 (Beijing 2024 final, 3rd-set tiebreak). A = Sinner (top row of score bug), B = Alcaraz, both right-handed. Server, side, ends and winner come from the score bug and are certain. t_start/t_end = the rally windows the pipeline passes to chart_point. fault_windows = separate short main-camera shots earlier in the same point that show a 1st-serve fault (the in-window serve is then n=2). Every shot was charted by eye (E5b) from 10-25 fps frame strips, zoom crops and ball-trail composites (3-frame-difference blobs coloured by time). shots[].t = contact time (+-0.1 s), by = hitter, wing fh/bh (null for serves), stroke serve/groundstroke/volley/overhead/slice. rally_len = MCP count (shots incl. the serve that started the rally; a 1st-serve fault is not counted). null = not knowable from the video.",
+ "points": [
+  {
+   "id": "W01",
+   "t_start": 4.8,
+   "t_end": 13.0,
+   "server": "A",
+   "side": "deuce",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "A",
+   "fault_windows": [],
+   "serves": [
+    {
+     "n": 1,
+     "t": 5.64,
+     "result": "in",
+     "zone": "wide",
+     "fault": null
+    }
+   ],
+   "shots": [
+    {
+     "t": 5.64,
+     "by": "A",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 6.27,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "full-stretch defensive return wide of the deuce sideline"
+    },
+    {
+     "t": 8.38,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "after a high bounce (~7.75); angled to the near ad side"
+    }
+   ],
+   "rally_len": 3,
+   "return_wing": "fh",
+   "last_shot_by": "A",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 0-0 -> 1-0. Window starts during Sinner's toss (preceded by a close-up of Sinner, so most likely a 1st serve; n=1 not certain). Wide serve; Alcaraz lunges, high defensive fh return; Sinner fh lands near the near service line on the ad side, Alcaraz does not move: clean winner."
+  },
+  {
+   "id": "W02",
+   "t_start": 41.6,
+   "t_end": 58.0,
+   "server": "B",
+   "side": "ad",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "A",
+   "fault_windows": [],
+   "serves": [
+    {
+     "n": 1,
+     "t": 43.2,
+     "result": "in",
+     "zone": "body",
+     "fault": null,
+     "note": "bounce ~(1.8, 5.7) m from the trail kink"
+    }
+   ],
+   "shots": [
+    {
+     "t": 43.2,
+     "by": "B",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 44.12,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 45.66,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 47.12,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 47.97,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "full stretch wide right"
+    },
+    {
+     "t": 50.05,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "slice",
+     "note": "backhand drop shot (bounces ~50.9 just past the net, near right)"
+    },
+    {
+     "t": 51.68,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "lunging pick-up of the drop shot near the net"
+    },
+    {
+     "t": 53.8,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "crosscourt pass to the near ad side, lands ~(-3.1,-5.8)"
+    }
+   ],
+   "rally_len": 8,
+   "return_wing": "bh",
+   "last_shot_by": "A",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 1-0 -> 2-0. Alcaraz serves; Sinner bh return; rally; Sinner bh drop shot, Alcaraz scrambles it back high, Sinner fh passing winner crosscourt while Alcaraz stands at the net."
+  },
+  {
+   "id": "W03",
+   "t_start": 203.6,
+   "t_end": 210.5,
+   "server": "B",
+   "side": "deuce",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "A",
+   "fault_windows": [
+    {
+     "t_start": 193.2,
+     "t_end": 195.8
+    }
+   ],
+   "serves": [
+    {
+     "n": 1,
+     "t": 193.5,
+     "result": "fault",
+     "zone": null,
+     "fault": "net",
+     "note": "separate shot 193.2-195.8: ball hits the net (tape vibrates) and drops on the server's side"
+    },
+    {
+     "n": 2,
+     "t": 204.72,
+     "result": "in",
+     "zone": "body",
+     "fault": null,
+     "note": "bounce ~(-2.3, 5.1) m from the trail kink"
+    }
+   ],
+   "shots": [
+    {
+     "t": 204.72,
+     "by": "B",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 205.47,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 206.42,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "into the net (tape vibrates, ball drops on near side)"
+    }
+   ],
+   "rally_len": 3,
+   "return_wing": "fh",
+   "last_shot_by": "B",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "net",
+   "ending": "unforced_error",
+   "notes": "TB 2-0 -> 3-0. 1st serve into the net (separate shot), 2nd serve body, Sinner fh return deep to the near deuce side, Alcaraz fh into the net. forced/unforced is a judgement call (return was deep)."
+  },
+  {
+   "id": "W04",
+   "t_start": 258.0,
+   "t_end": 275.5,
+   "server": "A",
+   "side": "ad",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "B",
+   "fault_windows": [
+    {
+     "t_start": 241.6,
+     "t_end": 244.8
+    }
+   ],
+   "serves": [
+    {
+     "n": 1,
+     "t": 242.1,
+     "result": "fault",
+     "zone": null,
+     "fault": "wide",
+     "note": "separate shot 241.6-244.8: Alcaraz lunges far to his left; ball lands around the near-ad singles sideline at the service line (~(-4.2,-5.7)); called out (wide) per broadcast"
+    },
+    {
+     "n": 2,
+     "t": 258.85,
+     "result": "in",
+     "zone": "T",
+     "fault": null,
+     "note": "bounce ~(-0.9,-6.3) m, at the T; Alcaraz moves right from the sideline and stretches"
+    }
+   ],
+   "shots": [
+    {
+     "t": 258.85,
+     "by": "A",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 259.5,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "stretched"
+    },
+    {
+     "t": 260.92,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 262.05,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 263.62,
+     "by": "A",
+     "wing": null,
+     "stroke": "groundstroke",
+     "note": "high ball, wing not resolvable"
+    },
+    {
+     "t": 264.63,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "high deep ball"
+    },
+    {
+     "t": 265.62,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "running fh"
+    },
+    {
+     "t": 266.92,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "stretched; short high ball to the far right, bounces ~268.45"
+    },
+    {
+     "t": 269.05,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke",
+     "note": "running forward, low reach"
+    },
+    {
+     "t": 269.8,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "volley",
+     "note": "bh volley winner into the open far-left court"
+    }
+   ],
+   "rally_len": 10,
+   "return_wing": "fh",
+   "last_shot_by": "B",
+   "last_shot_wing": "bh",
+   "last_shot_stroke": "volley",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 3-0 -> 3-1. Played on the 2nd serve (1st serve wide in a separate earlier shot; the old GT's '1st serve in, wide, bh return' referred to that fault). 2nd serve to the T, Alcaraz fh return; rally; Alcaraz follows a short ball to the net and puts away a bh volley; Sinner does not reach it."
+  },
+  {
+   "id": "W05",
+   "t_start": 312.8,
+   "t_end": 335.5,
+   "server": "A",
+   "side": "deuce",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "B",
+   "fault_windows": [
+    {
+     "t_start": 302.8,
+     "t_end": 305.4
+    }
+   ],
+   "serves": [
+    {
+     "n": 1,
+     "t": 303.25,
+     "result": "fault",
+     "zone": null,
+     "fault": "long",
+     "note": "separate shot 302.8-305.4: bounce kink ~(0.6,-6.8), just beyond the service line near the T"
+    },
+    {
+     "n": 2,
+     "t": 313.62,
+     "result": "in",
+     "zone": "T",
+     "fault": null,
+     "note": "bounce ~(1.2..1.3, -3..-4); close to the T/body boundary (1.37 m)"
+    }
+   ],
+   "shots": [
+    {
+     "t": 313.62,
+     "by": "A",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 314.47,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 315.74,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke",
+     "note": "low defensive reach that becomes a huge lob over the advancing Alcaraz"
+    },
+    {
+     "t": 319.45,
+     "by": "B",
+     "wing": null,
+     "stroke": "groundstroke",
+     "note": "retrieves the lob outside the frame on the near-left (wing not visible)"
+    },
+    {
+     "t": 320.92,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 321.86,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 323.1,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 324.23,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 325.5,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "stretched to the far left"
+    },
+    {
+     "t": 326.8,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "volley",
+     "note": "soft volley to the far right"
+    },
+    {
+     "t": 329.1,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke",
+     "note": "running reach at the far right (partly out of crop)"
+    },
+    {
+     "t": 329.6,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "volley",
+     "note": "diving fh volley winner to the far left-centre"
+    }
+   ],
+   "rally_len": 12,
+   "return_wing": "bh",
+   "last_shot_by": "B",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "volley",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 3-1 -> 3-2. 1st serve long (separate shot). Long rally: Sinner lobs Alcaraz, who retrieves it off-frame; later Alcaraz comes in, volleys short to the far right, Sinner runs it down and Alcaraz wins it with a diving fh volley. Off-frame retrieval at ~319.45 inferred from the ball path."
+  },
+  {
+   "id": "W06",
+   "t_start": 376.0,
+   "t_end": 382.5,
+   "server": "B",
+   "side": "ad",
+   "ends": {
+    "A": "far",
+    "B": "near"
+   },
+   "winner": "B",
+   "fault_windows": [],
+   "serves": [
+    {
+     "n": 1,
+     "t": 377.05,
+     "result": "in",
+     "zone": "T",
+     "fault": null,
+     "note": "25 fps zoom: ball passes the far service line at x ~637-648 px (centre line), bounce kink at ~377.42 near the T; Sinner, set up wide on the ad side, lunges back towards the centre"
+    }
+   ],
+   "shots": [
+    {
+     "t": 377.05,
+     "by": "B",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 377.68,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "full-stretch one-handed reach to image LEFT (= his right, he faces the camera): forehand. (First pass of this GT said bh; corrected on a 25 fps zoom)"
+    },
+    {
+     "t": 378.0,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "volley",
+     "note": "serve-and-volley, bh (half-)volley near the service line"
+    },
+    {
+     "t": 378.9,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "fh into the net; ball lies dead at the net on Sinner's side from ~379.35"
+    }
+   ],
+   "rally_len": 4,
+   "return_wing": "fh",
+   "last_shot_by": "A",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "net",
+   "ending": "forced_error",
+   "notes": "TB 3-2 -> 3-3. Alcaraz serve-and-volley (serve down the T); Sinner stretched fh return; Alcaraz bh volley deep; Sinner fh (passing attempt vs the net player) into the net. The old GT's 'Alcaraz volley winner' is contradicted by the ball resting at the net on the far side. forced vs unforced is a judgement call."
+  },
+  {
+   "id": "W07",
+   "t_start": 429.8,
+   "t_end": 440.0,
+   "server": "B",
+   "side": "deuce",
+   "ends": {
+    "A": "near",
+    "B": "far"
+   },
+   "winner": "B",
+   "fault_windows": [],
+   "serves": [
+    {
+     "n": 1,
+     "t": 430.62,
+     "result": "in",
+     "zone": "T",
+     "fault": null,
+     "note": "bounce ~(1.0, -5.0) m; Sinner reaches to his left (bh) from the deuce side"
+    }
+   ],
+   "shots": [
+    {
+     "t": 430.62,
+     "by": "B",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 431.58,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 432.4,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "approach"
+    },
+    {
+     "t": 433.7,
+     "by": "A",
+     "wing": "bh",
+     "stroke": "groundstroke",
+     "note": "passing attempt"
+    },
+    {
+     "t": 434.45,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "volley",
+     "note": "bh volley winner to the near-right corner past the diving Sinner"
+    }
+   ],
+   "rally_len": 5,
+   "return_wing": "bh",
+   "last_shot_by": "B",
+   "last_shot_wing": "bh",
+   "last_shot_stroke": "volley",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 3-3 -> 3-4 (ends changed). Serve to the T, Sinner bh return, Alcaraz fh approach, Sinner bh pass attempt, Alcaraz bh volley winner; Sinner dives and misses."
+  },
+  {
+   "id": "W08",
+   "t_start": 497.6,
+   "t_end": 510.5,
+   "server": "A",
+   "side": "ad",
+   "ends": {
+    "A": "near",
+    "B": "far"
+   },
+   "winner": "B",
+   "fault_windows": [
+    {
+     "t_start": 488.0,
+     "t_end": 491.0
+    }
+   ],
+   "serves": [
+    {
+     "n": 1,
+     "t": 487.8,
+     "result": "fault",
+     "zone": null,
+     "fault": "net",
+     "note": "struck in a close-up; the main shot (from ~487.9) shows the ball dropping off the net on the server's side and rolling right"
+    },
+    {
+     "n": 2,
+     "t": 498.35,
+     "result": "in",
+     "zone": "body",
+     "fault": null,
+     "note": "bounce ~(1.8..2.2, 5.5..6.1) m"
+    }
+   ],
+   "shots": [
+    {
+     "t": 498.35,
+     "by": "A",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 499.32,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 500.85,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 502.05,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 503.15,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 504.65,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "angled crosscourt winner; bounces on the near-ad singles sideline ~(-4.1,-6.7), Sinner does not move"
+    }
+   ],
+   "rally_len": 6,
+   "return_wing": "bh",
+   "last_shot_by": "B",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 3-4 -> 3-5. 1st serve into the net (struck in close-up, separate main shot 488-491). 2nd serve body, Alcaraz bh return, baseline rally, Alcaraz sharp-angle fh winner on the sideline."
+  },
+  {
+   "id": "W09",
+   "t_start": 549.6,
+   "t_end": 559.5,
+   "server": "A",
+   "side": "deuce",
+   "ends": {
+    "A": "near",
+    "B": "far"
+   },
+   "winner": "B",
+   "fault_windows": [
+    {
+     "t_start": 539.4,
+     "t_end": 542.0
+    }
+   ],
+   "serves": [
+    {
+     "n": 1,
+     "t": 539.94,
+     "result": "fault",
+     "zone": null,
+     "fault": "long",
+     "note": "separate shot 539.4-542.0: bounce ~(-3.9, 7.8), ~1.4 m beyond the service line, aimed wide; Alcaraz lets it go"
+    },
+    {
+     "n": 2,
+     "t": 550.3,
+     "result": "in",
+     "zone": "body",
+     "fault": null,
+     "note": "bounce at 550.82 ~(-1.7, 4.1) m (short, angled). Alcaraz stood near the singles sideline and took it on his bh (ball inside him). Old GT said 'wide' from the returner's position; bounce thirds say body - ambiguous"
+    }
+   ],
+   "shots": [
+    {
+     "t": 550.3,
+     "by": "A",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 551.24,
+     "by": "B",
+     "wing": "bh",
+     "stroke": "groundstroke"
+    },
+    {
+     "t": 552.45,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "deep high ball, bounces ~553.06 near the far baseline"
+    },
+    {
+     "t": 554.2,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "after a high bounce; lands mid-court ~(-0.2,-8.5)"
+    },
+    {
+     "t": 555.32,
+     "by": "A",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "ball leaves fast upward; broadcast cuts at 555.6 to a dejected Sinner"
+    }
+   ],
+   "rally_len": 5,
+   "return_wing": "bh",
+   "last_shot_by": "A",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": null,
+   "ending": "unforced_error",
+   "notes": "TB 3-5 -> 3-6. 1st serve long (separate shot). 2nd serve short body, Alcaraz bh return, rally, Sinner fh error (landing not visible: cut to close-up). The old GT's 'ball passes Sinner untouched => Alcaraz winner' is contradicted by 25 fps frames: racket meets the ball at 555.32 (ball streak above him at 555.36). forced vs unforced is a judgement call (neutral mid-court ball)."
+  },
+  {
+   "id": "W10",
+   "t_start": 593.4,
+   "t_end": 602.0,
+   "server": "B",
+   "side": "ad",
+   "ends": {
+    "A": "near",
+    "B": "far"
+   },
+   "winner": "B",
+   "fault_windows": [],
+   "serves": [
+    {
+     "n": 1,
+     "t": 594.35,
+     "result": "in",
+     "zone": "wide",
+     "fault": null,
+     "note": "bounce ~(-3.2,-3.5) m, then the ball runs out past x=-4.4; Sinner returns from outside the near-left doubles alley"
+    }
+   ],
+   "shots": [
+    {
+     "t": 594.35,
+     "by": "B",
+     "wing": null,
+     "stroke": "serve"
+    },
+    {
+     "t": 595.0,
+     "by": "A",
+     "wing": null,
+     "stroke": "groundstroke",
+     "note": "return; contact hidden behind the score bug / frame edge (wing unknown)"
+    },
+    {
+     "t": 596.58,
+     "by": "B",
+     "wing": "fh",
+     "stroke": "groundstroke",
+     "note": "from the far-right corner crosscourt to the near-left sideline ~(-4.1,-9.0); Sinner slides and lunges but does not touch it"
+    }
+   ],
+   "rally_len": 3,
+   "return_wing": null,
+   "last_shot_by": "B",
+   "last_shot_wing": "fh",
+   "last_shot_stroke": "groundstroke",
+   "last_shot_result": "in",
+   "ending": "winner",
+   "notes": "TB 3-6 -> 7-6, match to Alcaraz. Wide serve, Sinner return to the far centre, Alcaraz fh winner into the near-left corner (on/inside the sideline); ball passes Sinner at 597.3-597.6 untouched."
+  }
+ ]
+}

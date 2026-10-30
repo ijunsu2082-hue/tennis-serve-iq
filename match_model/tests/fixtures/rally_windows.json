@@ -1,0 +1,50 @@
+{
+ "description": "Hand-picked main-camera rally windows (seconds) in videoplayback.mp4: each covers one point being played on the high main camera, from just before/at the serve to the end of play (cut to close-up). Found by a court-line overlap scan with the manual homography, verified on contact sheets.",
+ "windows": [
+  {
+   "id": "W02",
+   "start": 41.6,
+   "end": 57.4
+  },
+  {
+   "id": "W03",
+   "start": 203.6,
+   "end": 209.2
+  },
+  {
+   "id": "W04",
+   "start": 258.0,
+   "end": 272.4
+  },
+  {
+   "id": "W05",
+   "start": 312.8,
+   "end": 332.2
+  },
+  {
+   "id": "W06",
+   "start": 376.0,
+   "end": 381.8
+  },
+  {
+   "id": "W07",
+   "start": 429.8,
+   "end": 436.8
+  },
+  {
+   "id": "W08",
+   "start": 497.6,
+   "end": 508.4
+  },
+  {
+   "id": "W09",
+   "start": 549.6,
+   "end": 555.4
+  },
+  {
+   "id": "W10",
+   "start": 593.4,
+   "end": 599.8
+  }
+ ]
+}

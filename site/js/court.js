@@ -11,8 +11,14 @@
    Camera: telephoto-like. The near half of the court is drawn shorter than to scale so the two receiving
    boxes (where the serves go) get most of the height, then a mild perspective narrows the far end.
 
-   createCourt(svg, { onHover }) returns { draw(view, { animate }), highlight(key) }.
-   view.sides[side].cells[dir].share (0 to 1 or null); key = side + dir, e.g. "deuceT". */
+   createCourt(svg, { onHover, onPick }) returns { draw(view, { animate }), highlight(key), focus(side),
+   hidePaths(), pickable(side, on), mark(key) }.
+   view.sides[side].cells[dir].share (0 to 1 or null); key = side + dir, e.g. "deuceT".
+     focus(side)        dims everything that belongs to the other side (null shows both)
+     hidePaths()        rewinds the paths and shows "?" in the focused side's share labels (the call phase)
+     pickable(side, on) lets the visitor click that side's three lanes; onPick(key) fires on a click
+     mark(key)          outlines the lane the visitor picked (null clears it)
+   draw() reveals: the paths draw in and the labels show the shares. */
 
 import { SIDES, DIRS, isNum, fPct } from "./data.js";
 import { el, debounce, reducedMotion } from "./ui.js";
@@ -42,6 +48,9 @@ const DRAW_MS = 750, STAGGER = 110;
 
 export function createCourt(svg, opts) {
   const onHover = (opts && opts.onHover) || (() => {});
+  const onPick = (opts && opts.onPick) || (() => {});
+  const bySide = { deuce: [], ad: [] };     // labels and servers dimmed by focus() (lane tints are set in draw)
+  let focused = null, hidden = false;
   const RM = reducedMotion();
   const font = { "font-family": "Archivo, system-ui, sans-serif", "font-weight": 800, "text-anchor": "middle" };
 
@@ -80,8 +89,10 @@ export function createCourt(svg, opts) {
   SIDES.forEach((s) => DIRS.forEach((d) => {
     const [a, b] = LANE_X[s][d];
     const x = fx((a + b) / 2, SVC + 0.6), y = fy(0, SVC + 0.6) - 6;
-    el("text", { x, y: y - 24, fill: "#cfe0ff", "font-size": 12, "font-weight": 700 }, labG).textContent = NAMES[d];
+    const nm = el("text", { x, y: y - 24, fill: "#cfe0ff", "font-size": 12, "font-weight": 700 }, labG);
+    nm.textContent = NAMES[d];
     labels[s + d] = el("text", { x, y, fill: "#ffffff", "font-size": 19, style: "font-variant-numeric: tabular-nums" }, labG);
+    bySide[s].push(nm, labels[s + d]);
   }));
 
   // paths, balls, servers
@@ -90,10 +101,12 @@ export function createCourt(svg, opts) {
   const srvG = el("g", font, svg);
   SIDES.forEach((s) => {
     const [x, y] = SERVER[s];
-    el("ellipse", { cx: fx(x, y), cy: fy(x, y) + 3, rx: 11, ry: 4, fill: "rgba(0,0,0,.25)" }, srvG);
-    el("circle", { cx: fx(x, y), cy: fy(x, y) - 4, r: 7.5, fill: COLORS[s], stroke: COLORS.navy, "stroke-width": 2 }, srvG);
-    el("text", { x: fx(x, y), y: fy(x, y) + 22, fill: "#ffffff", "font-size": 12, "font-weight": 700 }, srvG).textContent =
-      s === "deuce" ? "Deuce serve" : "Ad serve";
+    const g = el("g", {}, srvG);
+    el("ellipse", { cx: fx(x, y), cy: fy(x, y) + 3, rx: 11, ry: 4, fill: "rgba(0,0,0,.25)" }, g);
+    el("circle", { cx: fx(x, y), cy: fy(x, y) - 4, r: 7.5, fill: COLORS[s], stroke: COLORS.navy, "stroke-width": 2 }, g);
+    el("text", { x: fx(x, y), y: fy(x, y) + 22, fill: "#ffffff", "font-size": 12, "font-weight": 700 }, g).textContent =
+      s === "deuce" ? "Deuce side server" : "Ad side server";
+    bySide[s].push(g);
   });
   const paths = {};
   SIDES.forEach((s) => DIRS.forEach((d) => {
@@ -110,16 +123,29 @@ export function createCourt(svg, opts) {
     const len = path.getTotalLength();
     [shade, path].forEach((e) => { e.style.strokeDasharray = len; e.style.strokeDashoffset = RM ? 0 : len; });
     const ball = el("circle", { r: 5, fill: COLORS.ball, stroke: COLORS.navy, "stroke-width": 1.2, opacity: 0 }, ballsG);
-    paths[s + d] = { path, shade, len, ball };
+    paths[s + d] = { path, shade, len, ball, side: s };
   }));
 
-  // hover targets: the lane plus the space above it, so pointing at the label also works
+  // the picked lane: an outline drawn over the lane
+  const picks = {};
+  const pickG = el("g", { fill: "none", stroke: COLORS.ball, "stroke-width": 3.5, "stroke-linejoin": "round" }, svg);
+  SIDES.forEach((s) => DIRS.forEach((d) => {
+    const [a, b] = LANE_X[s][d];
+    picks[s + d] = el("polygon", { points: quad(a, b, NET, SVC), opacity: 0 }, pickG);
+  }));
+
+  // hover and click targets: the lane plus the space above it, so pointing at the label also works.
+  // Keyboard and screen-reader users pick with the buttons under the court (js/tool.js), so these stay
+  // out of the tab order.
   const hitG = el("g", {}, svg);
+  const hits = {};
   SIDES.forEach((s) => DIRS.forEach((d) => {
     const [a, b] = LANE_X[s][d];
     const hit = el("polygon", { points: quad(a, b, NET, Y1), fill: "transparent", class: "lane-hit" }, hitG);
     hit.addEventListener("mouseenter", () => onHover(s + d));
     hit.addEventListener("mouseleave", () => onHover(null));
+    hit.addEventListener("click", () => { if (hit.classList.contains("on")) onPick(s + d); });
+    hits[s + d] = hit;
   }));
 
   function fly(o, delay) {
@@ -147,11 +173,21 @@ export function createCourt(svg, opts) {
       const share = isNum(c.share) ? c.share : 0;
       const w = 1.5 + share * 15;
       lanes[k].style.transition = RM ? "none" : "opacity .6s";
-      lanes[k].setAttribute("opacity", (0.04 + share * 0.62).toFixed(2));
-      labels[k].textContent = isNum(c.share) ? fPct(c.share, 0) : "n/a";
+      const off = focused && s !== focused;
+      lanes[k].setAttribute("opacity", off ? "0.04" : (0.04 + share * 0.62).toFixed(2));
+      labels[k].textContent = off ? "" : isNum(c.share) ? fPct(c.share, 0) : "n/a";
+      labels[k].classList.remove("q");
       const p = paths[k];
       p.path.setAttribute("stroke-width", w.toFixed(1));
       p.shade.setAttribute("stroke-width", (w + 3).toFixed(1));
+      if (off) {
+        [p.path, p.shade].forEach((e) => { e.style.transition = "none"; e.style.strokeDashoffset = p.len; });
+        return;
+      }
+      [p.path, p.shade].forEach((e) => { e.style.transition = RM ? "none" : "stroke-width .5s"; });
+      if (!animate && hidden) {
+        [p.path, p.shade].forEach((e) => { e.style.strokeDashoffset = 0; });
+      }
       if (!animate) return;
       const delay = (i++) * STAGGER;
       [p.path, p.shade].forEach((e) => {
@@ -163,6 +199,30 @@ export function createCourt(svg, opts) {
       });
       fly(p, delay);
     }));
+    hidden = false;
+  }
+
+  function focus(side) {
+    focused = side || null;
+    SIDES.forEach((s) => bySide[s].forEach((e) => { e.style.opacity = !focused || s === focused ? "" : "0.28"; }));
+  }
+  function hidePaths() {
+    hidden = true;
+    Object.keys(paths).forEach((k) => {
+      const p = paths[k];
+      [p.path, p.shade].forEach((e) => { e.style.transition = "none"; e.style.strokeDashoffset = p.len; });
+      p.ball.setAttribute("opacity", 0);
+      labels[k].textContent = !focused || p.side === focused ? "?" : "";
+      labels[k].classList.toggle("q", !focused || p.side === focused);
+      lanes[k].style.transition = RM ? "none" : "opacity .6s";
+      lanes[k].setAttribute("opacity", !focused || p.side === focused ? "0.06" : "0.04");
+    });
+  }
+  function pickable(side, on) {
+    Object.keys(hits).forEach((k) => hits[k].classList.toggle("on", !!on && k.indexOf(side) === 0));
+  }
+  function mark(key) {
+    Object.keys(picks).forEach((k) => picks[k].setAttribute("opacity", k === key ? 1 : 0));
   }
 
   function highlight(key) {
@@ -178,5 +238,5 @@ export function createCourt(svg, opts) {
   fit();
   window.addEventListener("resize", debounce(fit, 120));
 
-  return { draw, highlight };
+  return { draw, highlight, focus, hidePaths, pickable, mark };
 }

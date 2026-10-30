@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Serve IQ static-site smoke test (headless browser), v5: one court with a stats panel, plus "By the numbers".
+// Serve IQ static-site smoke test (headless browser), v6: "Call the serve" on the court, a scouting card,
+// and the match model section.
 //
 // Usage:  node scripts/smoke_site.mjs <siteDir> <outDir> [port]
 //
@@ -11,47 +12,41 @@
 // $CHROME_PATH, else the Chrome app path on macOS. The script serves <siteDir> itself on 127.0.0.1
 // (port 0 = any free port), so it never needs another server.
 //
-// What it checks (each line of the JSON summary is one check), against the DOM contract of the v5 site:
+// Expected numbers are computed here from data/serveiq.json and data/match.json with the same rules as
+// js/tool.js (typical-pro lane by league_share, a split when the top two are within 0.03, the scouting-edge
+// gate on 95% ranges, serves needed = z^2 (p1 + p2 - d^2) / d^2), never read from the page.
+//
+// What it checks (each line of the JSON summary is one check):
 //   index.html at 1440x900 and 390x844:
-//     - the page boots (html.data-ready); the default view is the typical pro of the men on 1st serve:
-//       tab [data-key="m"] pressed, #who h2 "Typical pro, men", the first #seg button pressed
-//     - zero console errors, page errors, "Serve IQ:" module warnings and failed requests. The Archivo font
-//       comes from fonts.googleapis.com / fonts.gstatic.com: a failure on those two hosts (no network) is a
-//       warning, not a failure
-//     - no horizontal page scroll; no banned characters, placeholder text (NaN, undefined, n/a, null),
-//       the word "league", he/she pronouns or banned voice words anywhere in the rendered text
-//     - #court svg has 6 lane share labels and 6 serve paths (each with its shade path); once the draw
-//       animation settles every path has stroke-dashoffset 0
-//     - #sides has 2 .side blocks and 6 .row[data-k] with tabindex 0 and an aria-label; each row's share and
-//       points won equal a pooled typical pro computed here from league.directions (sum n over matchups and
-//       both break-point states per gender / serve / side / direction; share = n / side total; win =
-//       n-weighted mean), in whole percents
-//     - the typical pro (men, 1st serve) flags both body rows "Wins least"
-//     - page height: at most 2,000px at 1440, at most 3,400px at 390
+//     - boots (html.data-ready) on Kyrgios, ad side, 1st serve, all points, in the call phase: the first quick
+//       pick pressed, the prompt names Kyrgios and the ad side, #result hidden, the card asks for a call
+//     - the court has 6 serve paths (plus 6 shades); the ad side's 3 share labels show "?", the deuce side's
+//       are empty, and the ad paths are rewound (stroke-dashoffset > 0); 3 lane buttons in court order
+//     - zero console errors, page errors, module warnings and failed requests (font hosts are warnings);
+//       no horizontal scroll; no banned characters, placeholders, "league", pronouns, "predictable",
+//       "repeats", "pattern", "insight" or "you were right" in the rendered text; height under the cap
 //   index.html interaction (1440):
-//     - the Nadal tab loads Rafael Nadal: deuce T and ad wide shares equal mix.data["m|Rafael Nadal|1"]
-//       (51%, 54%), the deuce wide row is .best with "Wins clearly more", the #who photo loads
-//     - hovering or focusing a row adds .hl to it alone and dims the other court paths (opacity 0.18)
-//     - #seg: 2nd serve flips aria-pressed and changes the court labels; 1st serve restores them
-//     - #find: #players datalist has one option per player (headline.players); typing a full name and Enter
-//       loads that player and adds a tab for them; a name that matches nobody shows "No charted player
-//       matches" in #find-msg and keeps the player
-//     - details#sure is closed by default, opens and has text; for a player it lists 6 li
-//     - #numbers: #vs has 4 bars whose values equal |body_in_m1|, |body_win_m1|, |body_in_w1|, |body_win_w1|
-//       (headline coefs, 1 decimal); #clear shows the ring with costly_players_s1 of players and exactly
-//       costly_players_s1 .chip buttons; clicking a chip loads that player on 1st serve, presses the chip
-//       and scrolls #tool into view
-//     - a player with no photo (in players, not in images.json) shows the ball placeholder, no img
+//     - Kyrgios ad, call "Down the middle": the big number, "Your call", "Typical pro's lane" and "Random
+//       guess" equal the data (whole numbers in 100); the scouting-edge line shows the computed edge; the ad
+//       paths draw in (stroke-dashoffset 0); the card opens with the favorite, the range and serves needed
+//     - "Now make it a break point": #seg-sit flips, the big number is the break-point share, and the
+//       break-point line lists exactly the lanes whose change passes its test
+//     - "Call again" goes back to the call phase
+//     - Nadal by search, deuce side: each lane call shows that lane's share; "Best call" appears only off the
+//       favorite; "Same lane as the typical pro" appears (Nadal's deuce favorite is the typical-pro lane)
+//     - Henin quick pick (ad): the typical-pro split note and the averaged bar
+//     - every quick pick passes the scouting-edge gate (computed here)
+//     - clicking a lane on the court itself (not a button) makes the call
+//     - #match: the strip has one item per point in data/match.json, and the claim prints named of served
 //   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to
 //     serve-iq.streamlit.app, every .needs-data part is hidden.
-//   method.html at 1440 and 390: boots, no errors or failed requests (same font rule), no horizontal scroll
-//     (cards closed and all open), no banned characters, 13 details.fcard all closed by default, KaTeX renders
-//     every .fx block with no errors after all cards are opened, opening #credits-fold shows one credits row
-//     per images.json player with a photo, method.html#f7 opens f7 and method.html#credits opens the fold.
-//   Reduced motion (prefers-reduced-motion: reduce), index at 1440 and 390: boots, every path has
-//     stroke-dashoffset 0 at once, switching serve updates the labels in the same task, no errors.
-//   Screenshots go to <outDir>/v5-index-<w>.png (full page), v5-index-<w>-first.png (first screen) and
-//   v5-method-<w>.png (full page).
+//   method.html at 1440 and 390: boots, no errors, no horizontal scroll (cards closed and open), no banned
+//     characters, FORMULA_COUNT details.fcard all closed by default, KaTeX renders every .fx block, the
+//     credits fold lists every photo, method.html#f7 and #credits deep links open.
+//   Reduced motion, index at 1440 and 390: boots; a call reveals the paths at once (stroke-dashoffset 0 in
+//     the same task); no errors.
+//   Screenshots: <outDir>/v6-index-<w>.png (full page), v6-index-<w>-first.png, v6-index-1440-called.png and
+//   v6-method-<w>.png.
 //
 // Prints a JSON summary to stdout and exits 1 if any check fails.
 
@@ -69,7 +64,7 @@ if (!siteDirArg || !outDirArg) {
 const siteDir = path.resolve(siteDirArg);
 const outDir = path.resolve(outDirArg);
 const port = portArg ? Number(portArg) : 0;
-for (const f of ['index.html', 'method.html', 'data/serveiq.json', 'data/images.json']) {
+for (const f of ['index.html', 'method.html', 'data/serveiq.json', 'data/images.json', 'data/match.json']) {
   if (!fs.existsSync(path.join(siteDir, f))) {
     console.error(`no ${f} in ${siteDir}`);
     process.exit(2);
@@ -77,58 +72,68 @@ for (const f of ['index.html', 'method.html', 'data/serveiq.json', 'data/images.
 }
 fs.mkdirSync(outDir, { recursive: true });
 const DATA = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/serveiq.json'), 'utf8'));
+const MATCH = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/match.json'), 'utf8'));
 const IMAGES = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/images.json'), 'utf8'));
 const IMG_PLAYERS = IMAGES.players || {};
 const N_CREDITS = Object.keys(IMG_PLAYERS).filter((k) => IMG_PLAYERS[k] && IMG_PLAYERS[k].src).length;
-const N_PLAYERS = DATA.headline.players;
-const N_HITS = DATA.headline.costly_players_s1;
-const SERVERS = (() => {
-  const f = DATA.players.fields;
-  const si = f.indexOf('server');
-  return DATA.players.rows.map((r) => r[si]);
-})();
-const DEFAULT_H2 = 'Typical pro, men';
-const NADAL = 'Rafael Nadal';
+const FORMULA_COUNT = 14;
 const SIDES = ['deuce', 'ad'];
 const DIRS = ['wide', 'body', 'T'];
-// names: the page shows a display spelling for some players ("John McEnroe" for the data's "John Mcenroe",
-// "Jo-Wilfried Tsonga"), so names are compared by the same key js/data.js nameKey() uses
-const nameKey = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
-  .replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
-const sameName = (a, b) => nameKey(a) === nameKey(b);
-const LIMITS = { 1440: { w: 1440, h: 900, maxHeight: 2000 }, 390: { w: 390, h: 844, maxHeight: 3400 } };
+const LANE = { wide: 'Out wide', body: 'At the body', T: 'Down the middle' };
+const ORDER = { deuce: ['wide', 'body', 'T'], ad: ['T', 'body', 'wide'] };
+const PICKS = [['Nick Kyrgios', 'ad'], ['Justine Henin', 'ad'], ['Pete Sampras', 'ad'], ['Naomi Osaka', 'ad']];
+const NO_CLEAR = 0.03, Z = 1.96, Q = DATA.meta.thresholds.q;
+const LIMITS = { 1440: { w: 1440, h: 900, maxHeight: 2800 }, 390: { w: 390, h: 844, maxHeight: 5000 } };
 // the web font hosts: a failure there (no network) is a warning, not a failed check
 const FONT_HOST = /^https?:\/\/fonts\.(googleapis|gstatic)\.com\//;
-const pct = (x) => Math.round(100 * x);
+const r100 = (x) => Math.round(100 * x);
+const fInt = (x) => new Intl.NumberFormat('en-US').format(Math.round(x));
 
-/* The typical pro, computed here from the data file (not from the page): per side and direction, n = sum of
-   n over every matchup and both is_break_point values; share = n / side total; win = n-weighted mean of win. */
-function pooledTypical(g, serve) {
-  const LD = DATA.league.directions;
-  const F = {};
-  LD.fields.forEach((f, i) => { F[f] = i; });
-  const acc = {};
-  SIDES.forEach((s) => { acc[s] = {}; DIRS.forEach((d) => { acc[s][d] = { n: 0, w: 0, wn: 0 }; }); });
-  for (const r of LD.rows) {
-    if (r[F.gender] !== g || r[F.serve_num] !== serve) continue;
-    const a = acc[r[F.side]] && acc[r[F.side]][r[F.direction]];
-    if (!a || typeof r[F.n] !== 'number') continue;
-    a.n += r[F.n];
-    if (typeof r[F.win] === 'number') { a.w += r[F.n] * r[F.win]; a.wn += r[F.n]; }
-  }
+// ---------- expected values from the data files ----------
+const MF = {}; DATA.mix.fields.forEach((f, i) => { MF[f] = i; });
+const TF = {}; DATA.tests.fields.forEach((f, i) => { TF[f] = i; });
+const genderOf = (name) => {
+  const f = DATA.players.fields;
+  const r = DATA.players.rows.find((x) => x[f.indexOf('server')] === name);
+  return r ? r[f.indexOf('gender')] : null;
+};
+function cells(name, side, sit, serve) {
+  const m = DATA.mix.data[genderOf(name) + '|' + name + '|' + (serve || 1)];
   const out = {};
-  SIDES.forEach((s) => {
-    const tot = DIRS.reduce((t, d) => t + acc[s][d].n, 0);
-    DIRS.forEach((d) => { out[s + d] = { share: pct(acc[s][d].n / tot), win: pct(acc[s][d].w / acc[s][d].wn) }; });
-  });
+  DIRS.forEach((d) => { const a = m[side][sit][d]; out[d] = {}; Object.keys(MF).forEach((k) => { out[d][k] = a[MF[k]]; }); });
   return out;
 }
-// a player's 1st-serve share per side and direction from mix.data (field "share")
-function mixShare(key, side, dir) {
-  const i = DATA.mix.fields.indexOf('share');
-  const m = DATA.mix.data[key];
-  return m && m[side] && m[side].all && m[side].all[dir] ? m[side].all[dir][i] : null;
+function test(name, side, serve) {
+  const t = DATA.tests.data[genderOf(name) + '|' + name + '|' + (serve || 1)][side];
+  const o = {}; Object.keys(TF).forEach((k) => { o[k] = t[TF[k]]; });
+  return o;
 }
+const ranked = (c) => DIRS.filter((d) => typeof c[d].share === 'number').sort((a, b) => c[b].share - c[a].share);
+function favorite(name, side) {
+  const c = cells(name, side, 'all'), r = ranked(c);
+  if (r.length >= 2 && c[r[0]].share - c[r[1]].share < NO_CLEAR) return null;
+  return test(name, side).top_dir;
+}
+function typicalLanes(c) {
+  const r = DIRS.filter((d) => typeof c[d].league_share === 'number').sort((a, b) => c[b].league_share - c[a].league_share);
+  return r.length > 1 && c[r[0]].league_share - c[r[1]].league_share < NO_CLEAR ? [r[0], r[1]] : [r[0]];
+}
+function edge(name, side) {
+  const c = cells(name, side, 'all');
+  const fav = favorite(name, side) || ranked(c)[0];
+  const typ = typicalLanes(c);
+  const base = typ.reduce((t, d) => t + c[d].share, 0) / typ.length;
+  const others = typ.filter((d) => d !== fav);
+  return { fav, typ, base, same: typ.length === 1 && typ[0] === fav,
+    clear: others.length > 0 && others.every((d) => c[fav].share_lo > c[d].share_hi), value: c[fav].share - base };
+}
+function need(name, side) {
+  const c = cells(name, side, 'all'), r = ranked(c), t = test(name, side);
+  const p1 = c[r[0]].share, p2 = c[r[1]].share, d = p1 - p2;
+  const n = (Z * Z * (p1 + p2 - d * d)) / (d * d);
+  return { serves: n, matches: (n * t.matches) / t.n };
+}
+const bpShifts = (name, side) => { const t = test(name, side); return DIRS.filter((d) => typeof t['bp_' + d + '_q'] === 'number' && t['bp_' + d + '_q'] < Q); };
 
 // ---------- load playwright ----------
 const HARNESS_DIRS = [
@@ -217,15 +222,13 @@ async function newPage(browser, opts) {
   return { ctx, page, log };
 }
 
-// index: data bound, the stats panel and the court drawn, and "By the numbers" built (numbers.js runs after tool.js)
+// index: data bound, the quick picks built and the call prompt written
 async function waitForIndex(page) {
   await page.waitForFunction(() => document.documentElement.classList.contains('data-ready') ||
     document.documentElement.classList.contains('no-data'), null, { timeout: 20000 }).catch(() => {});
-  await page.waitForFunction(() => {
-    const h = document.querySelector('#who h2');
-    return h && h.textContent.trim() && document.querySelectorAll('#sides .row[data-k]').length === 6 &&
-      document.querySelectorAll('#court path').length > 0 && document.querySelectorAll('#clear .chip').length > 0;
-  }, null, { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => document.querySelectorAll('#picks .pick').length > 0 &&
+    (document.getElementById('prompt')?.textContent || '').trim() && document.querySelectorAll('#court path').length > 0 &&
+    document.querySelectorAll('#match .pt').length > 0, null, { timeout: 15000 }).catch(() => {});
 }
 // the draw animation is done when every court path has stroke-dashoffset 0
 const pathsSettled = () => {
@@ -273,6 +276,8 @@ const INDEX_BANNED = [
   [/\bleague\b/gi, '"league" (say "typical pro")'],
   [/\b(he|she|him|her|his|hers|himself|herself)\b/gi, 'he/she pronoun'],
   [/\b(insights?|patterns?|under the hood|dive)\b/gi, 'banned voice word'],
+  [/\b(predictable|predictability|repeats?)\b/gi, '"predictable"/"repeats" (servers over-alternate: say "lopsided")'],
+  [/\byou were (right|wrong)\b/gi, '"you were right" (returners were never observed)'],
 ];
 const PLACEHOLDER = [[/\bNaN\b/g, 'NaN'], [/\bundefined\b/g, 'undefined'], [/\bn\/a\b/g, 'n/a'], [/\[object /g, '[object'], [/\bnull\b/g, 'null'], [/\bInfinity\b/g, 'Infinity']];
 function hits(txt, list) {
@@ -303,18 +308,40 @@ async function overflow(page) {
   }));
 }
 
-// the six lane share labels on the court (the 19px numbers above the far service line)
-const courtLabels = (page) => page.evaluate(() => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()));
-const segPressed = (page) => page.evaluate(() => [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')));
-const whoNow = (page) => page.evaluate(() => (document.querySelector('#who h2')?.textContent || '').replace(/\s+/g, ' ').trim());
-// rows as { k, share, win } in whole percents (null when not a number), plus class and flag
-const rowsNow = (page) => page.evaluate(() => [...document.querySelectorAll('#sides .row[data-k]')].map((r) => {
-  const num = (s) => { const m = /^(\d+)%$/.exec((s || '').replace(/\s+/g, '')); return m ? Number(m[1]) : null; };
-  return { k: r.getAttribute('data-k'), share: num(r.querySelector('.v')?.textContent), win: num(r.querySelector('.won')?.textContent),
-    cls: r.className, flag: (r.querySelector('.flag')?.textContent || '').trim(), tab: r.getAttribute('tabindex'), label: r.getAttribute('aria-label') || '' };
-}));
+// ---------- page readers ----------
+const state = (page) => page.evaluate(() => {
+  const txt = (s) => (document.querySelector(s)?.textContent || '').replace(/\s+/g, ' ').trim();
+  const r = document.getElementById('result');
+  const bars = {};
+  document.querySelectorAll('#result .rb').forEach((b) => { bars[b.querySelector('.rl').textContent.trim()] = Number(b.querySelector('.rv').textContent.trim()); });
+  return {
+    prompt: txt('#prompt'),
+    resultShown: !!r && !r.hidden && r.getClientRects().length > 0,
+    big: Number(txt('#result .big b')),
+    lead: txt('#result .lead'),
+    lines: [...document.querySelectorAll('#result .line, #result .note')].map((p) => p.textContent.replace(/\s+/g, ' ').trim()),
+    bars,
+    card: (document.getElementById('card')?.innerText || '').replace(/\s+/g, ' ').trim(),
+    picks: [...document.querySelectorAll('#picks .pick')].map((b) => [b.getAttribute('data-key'), b.getAttribute('aria-pressed')]),
+    side: [...document.querySelectorAll('#seg-side button')].map((b) => b.getAttribute('aria-pressed')).join(),
+    sit: [...document.querySelectorAll('#seg-sit button')].map((b) => b.getAttribute('aria-pressed')).join(),
+    lanebtns: [...document.querySelectorAll('#lanebtns .lanebtn')].map((b) => b.textContent.trim()),
+    labels: [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()),
+  };
+});
+// path dash offsets per lane key, in court.js creation order (deuce wide, body, T, ad wide, body, T; path then shade)
+const offsets = (page) => page.evaluate(() => [...document.querySelectorAll('#court g[fill="none"] path')].map((p) => parseFloat(getComputedStyle(p).strokeDashoffset)));
+const settled = (page, side) => page.waitForFunction((s) => {
+  const ps = [...document.querySelectorAll('#court g[fill="none"] path')];
+  const mine = s === 'deuce' ? ps.slice(0, 6) : ps.slice(6, 12);
+  return mine.length === 6 && mine.every((p) => parseFloat(getComputedStyle(p).strokeDashoffset) === 0);
+}, side, { timeout: 8000 }).then(() => true).catch(() => false);
+const callLane = async (page, dir) => {
+  await page.locator(`#lanebtns .lanebtn[data-dir="${dir}"]`).click();
+  await page.waitForFunction(() => { const r = document.getElementById('result'); return r && !r.hidden; }, null, { timeout: 3000 }).catch(() => {});
+};
+const act = async (page, a) => { await page.locator(`#result button[data-act="${a}"]`).click(); await page.waitForTimeout(80); };
 
-// type into #find the way a person does (input events per key), then Enter
 async function findPlayer(page, text) {
   const inp = page.locator('#find');
   await inp.scrollIntoViewIfNeeded();
@@ -322,29 +349,17 @@ async function findPlayer(page, text) {
   await inp.fill('');
   await inp.pressSequentially(text, { delay: 8 });
   await inp.press('Enter');
+  await page.waitForFunction((t) => (document.getElementById('prompt')?.textContent || '').includes(t.split(' ').pop()), text, { timeout: 5000 }).catch(() => {});
 }
-const waitWho = (page, name) => page.waitForFunction((n) => {
-  const h = document.querySelector('#who h2');
-  return h && h.textContent.trim() === n;
-}, name, { timeout: 5000 }).then(() => true).catch(() => false);
 
 // ---------- main ----------
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}/`;
 const { browser, browserName } = await launchBrowser();
 const runs = [];
-const TYP_M1 = pooledTypical('m', 1);
 
 try {
-  // warm-up: one throwaway load so the first measured run is not a cold start
-  {
-    const { ctx, page } = await newPage(browser, { w: 1440, h: 900 });
-    await page.goto(base, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
-    await waitForIndex(page);
-    await ctx.close();
-  }
-
-  // ---------- index.html at both widths ----------
+  // ---------- index at both widths: the first screen ----------
   for (const w of [1440, 390]) {
     const L = LIMITS[w];
     const tag = `index-${w}`;
@@ -353,231 +368,129 @@ try {
     let gotoErr = null;
     await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
     await waitForIndex(page);
+    await page.waitForTimeout(400);
     const ready = await page.evaluate(() => document.documentElement.classList.contains('data-ready'));
     check(`${tag}: page boots and binds the data`, !gotoErr && ready, gotoErr || { ready });
-    const def = await page.evaluate(() => ({
-      tab: document.querySelector('#tabs [data-key="m"]')?.getAttribute('aria-pressed') || null,
-      others: [...document.querySelectorAll('#tabs .tab:not([data-key="m"])')].filter((b) => b.getAttribute('aria-pressed') === 'true').length,
-    }));
-    const who = await whoNow(page);
-    const pr = await segPressed(page);
-    check(`${tag}: default view is the typical pro of the men on 1st serve`,
-      def.tab === 'true' && def.others === 0 && who === DEFAULT_H2 && pr.join() === 'true,false', { ...def, who, seg: pr });
-
-    // court
-    const settled = await waitForPaths(page);
-    const court = await page.evaluate(() => {
-      const ps = [...document.querySelectorAll('#court path')];
-      return { labels: [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()),
-        paths: ps.length, serve: ps.filter((p) => p.getAttribute('opacity') === '0.95').length,
-        offsets: ps.map((p) => getComputedStyle(p).strokeDashoffset) };
-    });
-    check(`${tag}: #court svg has 6 lane share labels and 6 serve paths (plus 6 shade paths)`,
-      court.labels.length === 6 && court.labels.every((l) => /^\d+%$/.test(l)) && court.serve === 6 && court.paths === 12, { labels: court.labels, serve: court.serve, paths: court.paths });
-    check(`${tag}: after the draw animation every court path has stroke-dashoffset 0`, settled, court.offsets);
-
-    // stats panel against the pooled typical pro
-    const rows = await rowsNow(page);
-    const sides = await page.locator('#sides .side').count();
-    check(`${tag}: #sides has 2 .side blocks and 6 .row[data-k] with tabindex 0 and an aria-label`,
-      sides === 2 && rows.length === 6 && new Set(rows.map((r) => r.k)).size === 6 && rows.every((r) => r.tab === '0' && r.label.length > 10),
-      { sides, rows: rows.map((r) => `${r.k} tab=${r.tab} label=${r.label.length}`) });
-    const mism = rows.filter((r) => !TYP_M1[r.k] || r.share !== TYP_M1[r.k].share || r.win !== TYP_M1[r.k].win)
-      .map((r) => ({ k: r.k, page: [r.share, r.win], data: TYP_M1[r.k] ? [TYP_M1[r.k].share, TYP_M1[r.k].win] : null }));
-    check(`${tag}: typical-pro rows match the pooled league.directions computation (share, points won, whole %)`,
-      rows.length === 6 && mism.length === 0, mism.length ? mism : rows.map((r) => `${r.k} ${r.share}/${r.win}`));
-    const least = rows.filter((r) => /\bworst\b/.test(r.cls) || r.flag);
-    check(`${tag}: the typical pro (men, 1st serve) flags both body rows "Wins least" and nothing else`,
-      least.length === 2 && least.every((r) => /body$/.test(r.k) && /\bworst\b/.test(r.cls) && r.flag === 'Wins least'), least);
-
-    // first screen
-    await page.screenshot({ path: path.join(outDir, `v5-${tag}-first.png`), fullPage: false });
-
-    // whole-page checks
+    await page.screenshot({ path: path.join(outDir, `v6-${tag}-first.png`), fullPage: false });
+    const st = await state(page);
+    check(`${tag}: boots on Kyrgios, ad side, 1st serve, all points, call phase`,
+      st.picks.length === PICKS.length && st.picks[0][0] === 'Nick Kyrgios|ad' && st.picks[0][1] === 'true' && st.side === 'false,true' &&
+      st.sit === 'true,false' && /^Kyrgios serves from the ad side\. Tap where the first serve goes/.test(st.prompt) && !st.resultShown &&
+      /Make your call/.test(st.card), st);
+    const offs = await offsets(page);
+    check(`${tag}: 6 serve paths plus shades; ad labels "?", deuce labels empty; ad paths rewound`,
+      offs.length === 12 && st.labels.join('|') === '|||?|?|?' && offs.slice(6).every((o) => o > 0), { labels: st.labels, offs });
+    check(`${tag}: three lane buttons in court order for the ad side`, st.lanebtns.join('|') === ORDER.ad.map((d) => LANE[d]).join('|'), st.lanebtns);
     const ov = await overflow(page);
     check(`${tag}: no horizontal page scroll`, ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0, ov);
+    // reveal once so the scan covers the result and the card too
+    await callLane(page, 'T');
+    await settled(page, 'ad');
     const scan = await scanText(page);
     check(`${tag}: no banned characters or terms`, hits(scan, BANNED).length === 0, hits(scan, BANNED));
-    check(`${tag}: no "league", he/she or banned voice words in the rendered page`, hits(scan, INDEX_BANNED).length === 0, hits(scan, INDEX_BANNED));
-    const visible = await page.evaluate(() => document.body.innerText + '\n' + [...document.querySelectorAll('svg text')].map((t) => t.textContent).join(' '));
+    check(`${tag}: no "league", pronouns, "predictable", "repeats" or other banned voice words`, hits(scan, INDEX_BANNED).length === 0, hits(scan, INDEX_BANNED));
+    const visible = await page.evaluate(() => document.body.innerText);
     check(`${tag}: no placeholder text (NaN, undefined, n/a, null)`, hits(visible, PLACEHOLDER).length === 0, hits(visible, PLACEHOLDER));
+    const ov2 = await overflow(page);
+    check(`${tag}: no horizontal page scroll after a call`, ov2.scrollWidth <= Math.min(ov2.innerWidth, w) && ov2.wideEls.length === 0, ov2);
     const height = await page.evaluate(() => document.documentElement.scrollHeight);
     check(`${tag}: page height at most ${L.maxHeight.toLocaleString('en-US')}px`, height <= L.maxHeight, { height });
-
-    // full page: scroll through once so "By the numbers" fills, then back to the top
-    await page.locator('#numbers').scrollIntoViewIfNeeded();
-    await page.waitForFunction(() => [...document.querySelectorAll('#vs [data-w]')].every((b) => b.style.width), null, { timeout: 3000 }).catch(() => {});
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({ path: path.join(outDir, `v5-${tag}.png`), fullPage: true });
-
+    await page.screenshot({ path: path.join(outDir, `v6-${tag}.png`), fullPage: true });
     check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
     check(`${tag}: no failed requests (font hosts are warnings)`, log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag, height, labels: court.labels });
+    runs.push({ tag, height });
     await ctx.close();
   }
 
-  // ---------- index interaction (1440) ----------
-  tagNow = 'interaction';
+  // ---------- interaction (1440) ----------
   {
+    const tag = 'interact';
+    tagNow = tag;
     const { ctx, page, log } = await newPage(browser, { w: 1440, h: 900 });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await waitForIndex(page);
-    const out = {};
 
-    // details#sure for the typical pro: closed, opens, has text
-    const sure0 = await page.evaluate(() => { const d = document.querySelector('details#sure'); return d ? d.open : null; });
-    await page.locator('details#sure > summary').click();
-    await page.waitForFunction(() => document.querySelector('details#sure').open, null, { timeout: 2000 }).catch(() => {});
-    const sureT = await page.evaluate(() => { const d = document.querySelector('details#sure'); return { open: d.open, text: d.querySelector('#sure-body').innerText.trim() }; });
-    await page.locator('details#sure > summary').click();
+    // Kyrgios ad, call down the middle
+    const K = 'Nick Kyrgios';
+    const kc = cells(K, 'ad', 'all'), ke = edge(K, 'ad'), kn = need(K, 'ad');
+    await callLane(page, 'T');
+    const drawn = await settled(page, 'ad');
+    let st = await state(page);
+    await page.screenshot({ path: path.join(outDir, 'v6-index-1440-called.png'), fullPage: false });
+    const want = { big: r100(kc.T.share), you: r100(kc.T.share), typ: r100(ke.base), rnd: 33 };
+    check(`${tag}: Kyrgios ad, down the middle: big number and bars equal the data (${JSON.stringify(want)})`,
+      st.resultShown && st.big === want.big && st.bars['Your call'] === want.you && st.bars["Typical pro's lane"] === want.typ && st.bars['Random guess'] === 33,
+      { got: { big: st.big, bars: st.bars }, want });
+    check(`${tag}: Kyrgios ad: the scouting-edge line shows ${r100(ke.value)} (gate passes: ${ke.clear})`,
+      ke.clear && st.lines.some((l) => l === `Scouting edge: ${r100(ke.value)} more in 100 than guessing like the typical pro.`), st.lines);
+    check(`${tag}: the ad paths draw in (stroke-dashoffset 0) and the labels show shares`, drawn && st.labels.slice(3).every((x) => /^\d+%$/.test(x)), st.labels);
+    check(`${tag}: the card opens with the favorite, the range and serves needed (about ${fInt(kn.serves)})`,
+      /Scouting card, ad side/.test(st.card) && /Leans Down the middle, \d+ in 100/.test(st.card) &&
+      st.card.includes(`Likely range ${r100(kc.T.share_lo)} to ${r100(kc.T.share_hi)} in 100`) && st.card.includes(`About ${fInt(kn.serves)} charted serves from this side, about ${fInt(kn.matches)} matches`), st.card);
 
-    // tabs: Nadal
-    await page.locator('#tabs [data-key="Rafael Nadal"]').click();
-    const nadalOk = await waitWho(page, NADAL);
-    await page.waitForFunction(() => { const i = document.querySelector('#who img'); return i && i.complete; }, null, { timeout: 5000 }).catch(() => {});
-    const nadal = await rowsNow(page);
-    const img = await page.evaluate(() => { const i = document.querySelector('#who img'); return i ? { ok: i.complete && i.naturalWidth > 0, src: i.getAttribute('src') } : null; });
-    const tabPressed = await page.evaluate(() => document.querySelector('#tabs [data-key="Rafael Nadal"]').getAttribute('aria-pressed'));
-    const k1 = 'm|Rafael Nadal|1';
-    const want = { deuceT: pct(mixShare(k1, 'deuce', 'T')), adwide: pct(mixShare(k1, 'ad', 'wide')) };
-    const got = Object.fromEntries(nadal.map((r) => [r.k, r]));
-    check('interact: the Nadal tab loads Rafael Nadal (tab pressed, #who h2)', nadalOk && tabPressed === 'true', { who: await whoNow(page), tabPressed });
-    check(`interact: Nadal's deuce T row says ${want.deuceT}% and ad wide ${want.adwide}% (mix.data share; spec: 51%, 54%)`,
-      want.deuceT === 51 && want.adwide === 54 && got.deuceT?.share === want.deuceT && got.adwide?.share === want.adwide,
-      { want, page: { deuceT: got.deuceT?.share, adwide: got.adwide?.share } });
-    check('interact: Nadal\'s deuce wide row is .best with a "Wins clearly more" flag',
-      /\bbest\b/.test(got.deucewide?.cls || '') && got.deucewide?.flag === 'Wins clearly more', got.deucewide);
-    check('interact: Nadal\'s photo in #who loads', img && img.ok, img);
+    // break points
+    await act(page, 'sit');
+    st = await state(page);
+    const kbp = cells(K, 'ad', 'bp'), ksh = bpShifts(K, 'ad');
+    check(`${tag}: "Now make it a break point" flips #seg-sit and shows the break-point share (${r100(kbp.T.share)})`,
+      st.sit === 'false,true' && st.big === r100(kbp.T.share) && /^Break point\./.test(st.prompt), { sit: st.sit, big: st.big, prompt: st.prompt });
+    const bpLine = st.lines.find((l) => /^On break points:/.test(l)) || '';
+    check(`${tag}: the break-point line lists exactly the lanes whose change passes its test (${ksh.join(', ')})`,
+      ksh.length > 0 && ksh.every((d) => bpLine.includes(LANE[d].toLowerCase())) && DIRS.filter((d) => !ksh.includes(d)).every((d) => !bpLine.includes(LANE[d].toLowerCase())), bpLine);
+    await act(page, 'sit');
+    await act(page, 'again');
+    st = await state(page);
+    check(`${tag}: "Call again" returns to the call phase`, !st.resultShown && st.labels.slice(3).every((x) => x === '?') && /Make your call/.test(st.card), st);
 
-    // hover / focus a row: .hl on that row alone, the other court paths dimmed to 0.18
-    const hlState = (k) => page.evaluate((key) => {
-      const SIDES = ['deuce', 'ad'], DIRS = ['wide', 'body', 'T'];
-      const i = SIDES.indexOf(key.startsWith('deuce') ? 'deuce' : 'ad') * 3 + DIRS.indexOf(key.replace(/^(deuce|ad)/, ''));
-      const ps = [...document.querySelectorAll('#court path')];
-      const op = ps.map((p) => getComputedStyle(p).opacity);
-      // paths come in (shade, path) pairs in SIDES x DIRS order
-      return { hl: [...document.querySelectorAll('#sides .row.hl')].map((r) => r.getAttribute('data-k')),
-        lit: op.every((o, j) => (Math.floor(j / 2) === i ? o === '1' : o === '0.18')), op };
-    }, k);
-    await page.locator('#sides .row[data-k="deuceT"]').hover();
-    const hov = await hlState('deuceT');
-    await page.mouse.move(5, 5);
-    await page.locator('#sides .row[data-k="adbody"]').focus();
-    const foc = await hlState('adbody');
-    await page.evaluate(() => document.activeElement && document.activeElement.blur());
-    const off = await page.evaluate(() => ({ hl: document.querySelectorAll('#sides .row.hl').length,
-      op: [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).opacity) }));
-    check('interact: hovering a row adds .hl to it and dims the other court paths to 0.18', hov.hl.join() === 'deuceT' && hov.lit, hov);
-    check('interact: focusing a row adds .hl to it and dims the other court paths to 0.18', foc.hl.join() === 'adbody' && foc.lit, foc);
-    check('interact: leaving the row clears .hl and the dimming', off.hl === 0 && off.op.every((o) => o === '1'), off);
+    // Nadal by search, deuce side
+    const N = 'Rafael Nadal';
+    await findPlayer(page, N);
+    await page.locator('#seg-side button[data-side="deuce"]').click();
+    const nc = cells(N, 'deuce', 'all'), nfav = favorite(N, 'deuce'), ne = edge(N, 'deuce');
+    const per = {};
+    for (const d of DIRS) {
+      await callLane(page, d);
+      st = await state(page);
+      per[d] = { big: st.big, want: r100(nc[d].share), best: st.lines.some((l) => /^Best call:/.test(l)), same: st.lines.some((l) => /^Same lane as the typical pro/.test(l)) };
+      await act(page, 'again');
+    }
+    check(`${tag}: Nadal deuce: each lane call shows that lane's share`, DIRS.every((d) => per[d].big === per[d].want), per);
+    check(`${tag}: Nadal deuce: "Best call" only off the favorite (${nfav})`, DIRS.every((d) => per[d].best === (d !== nfav)), per);
+    check(`${tag}: Nadal deuce: "Same lane as the typical pro" (computed: ${ne.same})`, ne.same && DIRS.every((d) => per[d].same), per);
 
-    // #seg: 2nd serve and back
-    const before = await courtLabels(page);
-    const p0 = await segPressed(page);
-    await page.locator('#seg button[data-serve="2"]').click();
-    await page.waitForFunction((b) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() !== b,
-      before.join(), { timeout: 3000 }).catch(() => {});
-    const after = await courtLabels(page);
-    const p1 = await segPressed(page);
-    check('interact: #seg 2nd serve flips aria-pressed', p0.join() === 'true,false' && p1.join() === 'false,true', { before: p0, after: p1 });
-    check('interact: 2nd serve changes the court labels', before.length === 6 && after.length === 6 && before.join() !== after.join() &&
-      after.every((s) => /^\d+%$/.test(s)), { before, after });
-    await page.locator('#seg button[data-serve="1"]').click();
-    await page.waitForFunction((b) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() === b,
-      before.join(), { timeout: 3000 }).catch(() => {});
-    const back = await courtLabels(page);
-    check('interact: back to 1st serve restores the court labels and aria-pressed', back.join() === before.join() && (await segPressed(page)).join() === 'true,false', { before, back });
+    // Henin ad: typical pro splits
+    const H = 'Justine Henin', he = edge(H, 'ad');
+    await page.locator('#picks .pick[data-name="Justine Henin"]').click();
+    await callLane(page, 'T');
+    st = await state(page);
+    check(`${tag}: Henin ad: typical-pro split note and the averaged bar (${r100(he.base)}, split ${he.typ.join('/')})`,
+      he.typ.length === 2 && st.lines.some((l) => /^The typical pro splits between/.test(l)) && st.bars["Typical pro's lanes"] === r100(he.base), { lines: st.lines, bars: st.bars });
 
-    // details#sure for a player
-    await page.locator('details#sure > summary').click();
-    await page.waitForFunction(() => document.querySelector('details#sure').open, null, { timeout: 2000 }).catch(() => {});
-    const sureP = await page.evaluate(() => { const d = document.querySelector('details#sure'); return { open: d.open, li: d.querySelectorAll('li').length, text: d.innerText }; });
-    await page.locator('details#sure > summary').click();
-    check('interact: details#sure is closed by default, opens and has text; for a player it lists 6 li',
-      sure0 === false && sureT.open && sureT.text.length > 40 && sureP.open && sureP.li === 6,
-      { closedByDefault: sure0 === false, typicalOpen: sureT.open, typicalText: sureT.text.length, playerOpen: sureP.open, li: sureP.li });
-    check('interact: "How sure are we?" text has no "league", placeholder or banned text',
-      hits(sureT.text + '\n' + sureP.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]).length === 0, hits(sureT.text + '\n' + sureP.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]));
+    // every quick pick passes the gate
+    const gates = PICKS.map(([n, s]) => ({ n, s, ...edge(n, s) }));
+    check(`${tag}: every quick pick passes the scouting-edge gate`, gates.every((g) => g.clear && g.value > 0), gates.map((g) => [g.n, g.s, g.clear, r100(g.value)]));
 
-    // #find
-    const opts = await page.evaluate(() => {
-      const i = document.getElementById('find');
-      const l = document.getElementById('players');
-      return { list: i && i.getAttribute('list'), tag: l && l.tagName, n: l ? l.querySelectorAll('option').length : 0,
-        values: l ? [...l.querySelectorAll('option')].map((o) => o.value) : [] };
+    // a click on the court lane itself makes the call
+    await act(page, 'again');
+    const hit = await page.evaluate(() => {
+      const on = [...document.querySelectorAll('#court .lane-hit.on')];
+      const r = on[0] && on[0].getBoundingClientRect();
+      return { n: on.length, x: r ? r.left + r.width / 2 : 0, y: r ? r.top + r.height * 0.7 : 0 };
     });
-    const optKeys = new Set(opts.values.map(nameKey));
-    check(`interact: #players datalist has one option per player (${N_PLAYERS}) and #find uses it`,
-      opts.list === 'players' && opts.tag === 'DATALIST' && opts.n === N_PLAYERS && SERVERS.length === N_PLAYERS && SERVERS.every((s) => optKeys.has(nameKey(s))),
-      { list: opts.list, tag: opts.tag, n: opts.n, missing: SERVERS.filter((s) => !optKeys.has(nameKey(s))).slice(0, 5) });
-    const TABS = ['Rafael Nadal', 'Novak Djokovic', 'Aryna Sabalenka', 'Iga Swiatek'];
-    const typed = SERVERS.includes('Roger Federer') ? 'Roger Federer' : SERVERS.find((s) => !TABS.includes(s));
-    await findPlayer(page, typed);
-    const typedOk = await waitWho(page, typed);
-    const typedTab = await page.evaluate((n) => { const b = document.querySelector('#tabs .tab[data-key="' + CSS.escape(n) + '"]'); return b ? b.getAttribute('aria-pressed') : null; }, typed);
-    check(`interact: typing "${typed}" + Enter in #find loads that player and adds a pressed tab for them`, typedOk && typedTab === 'true', { who: await whoNow(page), tab: typedTab });
-    await findPlayer(page, 'Zzqx');
-    await page.waitForFunction(() => /No charted player matches/.test(document.getElementById('find-msg').textContent), null, { timeout: 2000 }).catch(() => {});
-    const miss = await page.evaluate(() => ({ msg: document.getElementById('find-msg').textContent.trim(), who: document.querySelector('#who h2').textContent.trim() }));
-    check('interact: a name that matches nobody shows "No charted player matches" in #find-msg and keeps the player',
-      /^No charted player matches/.test(miss.msg) && miss.who === typed, miss);
-    await page.locator('#find').press('Escape');
+    await page.mouse.click(hit.x, hit.y);
+    await page.waitForTimeout(150);
+    st = await state(page);
+    check(`${tag}: clicking a lane on the court makes the call`, hit.n === 3 && st.resultShown, { hit, shown: st.resultShown });
 
-    // a player with no photo shows the ball placeholder
-    const noPhoto = SERVERS.find((s) => !IMG_PLAYERS[s]);
-    if (noPhoto) {
-      await findPlayer(page, noPhoto);
-      await page.waitForFunction((n) => { const h = document.querySelector('#who h2'); return h && h.textContent.trim() !== n; }, typed, { timeout: 5000 }).catch(() => {});
-      const ph = await page.evaluate(() => ({ who: document.querySelector('#who h2').textContent.trim(), img: !!document.querySelector('#who img'), ball: !!document.querySelector('#who .ball svg') }));
-      check(`interact: a player with no photo (${noPhoto}) shows the ball placeholder instead of an img`, sameName(ph.who, noPhoto) && !ph.img && ph.ball, ph);
-    } else {
-      check('interact: a player with no photo shows the ball placeholder', false, 'every player has a photo; nothing to test');
-    }
+    // match model section
+    const mt = MATCH.totals;
+    const mm = await page.evaluate(() => ({ pts: document.querySelectorAll('#match .pt').length, claim: (document.querySelector('#match .claim')?.textContent || '').replace(/\s+/g, ' ') }));
+    check(`${tag}: #match strip has ${MATCH.points.length} points and the claim prints ${mt.named} of ${mt.served}`,
+      mm.pts === MATCH.points.length && mm.claim.includes(`${mt.named} of ${mt.served}`) && mm.claim.includes(`${mt.winners} of ${mt.points}`) &&
+      mm.claim.includes(`about ${fInt(MATCH.need.serves_per_match)} first serves`) && mm.claim.includes(`about ${fInt(MATCH.need.serves_q[1])}`), mm);
 
-    // #numbers: #vs bars
-    const vs = await page.evaluate(() => [...document.querySelectorAll('#vs .vs-row')].map((r) => ({
-      val: (r.querySelector('.val')?.textContent || '').trim(), bar: !!r.querySelector('b[data-w]') })));
-    const H = DATA.headline;
-    const wantVs = ['body_in_m1', 'body_win_m1', 'body_in_w1', 'body_win_w1'].map((k) => Math.abs(H[k].coef).toFixed(1));
-    check(`interact: #vs shows 4 bars whose values equal |body_in_m1|, |body_win_m1|, |body_in_w1|, |body_win_w1| (${wantVs.join(', ')})`,
-      vs.length === 4 && vs.every((r, i) => r.bar && r.val.split(' ')[0] === wantVs[i]), { page: vs.map((r) => r.val), want: wantVs });
-
-    // #numbers: #clear ring and chips
-    const ring = await page.evaluate(() => ({ big: document.querySelector('#clear .ring .big')?.textContent.trim(),
-      of: document.querySelector('#clear .ring .of')?.textContent.trim(), circle: !!document.querySelector('#clear .ring .ring-fill'),
-      chips: [...document.querySelectorAll('#clear .chip')].map((c) => ({ tag: c.tagName, name: c.getAttribute('data-name') })) }));
-    check(`interact: #clear ring shows ${N_HITS} of ${N_PLAYERS} (headline.costly_players_s1, players)`,
-      ring.circle && ring.big === String(N_HITS) && ring.of === `of ${N_PLAYERS}`, { big: ring.big, of: ring.of, circle: ring.circle });
-    check(`interact: #clear has exactly ${N_HITS} .chip buttons, each a charted player`,
-      ring.chips.length === N_HITS && ring.chips.every((c) => c.tag === 'BUTTON' && SERVERS.includes(c.name)), { chips: ring.chips.length });
-    const chipName = (ring.chips.find((c) => c.name !== NADAL && c.name !== typed) || ring.chips[0] || {}).name;
-    if (chipName) {
-      // start from 2nd serve, so the click must also switch back to 1st
-      await page.locator('#seg button[data-serve="2"]').click();
-      await page.waitForFunction(() => document.querySelector('#seg button[data-serve="2"]').getAttribute('aria-pressed') === 'true', null, { timeout: 2000 }).catch(() => {});
-      const chip = page.locator(`#clear .chip[data-name="${chipName}"]`);
-      await chip.scrollIntoViewIfNeeded();
-      await chip.click();
-      // smooth scroll: wait until #tool's top has reached the top part of the screen
-      await page.waitForFunction(() => { const r = document.getElementById('tool').getBoundingClientRect(); return r.top >= -2 && r.top < 120; }, null, { timeout: 5000 }).catch(() => {});
-      const clicked = await page.evaluate((n) => {
-        const r = document.getElementById('tool').getBoundingClientRect();
-        return { who: document.querySelector('#who h2').textContent.trim(), seg: [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')).join(),
-          chip: document.querySelector('#clear .chip[data-name="' + CSS.escape(n) + '"]').getAttribute('aria-pressed'),
-          otherChips: [...document.querySelectorAll('#clear .chip[aria-pressed="true"]')].length,
-          toolTop: Math.round(r.top), toolBottom: Math.round(r.bottom), vh: window.innerHeight };
-      }, chipName);
-      check(`interact: clicking the ${chipName} chip loads that player on 1st serve, presses the chip and scrolls #tool into view`,
-        sameName(clicked.who, chipName) && clicked.seg === 'true,false' && clicked.chip === 'true' && clicked.otherChips === 1 &&
-        clicked.toolTop >= -2 && clicked.toolTop < 120 && clicked.toolBottom > 0, clicked);
-      out.chip = { name: chipName, ...clicked };
-    } else {
-      check('interact: clicking a chip loads that player', false, 'no chips');
-    }
-
-    check('interact: no console errors, page errors or module warnings', errorsOf(log).length === 0, errorsOf(log));
-    check('interact: no failed requests (font hosts are warnings)', log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag: 'interaction', typed, noPhoto, vs: vs.map((r) => r.val), ring: { big: ring.big, of: ring.of, chips: ring.chips.length }, ...out });
+    check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
     await ctx.close();
   }
 
@@ -615,7 +528,7 @@ try {
     const ready = await page.evaluate(() => document.documentElement.classList.contains('data-ready'));
     check(`${tag}: page boots and binds the data`, !gotoErr && ready, gotoErr || { ready });
     const cards = await page.evaluate(() => [...document.querySelectorAll('details.fcard')].map((d) => ({ id: d.id, open: d.open })));
-    check(`${tag}: 13 details.fcard, all closed by default`, cards.length === 13 && cards.every((c) => !c.open), cards.filter((c) => c.open).map((c) => c.id).concat([`count=${cards.length}`]));
+    check(`${tag}: ${FORMULA_COUNT} details.fcard, all closed by default`, cards.length === FORMULA_COUNT && cards.every((c) => !c.open), cards.filter((c) => c.open).map((c) => c.id).concat([`count=${cards.length}`]));
     const ov0 = await overflow(page);
     const scan = await scanText(page);
 
@@ -626,8 +539,8 @@ try {
       return { fx: all.length, katex: all.filter((b) => b.querySelector('.katex') && b.getClientRects().length > 0 && b.getBoundingClientRect().height > 0).length,
         errors: document.querySelectorAll('.katex-error, .tex-raw').length, open: document.querySelectorAll('details.fcard[open]').length };
     });
-    check(`${tag}: after opening all 13 cards KaTeX renders every .fx block (${fx.fx}) with no errors`,
-      fx.open === 13 && fx.fx >= 14 && fx.katex === fx.fx && fx.errors === 0, fx);
+    check(`${tag}: after opening all ${FORMULA_COUNT} cards KaTeX renders every .fx block (${fx.fx}) with no errors`,
+      fx.open === FORMULA_COUNT && fx.fx >= FORMULA_COUNT + 1 && fx.katex === fx.fx && fx.errors === 0, fx);
     const ov1 = await overflow(page);
     check(`${tag}: no horizontal page scroll (cards closed and all open)`,
       [ov0, ov1].every((ov) => ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0), { closed: ov0, open: ov1 });
@@ -643,7 +556,7 @@ try {
       fold0 === false && credits.open && credits.rows === N_CREDITS, { closedByDefault: fold0 === false, ...credits });
 
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({ path: path.join(outDir, `v5-${tag}.png`), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, `v6-${tag}.png`), fullPage: true });
 
     // deep links: #f7 opens formula 7, #credits opens the credits fold (fresh loads)
     const deep = {};
@@ -672,25 +585,15 @@ try {
     const { ctx, page, log } = await newPage(browser, { w: L.w, h: L.h, reduce: true });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await waitForIndex(page);
-    const who = await whoNow(page);
-    // read in the same task as the boot check: no waiting for an animation
-    const at0 = await page.evaluate(() => [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).strokeDashoffset));
-    check(`${tag}: page boots (typical pro, men) under prefers-reduced-motion`, who === DEFAULT_H2, { who });
-    check(`${tag}: every court path has stroke-dashoffset 0 at once`, at0.length === 12 && at0.every((o) => parseFloat(o) === 0), at0);
-    // click and read the labels in one evaluate: they must already be final
-    const sw = await page.evaluate(() => {
-      const lab = () => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim());
-      const before = lab();
-      document.querySelector('#seg button[data-serve="2"]').click();
-      const soon = lab();
-      const offs = [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).strokeDashoffset);
-      return { before, soon, offs, seg: [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')).join() };
+    const st = await state(page);
+    check(`${tag}: page boots (Kyrgios, ad side) under prefers-reduced-motion`, /^Kyrgios serves from the ad side/.test(st.prompt), st.prompt);
+    // click and read the paths in one evaluate: they must already be drawn
+    const at = await page.evaluate(() => {
+      document.querySelector('#lanebtns .lanebtn[data-dir="wide"]').click();
+      const ps = [...document.querySelectorAll('#court g[fill="none"] path')].slice(6);
+      return ps.map((p) => parseFloat(getComputedStyle(p).strokeDashoffset));
     });
-    const settledLater = await page.waitForFunction((s) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() === s,
-      sw.soon.join(), { timeout: 1000 }).then(() => true).catch(() => false);
-    check(`${tag}: switching to 2nd serve updates the labels at once and the paths stay at stroke-dashoffset 0`,
-      sw.seg === 'false,true' && sw.before.length === 6 && sw.soon.join() !== sw.before.join() && settledLater && sw.offs.every((o) => parseFloat(o) === 0),
-      { before: sw.before, soon: sw.soon, seg: sw.seg });
+    check(`${tag}: a call reveals the ad paths at once (stroke-dashoffset 0 in the same task)`, at.length === 6 && at.every((o) => o === 0), at);
     check(`${tag}: no errors`, errorsOf(log).length === 0 && log.failedRequests.length === 0, errorsOf(log).concat(log.failedRequests));
     await ctx.close();
   }

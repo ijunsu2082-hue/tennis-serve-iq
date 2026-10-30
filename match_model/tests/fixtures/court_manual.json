@@ -1,0 +1,181 @@
+{
+ "description": "Manual homography for videoplayback.mp4 main camera (image px 1280x720 -> court metres). Points are intersections of least-squares line fits to white-line pixels around hand-located lines on the frame at t=54.0 s; camera verified static across main segments by line-overlap scan.",
+ "source_frame_t": 54.0,
+ "frame_w": 1280,
+ "frame_h": 720,
+ "H": [
+  [
+   0.06005634481851648,
+   0.0007149060159065579,
+   -38.60679045821745
+  ],
+  [
+   0.0009467317048339317,
+   -0.2026602506587075,
+   64.81097072103162
+  ],
+  [
+   -2.1655022317948744e-05,
+   0.005466925733564911,
+   1.0
+  ]
+ ],
+ "err_px": 0.355,
+ "conf": 1.0,
+ "points": [
+  {
+   "name": "near_left_doubles_corner",
+   "img": [
+    265.75,
+    558.45
+   ],
+   "court": [
+    -5.485,
+    -11.885
+   ]
+  },
+  {
+   "name": "near_right_doubles_corner",
+   "img": [
+    1007.08,
+    562.01
+   ],
+   "court": [
+    5.485,
+    -11.885
+   ]
+  },
+  {
+   "name": "far_left_doubles_corner",
+   "img": [
+    450.33,
+    199.81
+   ],
+   "court": [
+    -5.485,
+    11.885
+   ]
+  },
+  {
+   "name": "far_right_doubles_corner",
+   "img": [
+    830.66,
+    201.32
+   ],
+   "court": [
+    5.485,
+    11.885
+   ]
+  },
+  {
+   "name": "near_left_singles_corner",
+   "img": [
+    358.6,
+    558.89
+   ],
+   "court": [
+    -4.115,
+    -11.885
+   ]
+  },
+  {
+   "name": "near_right_singles_corner",
+   "img": [
+    913.85,
+    561.56
+   ],
+   "court": [
+    4.115,
+    -11.885
+   ]
+  },
+  {
+   "name": "far_left_singles_corner",
+   "img": [
+    498.17,
+    200.0
+   ],
+   "court": [
+    -4.115,
+    11.885
+   ]
+  },
+  {
+   "name": "far_right_singles_corner",
+   "img": [
+    782.76,
+    201.13
+   ],
+   "court": [
+    4.115,
+    11.885
+   ]
+  },
+  {
+   "name": "near_service_line_x_left_singles",
+   "img": [
+    410.02,
+    426.67
+   ],
+   "court": [
+    -4.115,
+    -6.4
+   ]
+  },
+  {
+   "name": "near_service_line_x_right_singles",
+   "img": [
+    865.51,
+    428.65
+   ],
+   "court": [
+    4.115,
+    -6.4
+   ]
+  },
+  {
+   "name": "far_service_line_x_left_singles",
+   "img": [
+    479.59,
+    247.77
+   ],
+   "court": [
+    -4.115,
+    6.4
+   ]
+  },
+  {
+   "name": "far_service_line_x_right_singles",
+   "img": [
+    800.54,
+    250.0
+   ],
+   "court": [
+    4.115,
+    6.4
+   ]
+  },
+  {
+   "name": "near_T",
+   "img": [
+    637.74,
+    427.66
+   ],
+   "court": [
+    0.0,
+    -6.4
+   ]
+  },
+  {
+   "name": "far_T",
+   "img": [
+    639.75,
+    248.89
+   ],
+   "court": [
+    0.0,
+    6.4
+   ]
+  }
+ ]
+}

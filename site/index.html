@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Serve IQ</title>
-<meta name="description" content="Where do pro tennis players aim the first serve, and which spot wins the point? Pick any of 447 players. Built from the Match Charting Project.">
+<meta name="description" content="Call where a pro will serve, then see if it changes on break points. Serve scouting for pro players from the Match Charting Project, plus a model that charts serves from match video.">
 <meta name="theme-color" content="#0b1d42">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%230b1d42%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%2319a4ec%22 stroke-width=%222%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,62 +32,59 @@
 <section class="head" aria-labelledby="intro-h">
   <div class="wrap">
     <p class="status" id="status" role="status" aria-live="polite" hidden></p>
-    <h1 id="intro-h">Where do pros aim the first serve, <em>and which spot wins?</em></h1>
-    <p class="answer needs-data"><b>Wide and T win about the same.</b> Body serves go in <span class="up"><span data-h="body_in_m1.coef" data-f="abs1"></span> more</span> times per <span data-b="per100"></span> but win <span class="down"><span data-h="body_win_m1.coef" data-f="abs1"></span> fewer</span> points per <span data-b="per100"></span> (men, same player and side, compared with wide).</p>
-    <p class="src needs-data"><span data-h="serves_listed" data-f="int"></span> charted serves from <span data-h="players" data-f="int"></span> pros, <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a></p>
+    <h1 id="intro-h">Where will the serve go?</h1>
+    <p class="sub">Guess where a pro serves. Then see if it changes when the game is on the line.</p>
+    <p class="src needs-data"><span data-h="serves_listed" data-f="int"></span> charted serves from <span data-h="players" data-f="int"></span> pros, <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a>. <a href="#video">A model can also chart serves from match video.</a></p>
   </div>
 </section>
 
 <div class="picker needs-data">
   <div class="wrap picker-in">
-    <div class="tabs" id="tabs" role="group" aria-label="Who to show"></div>
-    <div class="picker-right">
-      <div class="find">
-        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="#5b6577" stroke-width="2"/><path d="M11 11l3.5 3.5" stroke="#5b6577" stroke-width="2" stroke-linecap="round"/></svg>
-        <label class="skip" for="find">Find any player</label>
-        <input id="find" list="players" type="search" placeholder="Find a player" autocomplete="off" spellcheck="false" enterkeyhint="go">
-        <datalist id="players"></datalist>
-        <p class="find-msg" id="find-msg" aria-live="polite"></p>
-      </div>
+    <div class="picks" id="picks" role="group" aria-label="Quick picks"></div>
+    <div class="find">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="#5b6577" stroke-width="2"/><path d="M11 11l3.5 3.5" stroke="#5b6577" stroke-width="2" stroke-linecap="round"/></svg>
+      <label class="skip" for="find">Find any player</label>
+      <input id="find" list="players" type="search" placeholder="Find any player" autocomplete="off" spellcheck="false" enterkeyhint="go">
+      <datalist id="players"></datalist>
+      <p class="find-msg" id="find-msg" aria-live="polite"></p>
     </div>
   </div>
 </div>
 
-<section id="tool" class="tool needs-data" aria-label="Serve directions" tabindex="-1">
+<section id="tool" class="tool needs-data" aria-label="Call the serve" tabindex="-1">
   <div class="wrap grid">
     <div class="panel courtbox">
-      <div class="court-top">
-        <p class="panel-h">Seen from behind the server</p>
-        <div class="seg" id="seg" role="group" aria-label="Serve">
+      <div class="ctrls">
+        <div class="seg" id="seg-side" role="group" aria-label="Court side">
+          <button type="button" data-side="deuce" aria-pressed="false">Deuce side</button>
+          <button type="button" data-side="ad" aria-pressed="true">Ad side</button>
+        </div>
+        <div class="seg" id="seg-serve" role="group" aria-label="Serve">
           <button type="button" data-serve="1" aria-pressed="true">1st serve</button>
           <button type="button" data-serve="2" aria-pressed="false">2nd serve</button>
         </div>
+        <div class="seg" id="seg-sit" role="group" aria-label="Situation">
+          <button type="button" data-sit="all" aria-pressed="true">All points</button>
+          <button type="button" data-sit="bp" aria-pressed="false">Break points</button>
+        </div>
       </div>
-      <svg id="court" viewBox="0 0 640 470" role="img" aria-labelledby="court-title"><title id="court-title">Serve directions on court</title></svg>
-      <div class="key"><span><i class="kd"></i>Deuce side serves</span><span><i class="ka"></i>Ad side serves</span></div>
-      <p class="cap">Thicker path, more serves. Paths show direction, not exact landing spots.</p>
+      <p class="prompt" id="prompt" aria-live="polite"></p>
+      <svg id="court" viewBox="0 0 640 470" role="img" aria-labelledby="court-title"><title id="court-title">Serve lanes on court, seen from behind the server</title></svg>
+      <div class="lanebtns" id="lanebtns" role="group" aria-label="Your call"></div>
+      <p class="cap key">Seen from behind the server. Deuce side: the server starts right of center. Ad side: left of center. Lanes are serve directions, not exact spots.</p>
     </div>
 
-    <div class="panel stats" aria-live="polite">
-      <div class="who" id="who"></div>
-      <div id="sides"></div>
-      <p class="foot" id="foot"></p>
-      <details class="sure" id="sure">
-        <summary>How sure are we?</summary>
-        <div id="sure-body"></div>
-      </details>
+    <div class="side-col">
+      <div class="panel result" id="result" aria-live="polite" hidden></div>
+      <div class="panel card" id="card" aria-live="polite"></div>
     </div>
   </div>
 </section>
 
-<section id="numbers" class="numbers needs-data" aria-labelledby="numbers-h">
+<section id="video" class="video needs-data" aria-labelledby="video-h">
   <div class="wrap">
-    <h2 class="sec-h" id="numbers-h">By the numbers</h2>
-    <p class="sec-sub">Every charted 1st serve, compared within the same player and side.</p>
-    <div class="num-grid">
-      <div class="panel np" id="vs"></div>
-      <div class="panel np" id="clear"></div>
-    </div>
+    <h2 class="sec-h" id="video-h">Scout it from video</h2>
+    <div id="match" class="chart"></div>
   </div>
 </section>
 
@@ -95,7 +92,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <p class="license-note" id="license">Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a> by Jeff Sackmann and contributors (<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>). Code: MIT. Photos: Wikimedia Commons, credits on the <a href="method.html#credits">Method page</a>.</p>
+    <p class="license-note" id="license">Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a> by Jeff Sackmann and contributors (<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>). Code: MIT. Photos: Wikimedia Commons, credits on the <a href="method.html#credits">Method page</a>. The match model in <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/tree/main/match_model">match_model</a> uses Ultralytics and is under the GNU AGPLv3.</p>
     <p class="footer-links"><a href="method.html">Method</a> <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">GitHub</a></p>
   </div>
 </footer>

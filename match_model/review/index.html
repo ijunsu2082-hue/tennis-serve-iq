@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review points</title>
+<style>
+:root{--paper:#fbfaf7;--panel:#fbfaf7;--ink:#1b1b1a;--mut:#6d6a63;--rule:#cfcabe;--rule2:#e8e4da;--pa:#1e3a5f;--pb:#9c3d1c;
+--flag:#b23a2e;--low:#f2e8cc;--edit:#e3ecdf;--sel:#ece8de;--good:#2e6b3a;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#171716;--panel:#1c1c1a;--ink:#e6e3db;--mut:#9a968c;--rule:#45423b;--rule2:#2b2a27;
+--pa:#9dbbe0;--pb:#e49c7a;--flag:#e3796b;--low:#3b3423;--edit:#22301f;--sel:#2a2925;--good:#7fbf8b;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;height:100vh;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;padding:10px 14px;border-bottom:2px solid var(--ink)}
+header h1{font:600 20px/1.1 "Iowan Old Style","Palatino Linotype",Palatino,Charter,Georgia,serif;margin:0}
+header .sp{flex:1}
+#status{font-size:12px;color:var(--mut)}
+#status.dirty{color:var(--flag)}
+button{font:inherit;font-size:12.5px;background:none;color:var(--ink);border:1px solid var(--rule);padding:3px 10px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.pri{border-color:var(--ink);font-weight:600}
+header a{text-decoration:none}
+main{flex:1;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(330px,1fr);gap:0;min-height:0}
+@media (max-width:900px){main{grid-template-columns:1fr}body{height:auto}}
+.left{display:flex;flex-direction:column;min-height:0;gap:8px;padding:12px 14px;border-right:1px solid var(--rule)}
+video{width:100%;max-height:58vh;background:#000}
+#vinfo{font-size:12px;color:var(--mut);display:flex;justify-content:space-between}
+.list{flex:1;overflow:auto;border-top:1px solid var(--ink);min-height:160px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.list th,.list td{padding:4px 7px;border-bottom:1px solid var(--rule2);text-align:left;white-space:nowrap}
+.list th{position:sticky;top:0;background:var(--paper);font-size:11.5px;font-weight:600;color:var(--mut);border-bottom:1px solid var(--rule)}
+.list tr{cursor:pointer}
+.list tr:hover td{background:var(--rule2)}
+.list tr.sel td{background:var(--sel);font-weight:600}
+.list tr.gap td:first-child{border-left:2px dotted var(--mut)}
+.list .low{color:var(--flag);font-weight:700}
+.list .done{color:var(--good)}
+.right{padding:12px 16px;overflow:auto}
+.right h2{font:600 18px/1.2 "Iowan Old Style","Palatino Linotype",Palatino,Charter,Georgia,serif;margin:0 0 2px}
+.right h2 small{font:400 12px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.meta{color:var(--mut);font-size:12px;margin-bottom:10px}
+.f{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:6px;padding:4px 6px;margin:0 -6px 1px}
+.f label{color:var(--mut);font-size:12px}
+.f.low{background:var(--low)}
+.f.edited{background:var(--edit)}
+.f.check{display:block;background:var(--low);color:var(--ink);margin-bottom:8px;padding:6px}
+.f .opts{display:flex;flex-wrap:wrap;gap:0}
+.opt{padding:2px 9px;border:1px solid var(--rule);margin:0 -1px -1px 0;cursor:pointer;user-select:none;font-size:12px;background:var(--paper)}
+.opt:hover{border-color:var(--mut);position:relative}
+.opt.on{background:var(--ink);color:var(--paper);border-color:var(--ink);position:relative}
+.f input[type=number]{width:70px;font:inherit;padding:2px 4px;background:var(--paper);color:var(--ink);border:1px solid var(--rule)}
+.f input[type=text]{width:100%;font:inherit;padding:2px 4px;background:var(--paper);color:var(--ink);border:1px solid var(--rule)}
+.cf{font-size:10.5px;color:var(--mut);margin-left:5px;font-variant-numeric:tabular-nums}
+.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--rule2)}
+.keys{font-size:12px;color:var(--mut);border-top:1px solid var(--rule);margin-top:14px;padding-top:8px;line-height:1.8}
+kbd{font:11px ui-monospace,Menlo,monospace;border:1px solid var(--rule);padding:0 4px;color:var(--ink)}
+.pill{font-size:11.5px;color:var(--mut);font-weight:400;margin-left:6px}
+.pill.ok{color:var(--good)}
+.tag{font-size:10.5px;font-weight:700;color:var(--flag);letter-spacing:.04em;margin-left:5px}
+#err{color:var(--flag);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Review points</h1>
+  <span id="score" class="meta" style="margin:0"></span>
+  <span class="sp"></span>
+  <label style="font-size:12.5px;color:var(--mut)"><input type="checkbox" id="onlyLow"> only points that need checking</label>
+  <span id="status">loading…</span>
+  <button class="pri" id="saveBtn" title="Ctrl/Cmd+S">Save</button>
+  <a href="/report" target="_blank"><button>Open report</button></a>
+</header>
+<main>
+  <div class="left">
+    <video id="vid" src="/video" controls preload="metadata" playsinline></video>
+    <div id="vinfo"><span id="vpos"></span><span id="err"></span></div>
+    <div class="list"><table id="list"><thead><tr><th>#</th><th>Set</th><th>Games</th><th>Pts</th><th>Srv</th><th>Won</th><th>Ending</th><th>Time</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="right" id="editor"></div>
+</main>
+<script>
+"use strict";
+const LOW = 0.6;
+const ENDINGS = ["ace","service_winner","double_fault","winner","unforced_error","forced_error","unknown"];
+const ENDING_TXT = {ace:"ace",service_winner:"service winner",double_fault:"double fault",winner:"winner",unforced_error:"unforced error",forced_error:"forced error",unknown:"unknown"};
+let M = null, pts = [], corr = {}, idx = 0, dirty = false, stopAt = null, names = {A:"A", B:"B"};
+const $ = s => document.querySelector(s);
+const vid = $("#vid");
+
+function setStatus(t, d){ const s=$("#status"); s.textContent=t; s.className=d?"dirty":""; }
+function fmtT(t){ if(t==null) return ""; t=Math.max(0,t); const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+String(s).padStart(2,"0"); }
+function serve(p,n){ return (p.serves||[]).find(s=>s.n===n) || null; }
+function reviewed(p){ return (p.review||{}).status==="reviewed"; }
+
+// ---- field model: get / conf ----------------------------------------------
+function rawVal(p, f){
+  switch(f){
+    case "serve_zone": { const s = serve(p, val(p, "serve_number_won_on") || 1); return s ? s.zone : null; }
+    case "serve1_result": return (serve(p,1)||{}).result || null;
+    case "serve1_zone": return (serve(p,1)||{}).zone || null;
+    case "serve1_fault": return (serve(p,1)||{}).fault || null;
+    case "serve2_result": return (serve(p,2)||{}).result || null;
+    case "serve2_zone": return (serve(p,2)||{}).zone || null;
+    case "serve2_fault": return (serve(p,2)||{}).fault || null;
+    case "note": return (p.review||{}).note || "";
+    default: return p[f];
+  }
+}
+function val(p, f){ const c = corr[String(p.id)]; return (c && f in c) ? c[f] : rawVal(p, f); }
+const CONF_KEYS = {winner:["winner"], serve_number_won_on:["serves","serve"], serve_zone:["serve_zone","zone","serves"],
+  serve1_result:["serves"], serve1_zone:["serve_zone","serves"], serve1_fault:["serves"], serve2_result:["serves"], serve2_zone:["serve_zone","serves"], serve2_fault:["serves"],
+  return_wing:["return_wing"], rally_len:["rally_len"], ending:["ending"], ending_by:["ending"], last_shot_wing:["last_shot_wing","ending"], last_shot_stroke:["last_shot_stroke","ending"]};
+function conf(p, f){
+  const c = p.conf || {};
+  for (const k of (CONF_KEYS[f]||[f])) if (typeof c[k] === "number") return c[k];
+  if (f.startsWith("serve")) { const v=(p.serves||[]).map(s=>s.conf).filter(x=>typeof x==="number"); if (v.length) return Math.min(...v); }
+  return null;
+}
+function edited(p, f){ const c=corr[String(p.id)]; return (c && f in c) || ((p.review||{}).edited_fields||[]).includes(f); }
+function isLow(p, f){ if (reviewed(p) || edited(p,f)) return false; const c=conf(p,f); return c!==null && c<LOW; }
+function pointLow(p){ return ["winner","serve_zone","serve1_result","return_wing","rally_len","ending"].some(f=>isLow(p,f)); }
+
+function setField(f, v){
+  const p = pts[idx]; if (!p) return;
+  const k = String(p.id); corr[k] = corr[k] || {};
+  if (corr[k][f] === v) return;
+  corr[k][f] = v; dirty = true; setStatus("unsaved changes", true);
+  renderEditor(); renderRow(idx);
+}
+
+// ---- rendering -------------------------------------------------------------
+const FIELDS = [
+  ["Point", null],
+  ["winner", "Winner", "opts", [["A",()=>names.A+" (a)"],["B",()=>names.B+" (b)"]]],
+  ["serve_number_won_on", "Played on serve", "opts", [[1,"1st (1)"],[2,"2nd (2)"],[null,"double fault / ?"]]],
+  ["serve_zone", "Zone (serve in)", "opts", [["wide","wide (w)"],["body","body (o)"],["T","T (t)"]]],
+  ["Serves", null],
+  ["serve1_result", "1st serve", "opts", [["in","in"],["fault","fault"],["unknown","?"]]],
+  ["serve1_fault", "1st fault", "opts", [["net","net"],["long","long"],["wide","wide"],["long_wide","long+wide"]]],
+  ["serve1_zone", "1st zone", "opts", [["wide","wide"],["body","body"],["T","T"]]],
+  ["serve2_result", "2nd serve", "opts", [["in","in"],["fault","fault"],["unknown","?"]]],
+  ["serve2_fault", "2nd fault", "opts", [["net","net"],["long","long"],["wide","wide"],["long_wide","long+wide"]]],
+  ["serve2_zone", "2nd zone", "opts", [["wide","wide"],["body","body"],["T","T"]]],
+  ["Rally", null],
+  ["return_wing", "Return wing", "opts", [["fh","FH (f)"],["bh","BH (h)"]]],
+  ["rally_len", "Rally length", "num"],
+  ["ending", "Ending (e)", "opts", ENDINGS.map(e=>[e, ENDING_TXT[e]])],
+  ["ending_by", "Ending shot by", "opts", [["A",()=>names.A],["B",()=>names.B]]],
+  ["last_shot_wing", "Last-shot wing", "opts", [["fh","FH (F)"],["bh","BH (H)"]]],
+  ["last_shot_stroke", "Last-shot stroke", "opts", [["groundstroke","ground"],["volley","volley"],["overhead","overhead"],["serve","serve"]]],
+  ["note", "Note", "text"],
+];
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function renderEditor(){
+  const p = pts[idx], ed = $("#editor");
+  if (!p){ ed.innerHTML = "<p>No points.</p>"; return; }
+  const sb = p.score_before || {}, fl = p.flags || {};
+  const tags = [["BP","break_point"],["SP","set_point"],["MP","match_point"]].filter(t=>fl[t[1]]).map(t=>`<span class="tag">${t[0]}</span>`).join("");
+  let h = `<h2>Point ${esc(p.id)} <small class="meta">(${idx+1}/${pts.length})</small> ${reviewed(p)?'<span class="pill ok">checked</span>':''}${p.gap_before?'<span class="pill">after a gap in the video</span>':''}</h2>
+  <div class="meta">Set ${esc(p.set_no)} · games ${esc((sb.games||[]).join("-"))} · ${esc(sb.points)}${sb.in_tb?" (TB)":""} (A-B) · ${esc(names[p.server]||p.server)} serving, ${esc(p.side)} side ${tags}<br>
+  ${fmtT(p.t_start)}–${fmtT(p.t_end)} · winner source: ${esc(p.winner_source)} · MCP <code>${esc(p.mcp)}</code></div>`;
+  const warn = consistency(p);
+  if (warn.length) h += `<div class="f check"><strong>Check:</strong> ${warn.map(esc).join(" ")}</div>`;
+  for (const fd of FIELDS){
+    if (fd[1]===null){ h += `<div class="sec">${fd[0]}</div>`; continue; }
+    const [f, label, kind, opts] = fd, v = val(p, f), c = conf(p, f);
+    const cls = edited(p,f) ? "edited" : (isLow(p,f) ? "low" : "");
+    h += `<div class="f ${cls}" data-f="${f}"><label>${label}${c!==null && !edited(p,f) ? `<span class="cf">${c.toFixed(2)}</span>`:""}</label>`;
+    if (kind==="opts"){
+      h += `<div class="opts">` + opts.map(([ov, ol]) => `<span class="opt ${v===ov || (ov===null && (v===null||v===undefined)) ? "on":""}" data-v='${JSON.stringify(ov)}'>${esc(typeof ol==="function"?ol():ol)}</span>`).join("") + `</div>`;
+    } else if (kind==="num"){
+      h += `<div><input type="number" min="0" max="99" value="${v==null?"":v}" data-num="1"></div>`;
+    } else {
+      h += `<div><input type="text" value="${esc(v)}" data-text="1"></div>`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="keys"><kbd>j</kbd>/<kbd>k</kbd> next/prev · <kbd>space</kbd> replay · <kbd>a</kbd>/<kbd>b</kbd> winner · <kbd>1</kbd>/<kbd>2</kbd> serve played on ·
+    <kbd>w</kbd>/<kbd>o</kbd>/<kbd>t</kbd> zone wide/body/T · <kbd>f</kbd>/<kbd>h</kbd> return wing FH/BH · <kbd>F</kbd>/<kbd>H</kbd> last-shot wing ·
+    <kbd>e</kbd> cycle ending · <kbd>Enter</kbd> mark checked and go to the next · <kbd>Ctrl/⌘S</kbd> save · <kbd>u</kbd> undo edits on this point<br>
+    Shaded yellow: confidence under ${LOW}. Shaded green: edited. Saving writes corrections.json and rebuilds the report.</div>`;
+  ed.innerHTML = h;
+}
+
+function consistency(p){
+  const w = val(p,"winner"), e = val(p,"ending"), by = val(p,"ending_by"), srv = p.server, out = [];
+  if ((e==="ace"||e==="service_winner") && w && w!==srv) out.push("An ace/service winner should be won by the server.");
+  if (e==="double_fault" && w && w===srv) out.push("A double fault should be won by the receiver.");
+  if (e==="winner" && by && w && by!==w) out.push("Winner hit by the player who lost the point?");
+  if ((e==="unforced_error"||e==="forced_error") && by && w && by===w) out.push("Error made by the point winner?");
+  return out;
+}
+function rowHtml(i){
+  const p = pts[i], sb = p.score_before || {}, w = val(p,"winner"), e = val(p,"ending");
+  const fl = p.flags||{}, press = fl.break_point||fl.set_point||fl.match_point;
+  const st = reviewed(p) || (corr[String(p.id)]||{}).reviewed ? '<span class="done">✓</span>' : (pointLow(p) ? '<span class="low">!</span>' : "");
+  return `<td>${esc(p.id)}${press?'<span class="tag">'+(fl.match_point?"MP":fl.set_point?"SP":"BP")+'</span>':""}</td><td>${esc(p.set_no)}</td><td>${esc((sb.games||[]).join("-"))}</td><td>${esc(sb.points)}</td>
+    <td>${esc(p.server)}</td><td>${esc(w||"?")}</td><td>${esc(ENDING_TXT[e]||e||"")}</td><td>${fmtT(p.t_start!=null?p.t_start:p.t_end)}</td><td>${st}</td>`;
+}
+function renderRow(i){ const tr = document.querySelector(`#list tbody tr[data-i="${i}"]`); if (tr) tr.innerHTML = rowHtml(i); }
+function renderList(){
+  const only = $("#onlyLow").checked;
+  const tb = $("#list tbody"); let h = "";
+  pts.forEach((p,i)=>{
+    if (only && (reviewed(p) || !pointLow(p)) && i!==idx) return;
+    h += `<tr data-i="${i}" class="${i===idx?"sel":""} ${p.gap_before?"gap":""}">${rowHtml(i)}</tr>`;
+  });
+  tb.innerHTML = h;
+  const sel = tb.querySelector("tr.sel"); if (sel) sel.scrollIntoView({block:"nearest"});
+}
+
+// ---- navigation & video ------------------------------------------------------
+function windowOf(p){
+  const te = p.t_end, ts = p.t_start!=null ? p.t_start : (te!=null ? te-10 : 0);
+  return [Math.max(0, ts-1), (te!=null?te:ts+10)+0.5];
+}
+function playPoint(){
+  const p = pts[idx]; if (!p) return;
+  const [a,b] = windowOf(p); stopAt = b;
+  const go = ()=>{ vid.currentTime = a; vid.play().catch(()=>{}); };
+  if (vid.readyState >= 1) go(); else vid.addEventListener("loadedmetadata", go, {once:true});
+}
+function select(i, play=true){
+  if (!pts.length) return;
+  idx = Math.max(0, Math.min(pts.length-1, i));
+  renderList(); renderEditor(); if (play) playPoint();
+}
+function nextIdx(d){
+  const only = $("#onlyLow").checked; let i = idx + d;
+  while (only && i>=0 && i<pts.length && (reviewed(pts[i]) || !pointLow(pts[i]))) i += d;
+  return i;
+}
+vid.addEventListener("timeupdate", ()=>{
+  $("#vpos").textContent = fmtT(vid.currentTime) + (pts[idx] ? `  ·  point ${pts[idx].id} window ${fmtT(windowOf(pts[idx])[0])}–${fmtT(windowOf(pts[idx])[1])}` : "");
+  if (stopAt!==null && vid.currentTime >= stopAt){ vid.pause(); stopAt = null; }
+});
+vid.addEventListener("error", ()=>{ $("#err").textContent = "Video not available from the server (start it with --video PATH)."; });
+
+// ---- events -------------------------------------------------------------------
+$("#list").addEventListener("click", e=>{ const tr = e.target.closest("tr[data-i]"); if (tr) select(+tr.dataset.i); });
+$("#onlyLow").addEventListener("change", renderList);
+$("#editor").addEventListener("click", e=>{
+  const o = e.target.closest(".opt"); if (!o) return;
+  const f = o.closest(".f").dataset.f; let v = JSON.parse(o.dataset.v);
+  if (val(pts[idx], f) === v && f !== "winner") v = null;  // click again to clear
+  setField(f, v);
+});
+$("#editor").addEventListener("change", e=>{
+  const fd = e.target.closest(".f"); if (!fd) return;
+  if (e.target.dataset.num){ const n = e.target.value === "" ? null : parseInt(e.target.value,10); setField(fd.dataset.f, Number.isFinite(n)?n:null); }
+  if (e.target.dataset.text){ setField(fd.dataset.f, e.target.value); }
+});
+document.addEventListener("keydown", e=>{
+  if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); save(); return; }
+  if (e.target.tagName==="INPUT" || e.target.tagName==="SELECT" || e.target.tagName==="TEXTAREA"){ if (e.key==="Escape") e.target.blur(); return; }
+  if (e.metaKey||e.ctrlKey||e.altKey) return;
+  const p = pts[idx]; if (!p) return;
+  const k = e.key;
+  const map = {a:["winner","A"], b:["winner","B"], "1":["serve_number_won_on",1], "2":["serve_number_won_on",2],
+    w:["serve_zone","wide"], o:["serve_zone","body"], t:["serve_zone","T"], f:["return_wing","fh"], h:["return_wing","bh"],
+    F:["last_shot_wing","fh"], H:["last_shot_wing","bh"]};
+  if (k==="j"){ select(nextIdx(1)); }
+  else if (k==="k"){ select(nextIdx(-1)); }
+  else if (k===" "){ e.preventDefault(); playPoint(); }
+  else if (k==="e"){ const cur = val(p,"ending"); const i = ENDINGS.indexOf(cur); setField("ending", ENDINGS[(i+1) % ENDINGS.length]); }
+  else if (k==="u"){ delete corr[String(p.id)]; dirty = true; setStatus("unsaved changes", true); renderEditor(); renderRow(idx); }
+  else if (k==="Enter"){ e.preventDefault(); setField("reviewed", true); save(true); select(nextIdx(1)); }
+  else if (map[k]){ setField(map[k][0], map[k][1]); }
+  else return;
+});
+$("#saveBtn").addEventListener("click", ()=>save());
+window.addEventListener("beforeunload", e=>{ if (dirty){ e.preventDefault(); e.returnValue = ""; } });
+
+// ---- io -----------------------------------------------------------------------
+let saving = null, pending = false;
+async function save(quiet){
+  if (saving){ pending = true; return; }
+  setStatus("saving…", true);
+  saving = fetch("/save", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({corrections: corr})})
+    .then(r => r.json().then(j => ({ok: r.ok, j})))
+    .then(async ({ok, j}) => {
+      if (!ok || !j.ok) throw new Error(j.error || "save failed");
+      dirty = false;
+      await loadMatch(true);
+      setStatus(`saved ${new Date().toLocaleTimeString()} · ${j.n_corrections} points corrected · ${j.n_insights} insights`, false);
+    })
+    .catch(err => setStatus("save error: " + err.message, true))
+    .finally(() => { saving = null; if (pending){ pending = false; save(true); } });
+}
+async function loadMatch(keep){
+  const r = await fetch("/match.json", {cache:"no-store"}); M = await r.json();
+  pts = M.points || [];
+  const pl = (M.meta||{}).players || {};
+  names = {A: (pl.A||{}).name || "A", B: (pl.B||{}).name || "B"};
+  $("#title").textContent = `${names.A} v ${names.B}`;
+  const fmt = (M.meta||{}).format||{};
+  $("#score").textContent = `${pts.length} points · ${fmt.no_ad ? "no-ad" : "ad"} · ${(M.meta||{}).has_scorebug ? "score bug" : "no score bug"}`;
+  if (!keep) idx = 0;
+  renderList(); renderEditor();
+}
+(async function init(){
+  try {
+    const c = await fetch("/corrections.json", {cache:"no-store"}); corr = await c.json() || {};
+    await loadMatch(false);
+    setStatus(`${Object.keys(corr).length} points already corrected`, false);
+    if (pts.length){ const [a] = windowOf(pts[0]); vid.addEventListener("loadedmetadata", ()=>{ vid.currentTime = a; }, {once:true}); }
+  } catch(err){ setStatus("failed to load: " + err.message, true); }
+})();
+</script>
+</body>
+</html>

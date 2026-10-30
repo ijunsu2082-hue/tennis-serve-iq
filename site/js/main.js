@@ -57,5 +57,5 @@ export function boot(modules) {
 }
 
 if (document.body && document.body.getAttribute("data-page") === "index") {
-  boot(["tool", "numbers"]);
+  boot(["tool", "match"]);
 }

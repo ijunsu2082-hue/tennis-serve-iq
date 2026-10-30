@@ -1,0 +1,2271 @@
+{
+  "meta": {
+    "video": "videoplayback.mp4",
+    "video_info": {
+      "path": "videoplayback.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 25.0,
+      "duration": 662.0
+    },
+    "players": {
+      "A": {
+        "name": "Sinner",
+        "hand": "R"
+      },
+      "B": {
+        "name": "Alcaraz",
+        "hand": "R"
+      }
+    },
+    "format": {
+      "best_of": 3,
+      "no_ad": false,
+      "games_per_set": 6,
+      "tb_at": 6,
+      "tb_points": 7,
+      "final_set": "tb",
+      "no_ad_deciding_side": "ad"
+    },
+    "pipeline_version": "1.0",
+    "generated_at": "2026-10-30T00:57:12",
+    "runtime_s": 36.7,
+    "has_scorebug": true,
+    "quick": false,
+    "court": {
+      "H": [
+        [
+          0.060553147567243,
+          0.0007290643202636222,
+          -38.927452887730276
+        ],
+        [
+          0.0008215870955323721,
+          -0.2045118962684655,
+          65.4742900948908
+        ],
+        [
+          -1.8050871328047106e-05,
+          0.005534139086866789,
+          1.0
+        ]
+      ],
+      "frame_w": 1280,
+      "frame_h": 720,
+      "err_px": 0.20519793033599854,
+      "conf": 0.9908163265306122
+    }
+  },
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 4.8,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 4.8,
+      "end": 11.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 11.0,
+      "end": 41.6,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 41.6,
+      "end": 57.6,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 57.6,
+      "end": 193.2,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 193.2,
+      "end": 195.79999999999998,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 195.8,
+      "end": 203.6,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 203.6,
+      "end": 209.39999999999998,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 209.4,
+      "end": 241.6,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 241.6,
+      "end": 244.79999999999998,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 244.8,
+      "end": 258.0,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 258.0,
+      "end": 272.59999999999997,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 272.6,
+      "end": 302.8,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 302.8,
+      "end": 305.4,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 305.4,
+      "end": 312.8,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 312.8,
+      "end": 332.4,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 332.4,
+      "end": 376.0,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 376.0,
+      "end": 382.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 382.0,
+      "end": 429.8,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 429.8,
+      "end": 437.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 437.0,
+      "end": 488.0,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 488.0,
+      "end": 491.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 491.0,
+      "end": 497.59999999999997,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 497.6,
+      "end": 508.59999999999997,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 508.6,
+      "end": 539.4000000000001,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 539.4,
+      "end": 542.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 542.0,
+      "end": 549.6,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 549.6,
+      "end": 555.6,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 555.6,
+      "end": 593.4000000000001,
+      "kind": "other",
+      "conf": 1.0
+    },
+    {
+      "start": 593.4,
+      "end": 600.0,
+      "kind": "main",
+      "conf": 1.0
+    },
+    {
+      "start": 600.0,
+      "end": 662.0,
+      "kind": "other",
+      "conf": 1.0
+    }
+  ],
+  "points": [
+    {
+      "id": 0,
+      "t_start": 4.8,
+      "t_end": 13.0,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "0-0",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "A",
+      "receiver": "B",
+      "side": "deuce",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "A",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 5.52,
+          "result": "unknown",
+          "zone": null,
+          "fault": null,
+          "bounce_xy": null,
+          "speed_kmh": null,
+          "conf": 0.2
+        }
+      ],
+      "serve_number_won_on": null,
+      "return_wing": "fh",
+      "rally_len": 5,
+      "ending": "winner",
+      "ending_by": "A",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "groundstroke",
+      "last_shot_result": "in",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 0,
+        "A": 1
+      },
+      "player_dist_m": {
+        "B": 10.4,
+        "A": 11.0
+      },
+      "gap_before": true,
+      "conf": {
+        "winner": 0.92,
+        "ends": 1.0,
+        "player_dist_m": 0.67,
+        "net_approaches": 0.67,
+        "rally_len": 0.4,
+        "return_wing": 0.46,
+        "last_shot_by": 0.5,
+        "last_shot_wing": 0.31,
+        "last_shot_stroke": 0.2,
+        "last_shot_result": 0.8,
+        "ending": 0.5,
+        "inferred_winner": 0.95
+      },
+      "mcp": "0fqqf*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 1,
+      "t_start": 41.6,
+      "t_end": 58.0,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "1-0",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "B",
+      "receiver": "A",
+      "side": "ad",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "A",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 43.24,
+          "result": "in",
+          "zone": "body",
+          "fault": null,
+          "bounce_xy": [
+            1.99,
+            5.95
+          ],
+          "speed_kmh": null,
+          "conf": 0.6
+        }
+      ],
+      "serve_number_won_on": 1,
+      "return_wing": "bh",
+      "rally_len": 8,
+      "ending": "winner",
+      "ending_by": "A",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "groundstroke",
+      "last_shot_result": "in",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 0,
+        "A": 1
+      },
+      "player_dist_m": {
+        "B": 29.9,
+        "A": 25.8
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.957,
+        "ends": 1.0,
+        "player_dist_m": 0.68,
+        "net_approaches": 0.68,
+        "rally_len": 0.45,
+        "return_wing": 0.69,
+        "last_shot_by": 0.61,
+        "last_shot_wing": 0.35,
+        "last_shot_stroke": 0.26,
+        "last_shot_result": 0.78,
+        "ending": 0.61,
+        "inferred_winner": 0.95
+      },
+      "mcp": "5bqqqqqf*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 2,
+      "t_start": 193.2,
+      "t_end": 210.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "2-0",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "B",
+      "receiver": "A",
+      "side": "deuce",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "A",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 193.44,
+          "result": "fault",
+          "zone": null,
+          "fault": "net",
+          "bounce_xy": [
+            -1.43,
+            -2.58
+          ],
+          "speed_kmh": null,
+          "conf": 0.8
+        },
+        {
+          "n": 2,
+          "t": 204.64000000000001,
+          "result": "in",
+          "zone": null,
+          "fault": null,
+          "bounce_xy": null,
+          "speed_kmh": null,
+          "conf": 0.6
+        }
+      ],
+      "serve_number_won_on": 2,
+      "return_wing": "fh",
+      "rally_len": 3,
+      "ending": "unforced_error",
+      "ending_by": "B",
+      "last_shot_wing": "bh",
+      "last_shot_stroke": "overhead",
+      "last_shot_result": "net",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 0,
+        "A": 0
+      },
+      "player_dist_m": {
+        "B": 6.4,
+        "A": 6.9
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.94,
+        "ends": 1.0,
+        "player_dist_m": 0.66,
+        "net_approaches": 0.66,
+        "rally_len": 0.6,
+        "return_wing": 0.64,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.44,
+        "last_shot_stroke": 0.45,
+        "last_shot_result": 0.48,
+        "ending": 0.64,
+        "inferred_winner": 0.95,
+        "serves": 0.72
+      },
+      "mcp": "0n 0fpn@",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 3,
+      "t_start": 241.6,
+      "t_end": 275.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-0",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "A",
+      "receiver": "B",
+      "side": "ad",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 241.64,
+          "result": "fault",
+          "zone": null,
+          "fault": null,
+          "bounce_xy": null,
+          "speed_kmh": null,
+          "conf": 0.8
+        },
+        {
+          "n": 2,
+          "t": 258.79999999999995,
+          "result": "in",
+          "zone": "T",
+          "fault": null,
+          "bounce_xy": [
+            -0.63,
+            -6.37
+          ],
+          "speed_kmh": null,
+          "conf": 0.6
+        }
+      ],
+      "serve_number_won_on": 2,
+      "return_wing": "fh",
+      "rally_len": 10,
+      "ending": "winner",
+      "ending_by": "B",
+      "last_shot_wing": "bh",
+      "last_shot_stroke": "volley",
+      "last_shot_result": "in",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 1,
+        "A": 1
+      },
+      "player_dist_m": {
+        "B": 31.4,
+        "A": 35.1
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.923,
+        "ends": 1.0,
+        "player_dist_m": 0.71,
+        "net_approaches": 0.71,
+        "rally_len": 0.32,
+        "return_wing": 0.62,
+        "last_shot_by": 0.74,
+        "last_shot_wing": 0.46,
+        "last_shot_stroke": 0.61,
+        "last_shot_result": 0.57,
+        "ending": 0.74,
+        "inferred_winner": 0.95,
+        "serves": 0.72
+      },
+      "mcp": "0e 6fqqqqqqqz*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 4,
+      "t_start": 302.8,
+      "t_end": 335.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-1",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "A",
+      "receiver": "B",
+      "side": "deuce",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 302.96,
+          "result": "fault",
+          "zone": null,
+          "fault": "long",
+          "bounce_xy": [
+            0.64,
+            -7.01
+          ],
+          "speed_kmh": null,
+          "conf": 0.8
+        },
+        {
+          "n": 2,
+          "t": 313.64,
+          "result": "in",
+          "zone": "T",
+          "fault": null,
+          "bounce_xy": [
+            1.18,
+            -3.74
+          ],
+          "speed_kmh": null,
+          "conf": 0.84
+        }
+      ],
+      "serve_number_won_on": 2,
+      "return_wing": "bh",
+      "rally_len": 10,
+      "ending": "winner",
+      "ending_by": "B",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "volley",
+      "last_shot_result": "in",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 2,
+        "A": 1
+      },
+      "player_dist_m": {
+        "B": 51.7,
+        "A": 41.1
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.955,
+        "ends": 1.0,
+        "player_dist_m": 0.62,
+        "net_approaches": 0.62,
+        "rally_len": 0.35,
+        "return_wing": 0.68,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.55,
+        "last_shot_stroke": 0.65,
+        "last_shot_result": 0.6,
+        "ending": 0.8,
+        "inferred_winner": 0.95,
+        "serves": 0.72
+      },
+      "mcp": "0d 6bqqqqqqqv*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 5,
+      "t_start": 376.0,
+      "t_end": 382.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-2",
+        "in_tb": true,
+        "ends": {
+          "A": "far",
+          "B": "near"
+        }
+      },
+      "server": "B",
+      "receiver": "A",
+      "side": "ad",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 376.96,
+          "result": "in",
+          "zone": "T",
+          "fault": null,
+          "bounce_xy": [
+            -0.07,
+            5.72
+          ],
+          "speed_kmh": null,
+          "conf": 0.51
+        }
+      ],
+      "serve_number_won_on": 1,
+      "return_wing": "fh",
+      "rally_len": 2,
+      "ending": "forced_error",
+      "ending_by": "A",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "overhead",
+      "last_shot_result": "net",
+      "ends": {
+        "B": "near",
+        "A": "far"
+      },
+      "net_approaches": {
+        "B": 1,
+        "A": 0
+      },
+      "player_dist_m": {
+        "B": 10.0,
+        "A": 7.5
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.916,
+        "ends": 1.0,
+        "player_dist_m": 0.64,
+        "net_approaches": 0.64,
+        "rally_len": 0.6,
+        "return_wing": 0.51,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.51,
+        "last_shot_stroke": 0.45,
+        "last_shot_result": 0.29,
+        "ending": 0.64,
+        "inferred_winner": 0.95
+      },
+      "mcp": "6on#",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 6,
+      "t_start": 429.8,
+      "t_end": 440.0,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-3",
+        "in_tb": true,
+        "ends": {
+          "A": "near",
+          "B": "far"
+        }
+      },
+      "server": "B",
+      "receiver": "A",
+      "side": "deuce",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 430.68000000000006,
+          "result": "in",
+          "zone": "T",
+          "fault": null,
+          "bounce_xy": [
+            1.07,
+            -5.47
+          ],
+          "speed_kmh": null,
+          "conf": 0.4
+        }
+      ],
+      "serve_number_won_on": 1,
+      "return_wing": "bh",
+      "rally_len": 5,
+      "ending": "winner",
+      "ending_by": "B",
+      "last_shot_wing": "bh",
+      "last_shot_stroke": "volley",
+      "last_shot_result": "in",
+      "ends": {
+        "A": "near",
+        "B": "far"
+      },
+      "net_approaches": {
+        "A": 0,
+        "B": 1
+      },
+      "player_dist_m": {
+        "A": 15.0,
+        "B": 12.0
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.923,
+        "ends": 1.0,
+        "player_dist_m": 0.76,
+        "net_approaches": 0.76,
+        "rally_len": 0.53,
+        "return_wing": 0.66,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.62,
+        "last_shot_stroke": 0.65,
+        "last_shot_result": 0.6,
+        "ending": 0.8,
+        "inferred_winner": 0.95
+      },
+      "mcp": "6bqqz*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 7,
+      "t_start": 488.0,
+      "t_end": 510.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-4",
+        "in_tb": true,
+        "ends": {
+          "A": "near",
+          "B": "far"
+        }
+      },
+      "server": "A",
+      "receiver": "B",
+      "side": "ad",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 488.08,
+          "result": "fault",
+          "zone": null,
+          "fault": "net",
+          "bounce_xy": [
+            1.37,
+            -2.19
+          ],
+          "speed_kmh": null,
+          "conf": 0.8
+        },
+        {
+          "n": 2,
+          "t": 498.4,
+          "result": "in",
+          "zone": "body",
+          "fault": null,
+          "bounce_xy": [
+            1.83,
+            5.2
+          ],
+          "speed_kmh": null,
+          "conf": 0.85
+        }
+      ],
+      "serve_number_won_on": 2,
+      "return_wing": "bh",
+      "rally_len": 6,
+      "ending": "winner",
+      "ending_by": "B",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "groundstroke",
+      "last_shot_result": "in",
+      "ends": {
+        "A": "near",
+        "B": "far"
+      },
+      "net_approaches": {
+        "A": 0,
+        "B": 0
+      },
+      "player_dist_m": {
+        "A": 11.7,
+        "B": 16.1
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.941,
+        "ends": 1.0,
+        "player_dist_m": 0.79,
+        "net_approaches": 0.79,
+        "rally_len": 0.6,
+        "return_wing": 0.77,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.77,
+        "last_shot_stroke": 0.45,
+        "last_shot_result": 0.6,
+        "ending": 0.8,
+        "inferred_winner": 0.95,
+        "serves": 0.72
+      },
+      "mcp": "0n 5bqqqf*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 8,
+      "t_start": 539.4,
+      "t_end": 559.5,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-5",
+        "in_tb": true,
+        "ends": {
+          "A": "near",
+          "B": "far"
+        }
+      },
+      "server": "A",
+      "receiver": "B",
+      "side": "deuce",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": false,
+        "match_point": false,
+        "break_point_for": [],
+        "game_point_for": [],
+        "set_point_for": [],
+        "match_point_for": []
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 539.84,
+          "result": "fault",
+          "zone": null,
+          "fault": "long_wide",
+          "bounce_xy": [
+            -4.68,
+            7.71
+          ],
+          "speed_kmh": null,
+          "conf": 0.8
+        },
+        {
+          "n": 2,
+          "t": 550.2800000000001,
+          "result": "in",
+          "zone": "body",
+          "fault": null,
+          "bounce_xy": [
+            -1.7,
+            4.13
+          ],
+          "speed_kmh": null,
+          "conf": 0.85
+        }
+      ],
+      "serve_number_won_on": 2,
+      "return_wing": "bh",
+      "rally_len": 5,
+      "ending": "unforced_error",
+      "ending_by": "A",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "groundstroke",
+      "last_shot_result": "unknown",
+      "ends": {
+        "A": "near",
+        "B": "far"
+      },
+      "net_approaches": {
+        "A": 0,
+        "B": 0
+      },
+      "player_dist_m": {
+        "A": 6.4,
+        "B": 12.4
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.916,
+        "ends": 1.0,
+        "player_dist_m": 0.77,
+        "net_approaches": 0.77,
+        "rally_len": 0.6,
+        "return_wing": 0.71,
+        "last_shot_by": 0.7,
+        "last_shot_wing": 0.71,
+        "last_shot_stroke": 0.45,
+        "last_shot_result": 0.1,
+        "ending": 0.56,
+        "inferred_winner": 0.95,
+        "serves": 0.72
+      },
+      "mcp": "0x 5bqqf@",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    },
+    {
+      "id": 9,
+      "t_start": 593.4,
+      "t_end": 602.0,
+      "set_no": 3,
+      "score_before": {
+        "sets": [
+          [
+            7,
+            6
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "games": [
+          6,
+          6
+        ],
+        "points": "3-6",
+        "in_tb": true,
+        "ends": {
+          "A": "near",
+          "B": "far"
+        }
+      },
+      "server": "B",
+      "receiver": "A",
+      "side": "ad",
+      "flags": {
+        "break_point": false,
+        "game_point": false,
+        "set_point": true,
+        "match_point": true,
+        "break_point_for": [],
+        "game_point_for": [
+          "B"
+        ],
+        "set_point_for": [
+          "B"
+        ],
+        "match_point_for": [
+          "B"
+        ]
+      },
+      "winner": "B",
+      "winner_source": "ocr",
+      "serves": [
+        {
+          "n": 1,
+          "t": 593.82,
+          "result": "in",
+          "zone": "wide",
+          "fault": null,
+          "bounce_xy": null,
+          "speed_kmh": null,
+          "conf": 0.4
+        }
+      ],
+      "serve_number_won_on": 1,
+      "return_wing": "fh",
+      "rally_len": 3,
+      "ending": "winner",
+      "ending_by": "B",
+      "last_shot_wing": "fh",
+      "last_shot_stroke": "groundstroke",
+      "last_shot_result": "in",
+      "ends": {
+        "A": "near",
+        "B": "far"
+      },
+      "net_approaches": {
+        "A": 0,
+        "B": 0
+      },
+      "player_dist_m": {
+        "A": 4.9,
+        "B": 12.1
+      },
+      "gap_before": false,
+      "conf": {
+        "winner": 0.935,
+        "ends": 1.0,
+        "player_dist_m": 0.22,
+        "net_approaches": 0.22,
+        "rally_len": 0.44,
+        "return_wing": 0.5,
+        "last_shot_by": 0.8,
+        "last_shot_wing": 0.77,
+        "last_shot_stroke": 0.45,
+        "last_shot_result": 0.78,
+        "ending": 0.8,
+        "inferred_winner": 0.95
+      },
+      "mcp": "4ff*",
+      "review": {
+        "status": "auto",
+        "edited_fields": []
+      }
+    }
+  ],
+  "stats": {
+    "n_points": 10,
+    "n_gaps": 1,
+    "n_reviewed": 0,
+    "n_edited": 0,
+    "coverage": {
+      "winner": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.933,
+        "low_conf": 0
+      },
+      "serves": {
+        "known": 9,
+        "total": 10,
+        "pct": 90.0,
+        "mean_conf": 0.612,
+        "low_conf": 3
+      },
+      "serve_zone": {
+        "known": 8,
+        "total": 10,
+        "pct": 80.0,
+        "mean_conf": 0.599,
+        "low_conf": 3
+      },
+      "return_wing": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.624,
+        "low_conf": 3
+      },
+      "rally_len": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.489,
+        "low_conf": 6
+      },
+      "ending": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.689,
+        "low_conf": 2
+      },
+      "last_shot_wing": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.549,
+        "low_conf": 6
+      },
+      "net_approaches": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.652,
+        "low_conf": 1
+      },
+      "player_dist_m": {
+        "known": 10,
+        "total": 10,
+        "pct": 100.0,
+        "mean_conf": 0.652,
+        "low_conf": 1
+      }
+    },
+    "players": {
+      "A": {
+        "points_won": {
+          "k": 3,
+          "n": 10,
+          "pct": 30.0,
+          "lo": 10.8,
+          "hi": 60.3
+        },
+        "serve_points_won": {
+          "k": 1,
+          "n": 5,
+          "pct": 20.0,
+          "lo": 3.6,
+          "hi": 62.4
+        },
+        "return_points_won": {
+          "k": 2,
+          "n": 5,
+          "pct": 40.0,
+          "lo": 11.8,
+          "hi": 76.9
+        },
+        "first_serve_in": {
+          "k": 0,
+          "n": 4,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 49.0
+        },
+        "first_serve_won": {
+          "k": 0,
+          "n": 0,
+          "pct": null,
+          "lo": null,
+          "hi": null
+        },
+        "second_serve_won": {
+          "k": 0,
+          "n": 4,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 49.0
+        },
+        "second_serve_in": {
+          "k": 4,
+          "n": 4,
+          "pct": 100.0,
+          "lo": 51.0,
+          "hi": 100.0
+        },
+        "aces": {
+          "k": 0,
+          "n": 5,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 43.4
+        },
+        "double_faults": {
+          "k": 0,
+          "n": 5,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 43.4
+        },
+        "serve_zones": {
+          "1": {
+            "deuce": {
+              "n": 0,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "T": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              }
+            },
+            "ad": {
+              "n": 0,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "T": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              }
+            }
+          },
+          "2": {
+            "deuce": {
+              "n": 2,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 2,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 65.8
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 2,
+                  "pct": 50.0,
+                  "lo": 9.5,
+                  "hi": 90.5
+                },
+                "won": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                }
+              },
+              "T": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 2,
+                  "pct": 50.0,
+                  "lo": 9.5,
+                  "hi": 90.5
+                },
+                "won": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                }
+              }
+            },
+            "ad": {
+              "n": 2,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 2,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 65.8
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 2,
+                  "pct": 50.0,
+                  "lo": 9.5,
+                  "hi": 90.5
+                },
+                "won": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                }
+              },
+              "T": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 2,
+                  "pct": 50.0,
+                  "lo": 9.5,
+                  "hi": 90.5
+                },
+                "won": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                }
+              }
+            }
+          }
+        },
+        "fault_types": {
+          "1": {
+            "n": 3,
+            "faults": 4,
+            "net": 1,
+            "long": 1,
+            "wide": 0,
+            "long_wide": 1
+          },
+          "2": {
+            "n": 0,
+            "faults": 0,
+            "net": 0,
+            "long": 0,
+            "wide": 0,
+            "long_wide": 0
+          }
+        },
+        "return_in": {
+          "k": 4,
+          "n": 5,
+          "pct": 80.0,
+          "lo": 37.6,
+          "hi": 96.4
+        },
+        "return_by_wing": {
+          "fh": {
+            "in": {
+              "k": 2,
+              "n": 3,
+              "pct": 66.7,
+              "lo": 20.8,
+              "hi": 93.9
+            },
+            "errors": 1
+          },
+          "bh": {
+            "in": {
+              "k": 2,
+              "n": 2,
+              "pct": 100.0,
+              "lo": 34.2,
+              "hi": 100.0
+            },
+            "errors": 0
+          }
+        },
+        "endings": {
+          "winner": {
+            "total": 2,
+            "fh": 2,
+            "bh": 0,
+            "unknown_wing": 0,
+            "by_stroke": {
+              "groundstroke": 2
+            }
+          },
+          "unforced_error": {
+            "total": 1,
+            "fh": 1,
+            "bh": 0,
+            "unknown_wing": 0,
+            "by_stroke": {
+              "groundstroke": 1
+            }
+          },
+          "forced_error": {
+            "total": 1,
+            "fh": 1,
+            "bh": 0,
+            "unknown_wing": 0,
+            "by_stroke": {
+              "overhead": 1
+            }
+          }
+        },
+        "rally": {
+          "1-4": {
+            "k": 1,
+            "n": 3,
+            "pct": 33.3,
+            "lo": 6.1,
+            "hi": 79.2
+          },
+          "5-8": {
+            "k": 2,
+            "n": 5,
+            "pct": 40.0,
+            "lo": 11.8,
+            "hi": 76.9
+          },
+          "9+": {
+            "k": 0,
+            "n": 2,
+            "pct": 0.0,
+            "lo": 0.0,
+            "hi": 65.8
+          }
+        },
+        "break_points": {
+          "saved": {
+            "k": 0,
+            "n": 0,
+            "pct": null,
+            "lo": null,
+            "hi": null
+          },
+          "converted": {
+            "k": 0,
+            "n": 0,
+            "pct": null,
+            "lo": null,
+            "hi": null
+          }
+        },
+        "pressure": {
+          "won": {
+            "k": 0,
+            "n": 1,
+            "pct": 0.0,
+            "lo": 0.0,
+            "hi": 79.3
+          },
+          "normal_won": {
+            "k": 3,
+            "n": 9,
+            "pct": 33.3,
+            "lo": 12.1,
+            "hi": 64.6
+          },
+          "first_serve_in": {
+            "k": 0,
+            "n": 0,
+            "pct": null,
+            "lo": null,
+            "hi": null
+          },
+          "first_serve_in_normal": {
+            "k": 0,
+            "n": 4,
+            "pct": 0.0,
+            "lo": 0.0,
+            "hi": 49.0
+          }
+        },
+        "net": {
+          "points": {
+            "k": 2,
+            "n": 4,
+            "pct": 50.0,
+            "lo": 15.0,
+            "hi": 85.0
+          },
+          "approaches": 4,
+          "n_points_known": 10
+        },
+        "distance": {
+          "n": 10,
+          "mean_m": 16.5,
+          "total_m": 165.4
+        },
+        "serve_points": 5,
+        "return_points": 5
+      },
+      "B": {
+        "points_won": {
+          "k": 7,
+          "n": 10,
+          "pct": 70.0,
+          "lo": 39.7,
+          "hi": 89.2
+        },
+        "serve_points_won": {
+          "k": 3,
+          "n": 5,
+          "pct": 60.0,
+          "lo": 23.1,
+          "hi": 88.2
+        },
+        "return_points_won": {
+          "k": 4,
+          "n": 5,
+          "pct": 80.0,
+          "lo": 37.6,
+          "hi": 96.4
+        },
+        "first_serve_in": {
+          "k": 4,
+          "n": 5,
+          "pct": 80.0,
+          "lo": 37.6,
+          "hi": 96.4
+        },
+        "first_serve_won": {
+          "k": 3,
+          "n": 4,
+          "pct": 75.0,
+          "lo": 30.1,
+          "hi": 95.4
+        },
+        "second_serve_won": {
+          "k": 0,
+          "n": 1,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 79.3
+        },
+        "second_serve_in": {
+          "k": 1,
+          "n": 1,
+          "pct": 100.0,
+          "lo": 20.7,
+          "hi": 100.0
+        },
+        "aces": {
+          "k": 0,
+          "n": 5,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 43.4
+        },
+        "double_faults": {
+          "k": 0,
+          "n": 5,
+          "pct": 0.0,
+          "lo": 0.0,
+          "hi": 43.4
+        },
+        "serve_zones": {
+          "1": {
+            "deuce": {
+              "n": 1,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "T": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 1,
+                  "pct": 100.0,
+                  "lo": 20.7,
+                  "hi": 100.0
+                },
+                "won": {
+                  "k": 1,
+                  "n": 1,
+                  "pct": 100.0,
+                  "lo": 20.7,
+                  "hi": 100.0
+                }
+              }
+            },
+            "ad": {
+              "n": 3,
+              "wide": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 3,
+                  "pct": 33.3,
+                  "lo": 6.1,
+                  "hi": 79.2
+                },
+                "won": {
+                  "k": 1,
+                  "n": 1,
+                  "pct": 100.0,
+                  "lo": 20.7,
+                  "hi": 100.0
+                }
+              },
+              "body": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 3,
+                  "pct": 33.3,
+                  "lo": 6.1,
+                  "hi": 79.2
+                },
+                "won": {
+                  "k": 0,
+                  "n": 1,
+                  "pct": 0.0,
+                  "lo": 0.0,
+                  "hi": 79.3
+                }
+              },
+              "T": {
+                "count": 1,
+                "share": {
+                  "k": 1,
+                  "n": 3,
+                  "pct": 33.3,
+                  "lo": 6.1,
+                  "hi": 79.2
+                },
+                "won": {
+                  "k": 1,
+                  "n": 1,
+                  "pct": 100.0,
+                  "lo": 20.7,
+                  "hi": 100.0
+                }
+              }
+            }
+          },
+          "2": {
+            "deuce": {
+              "n": 0,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "T": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              }
+            },
+            "ad": {
+              "n": 0,
+              "wide": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "body": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              },
+              "T": {
+                "count": 0,
+                "share": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                },
+                "won": {
+                  "k": 0,
+                  "n": 0,
+                  "pct": null,
+                  "lo": null,
+                  "hi": null
+                }
+              }
+            }
+          }
+        },
+        "fault_types": {
+          "1": {
+            "n": 1,
+            "faults": 1,
+            "net": 1,
+            "long": 0,
+            "wide": 0,
+            "long_wide": 0
+          },
+          "2": {
+            "n": 0,
+            "faults": 0,
+            "net": 0,
+            "long": 0,
+            "wide": 0,
+            "long_wide": 0
+          }
+        },
+        "return_in": {
+          "k": 4,
+          "n": 4,
+          "pct": 100.0,
+          "lo": 51.0,
+          "hi": 100.0
+        },
+        "return_by_wing": {
+          "fh": {
+            "in": {
+              "k": 1,
+              "n": 1,
+              "pct": 100.0,
+              "lo": 20.7,
+              "hi": 100.0
+            },
+            "errors": 0
+          },
+          "bh": {
+            "in": {
+              "k": 3,
+              "n": 3,
+              "pct": 100.0,
+              "lo": 43.8,
+              "hi": 100.0
+            },
+            "errors": 0
+          }
+        },
+        "endings": {
+          "winner": {
+            "total": 5,
+            "fh": 3,
+            "bh": 2,
+            "unknown_wing": 0,
+            "by_stroke": {
+              "volley": 3,
+              "groundstroke": 2
+            }
+          },
+          "unforced_error": {
+            "total": 1,
+            "fh": 0,
+            "bh": 1,
+            "unknown_wing": 0,
+            "by_stroke": {
+              "overhead": 1
+            }
+          },
+          "forced_error": {
+            "total": 0,
+            "fh": 0,
+            "bh": 0,
+            "unknown_wing": 0,
+            "by_stroke": {}
+          }
+        },
+        "rally": {
+          "1-4": {
+            "k": 2,
+            "n": 3,
+            "pct": 66.7,
+            "lo": 20.8,
+            "hi": 93.9
+          },
+          "5-8": {
+            "k": 3,
+            "n": 5,
+            "pct": 60.0,
+            "lo": 23.1,
+            "hi": 88.2
+          },
+          "9+": {
+            "k": 2,
+            "n": 2,
+            "pct": 100.0,
+            "lo": 34.2,
+            "hi": 100.0
+          }
+        },
+        "break_points": {
+          "saved": {
+            "k": 0,
+            "n": 0,
+            "pct": null,
+            "lo": null,
+            "hi": null
+          },
+          "converted": {
+            "k": 0,
+            "n": 0,
+            "pct": null,
+            "lo": null,
+            "hi": null
+          }
+        },
+        "pressure": {
+          "won": {
+            "k": 1,
+            "n": 1,
+            "pct": 100.0,
+            "lo": 20.7,
+            "hi": 100.0
+          },
+          "normal_won": {
+            "k": 6,
+            "n": 9,
+            "pct": 66.7,
+            "lo": 35.4,
+            "hi": 87.9
+          },
+          "first_serve_in": {
+            "k": 1,
+            "n": 1,
+            "pct": 100.0,
+            "lo": 20.7,
+            "hi": 100.0
+          },
+          "first_serve_in_normal": {
+            "k": 3,
+            "n": 4,
+            "pct": 75.0,
+            "lo": 30.1,
+            "hi": 95.4
+          }
+        },
+        "net": {
+          "points": {
+            "k": 4,
+            "n": 4,
+            "pct": 100.0,
+            "lo": 51.0,
+            "hi": 100.0
+          },
+          "approaches": 5,
+          "n_points_known": 10
+        },
+        "distance": {
+          "n": 10,
+          "mean_m": 19.2,
+          "total_m": 192.4
+        },
+        "serve_points": 5,
+        "return_points": 5
+      }
+    },
+    "names": {
+      "A": "Sinner",
+      "B": "Alcaraz"
+    }
+  },
+  "insights": [],
+  "recommendations": []
+}

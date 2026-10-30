@@ -9,7 +9,8 @@ Exit code 1 if any check FAILs. Prints PASS / FAIL / WARN per check, with file:l
 
 Checks
   0. Site files (v5 layout): DIR/index.html, DIR/method.html, DIR/data/serveiq.json,
-     DIR/data/images.json, DIR/css/{site,method}.css and DIR/js/{data,ui,main,court,tool,numbers,method}.js
+     DIR/data/images.json, DIR/css/{site,method}.css and DIR/js/{data,ui,main,court,tool,match,method}.js (js/explore.js optional),
+     DIR/data/match.json
      exist. Must be gone: the v2 files DIR/app.js and DIR/styles.css, the v3 files
      DIR/css/{base,hero,players,league}.css and DIR/js/{hero,players,league}.js, the v4 files
      DIR/js/{findings,anim}.js, the draft v5 files DIR/js/{strip,bars}.js, the folder DIR/img/scenes and the
@@ -87,7 +88,7 @@ Checks
   8. The word "league" (case-insensitive, whole word) is not shown on index.html. Checked:
        - index.html text nodes outside <script> / <style> / comments, and the attributes people read
          (aria-label, title, alt, placeholder, content, value, data-info)
-       - every string literal of DIR/js/tool.js, numbers.js and court.js (the modules only index.html runs),
+       - every string literal of DIR/js/tool.js, court.js, match.js and explore.js (the modules only index.html runs),
          found by a small JS lexer: '...' and "..." literals and template literals (${...} parts become a
          space, strings inside them are checked on their own); comments and regex literals are skipped.
      Heuristic for "user-visible": HTML tags are removed from the literal first (class="league-x" is not
@@ -97,6 +98,11 @@ Checks
      (leagueRows, league_share, D.LDIR, a variable named league) are not strings, so they always pass;
      "league_share" and "leagueRows" also do not contain "league" as a whole word. Text built by joining
      fragments ("lea" + "gue") is not caught here; the smoke test scans the rendered page for it.
+  9. Match model: DIR/data/match.json equals a fresh run of src/export_match.py's build() (the model's
+     chart of its 10-point clip paired with the chart made by eye, and the "serves needed" quartiles from
+     serveiq.json). match_model/ (outside its git-ignored .venv, models, inbox, caches and __pycache__)
+     holds no .mp4 or .pt file and no "/Users/" path in any text file, no "video_abs" under out/, and
+     its LICENSE is the GNU AGPL.
   5. README.md, docs/SUBMISSION.md and the string literals of app/streamlit_app.py (docstrings,
      comments, raw strings, f-string {...} fields, plotly %{...} fields, hex colors and rgba(...)
      skipped): every number token must be one of the explicitly NAMED values in allowed_numbers().
@@ -244,16 +250,16 @@ def missing(check, rel):
     report("FAIL" if STRICT or (in_site and site_started()) else "WARN", check, f"{rel} does not exist yet")
 
 
-# v5 layout
-SITE_FILES = (["index.html", "method.html", "data/serveiq.json", "data/images.json"]
+# v6 layout
+SITE_FILES = (["index.html", "method.html", "data/serveiq.json", "data/images.json", "data/match.json"]
               + [f"css/{n}.css" for n in ["site", "method"]]
-              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "numbers", "method"]])
-OPTIONAL_FILES = []
+              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "match", "method"]])
+OPTIONAL_FILES = ["js/explore.js"]
 # files and folders that must be gone: v2 (app.js, styles.css), v3 (the section css/js and scene photos),
-# v4 (findings.js, anim.js), the v5 drafts (strip.js, bars.js) and the design drafts folder
+# v4 (findings.js, anim.js), the v5 drafts (strip.js, bars.js), v5's numbers.js and the design drafts folder
 LEGACY_FILES = (["app.js", "styles.css"]
                 + [f"css/{n}.css" for n in ["base", "hero", "players", "league"]]
-                + [f"js/{n}.js" for n in ["hero", "players", "league", "findings", "anim", "strip", "bars"]]
+                + [f"js/{n}.js" for n in ["hero", "players", "league", "findings", "anim", "strip", "bars", "numbers"]]
                 + ["img/scenes", "_concepts"])
 
 
@@ -280,7 +286,7 @@ def check_files():
             missing(C, f"{SITE_REL}/{name}")
             bad += 1
     if not bad:
-        report("PASS", C, f"all {len(SITE_FILES)} v5 site files exist (pages, data, css/site.css, css/method.css, js/*.js)")
+        report("PASS", C, f"all {len(SITE_FILES)} v6 site files exist (pages, data, css/site.css, css/method.css, js/*.js)")
     for name in LEGACY_FILES:
         if (SITE / name).exists():
             report("FAIL", C, f"{SITE_REL}/{name} is an old or draft file and must be removed (nothing should reference it)")
@@ -291,7 +297,7 @@ def check_files():
     extra = [f"{d}/{q.name}" for d, files in (("css", site_css()), ("js", site_js())) for q in files
              if f"{d}/{q.name}" not in known]
     for e in extra:
-        report("WARN", C, f"{SITE_REL}/{e} is not in the v5 file list")
+        report("WARN", C, f"{SITE_REL}/{e} is not in the v6 file list")
 
     # local references
     refs = []  # (file, line, target path relative to the file's folder)
@@ -1060,7 +1066,7 @@ def formula_cards():
 PROSE_SKIP_TAGS = {"script", "style", "svg", "button", "label", "input", "select", "option", "textarea", "table"}
 PROSE_SKIP_CLASSES = {"chart", "key", "court", "control-label", "visually-hidden", "kpi-value", "btn", "lg-letter"}
 WORD_BUDGET = 100
-FORMULA_COUNT = 13
+FORMULA_COUNT = 14
 
 
 def prose_words(text):
@@ -1552,7 +1558,7 @@ def check_style():
 # ---------------------------------------------------------------- check 8: "league" on index.html
 
 LEAGUE = re.compile(r"(?i)\bleague\b")
-LEAGUE_JS = ["tool.js", "numbers.js", "court.js"]  # the modules only index.html runs
+LEAGUE_JS = ["tool.js", "court.js", "match.js", "explore.js"]  # the modules only index.html runs
 
 
 def league_visible(s):
@@ -1591,7 +1597,7 @@ def check_league_word():
     for name in LEAGUE_JS:
         f = SITE / "js" / name
         if not f.exists():
-            if name != "court.js":
+            if name not in ("court.js", "explore.js"):
                 missing(C, f"{SITE_REL}/js/{name}")
             continue
         src = f.read_text(encoding="utf-8")
@@ -1660,6 +1666,16 @@ def allowed_numbers(mine, fam):
     for k, v in fam.items():
         add_int(v, f"test family size ({k})")
     add_int(SERVES_TOTAL, "SERVES_TOTAL")
+    mj = match_json()
+    if mj:
+        for k, v in mj["totals"].items():
+            add_int(v, f"match.totals.{k}")
+        nd = mj["need"]
+        for i, v in enumerate(nd["serves_q"]):
+            add_int(round(v), f"match.need.serves_q[{i}]")
+        for i, v in enumerate(nd["matches_q"]):
+            add_int(round(v), f"match.need.matches_q[{i}]")
+        add_int(round(nd["serves_per_match"]), "match.need.serves_per_match")
     for y in range(1974, 2031):
         plain.setdefault(str(y), "year")
     for v in VERSION_STRINGS:
@@ -1746,6 +1762,74 @@ def check_doc_numbers(mine, fam):
             report("PASS", C, f"{rel}: every number is in the named allowed set")
 
 
+# ---------------------------------------------------------------- check 9: match model
+
+MATCH_PATH = SITE / "data" / "match.json"
+MODEL_DIR = ROOT / "match_model"
+MODEL_IGNORED = {".venv", "models", "inbox", "cache", "__pycache__"}
+
+
+def match_json():
+    try:
+        return load_json(MATCH_PATH) if MATCH_PATH.exists() else None
+    except ValueError:
+        return None
+
+
+def check_match():
+    C = "9 match model"
+    if not MATCH_PATH.exists():
+        missing(C, f"{SITE_REL}/data/match.json")
+        return
+    sys.path.insert(0, str(ROOT / "src"))
+    try:
+        import export_match
+        want = export_match.build()
+    except (OSError, KeyError, ValueError, SystemExit) as e:
+        report("FAIL", C, f"src/export_match.py could not rebuild the match data: {type(e).__name__} {e}")
+        return
+    finally:
+        sys.path.pop(0)
+    got = match_json()
+    if got is None:
+        report("FAIL", C, f"{SITE_REL}/data/match.json is not strict JSON")
+    elif got != want:
+        keys = sorted(k for k in set(got) | set(want) if got.get(k) != want.get(k))
+        report("FAIL", C, f"{SITE_REL}/data/match.json differs from a fresh export_match.build() in {keys}: run src/export_match.py")
+    else:
+        t = got["totals"]
+        report("PASS", C, f"{SITE_REL}/data/match.json equals a fresh rebuild ({t['named']} of {t['served']} served lanes named, "
+                          f"{t['matched']} matched, winners {t['winners']} of {t['points']})")
+    if not MODEL_DIR.is_dir():
+        report("FAIL", C, "match_model/ is missing")
+        return
+    bad = 0
+    for f in sorted(MODEL_DIR.rglob("*")):
+        rel = f.relative_to(MODEL_DIR)
+        if not f.is_file() or MODEL_IGNORED & set(rel.parts[:-1]) or f.name == ".DS_Store":
+            continue
+        if f.suffix.lower() in (".mp4", ".mov", ".pt"):
+            report("FAIL", C, f"match_model/{rel.as_posix()}: video or model weights must not ship")
+            bad += 1
+            continue
+        try:
+            text = f.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        if "/Users/" in text:
+            report("FAIL", C, f"match_model/{rel.as_posix()}: contains a local /Users/ path")
+            bad += 1
+        if rel.parts[0] == "out" and "video_abs" in text:
+            report("FAIL", C, f"match_model/{rel.as_posix()}: contains video_abs (a local video path)")
+            bad += 1
+    lic = MODEL_DIR / "LICENSE"
+    if not lic.exists() or "GNU AFFERO GENERAL PUBLIC LICENSE" not in lic.read_text(encoding="utf-8"):
+        report("FAIL", C, "match_model/LICENSE must be the GNU AGPL (the model imports Ultralytics)")
+        bad += 1
+    if not bad:
+        report("PASS", C, "match_model/ ships no video, weights, local paths or video_abs, and carries the AGPL license")
+
+
 # ---------------------------------------------------------------- main
 
 def main():
@@ -1774,6 +1858,7 @@ def main():
     check_league_word()
     mine, _, fam = recompute()
     check_doc_numbers(mine, fam)
+    check_match()
     n = {s: sum(1 for r in results if r[0] == s) for s in ["PASS", "FAIL", "WARN"]}
     print(f"\nSUMMARY: {n['PASS']} PASS, {n['FAIL']} FAIL, {n['WARN']} WARN")
     sys.exit(1 if n["FAIL"] else 0)
