@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Serve IQ static-site smoke test (headless browser), v4: one court screen plus one finding.
+// Serve IQ static-site smoke test (headless browser), v5: one court with a stats panel, plus "By the numbers".
 //
 // Usage:  node scripts/smoke_site.mjs <siteDir> <outDir> [port]
 //
@@ -11,42 +11,47 @@
 // $CHROME_PATH, else the Chrome app path on macOS. The script serves <siteDir> itself on 127.0.0.1
 // (port 0 = any free port), so it never needs another server.
 //
-// What it checks (each line of the JSON summary is one check), against the DOM contract of the v4 spec:
+// What it checks (each line of the JSON summary is one check), against the DOM contract of the v5 site:
 //   index.html at 1440x900 and 390x844:
-//     - the page boots (html.data-ready), the default player is Rafael Nadal on 1st serve
-//     - zero console errors, page errors, "Serve IQ:" module warnings and failed requests
+//     - the page boots (html.data-ready); the default view is the typical pro of the men on 1st serve:
+//       tab [data-key="m"] pressed, #who h2 "Typical pro, men", the first #seg button pressed
+//     - zero console errors, page errors, "Serve IQ:" module warnings and failed requests. The Archivo font
+//       comes from fonts.googleapis.com / fonts.gstatic.com: a failure on those two hosts (no network) is a
+//       warning, not a failure
 //     - no horizontal page scroll; no banned characters, placeholder text (NaN, undefined, n/a, null),
 //       the word "league", he/she pronouns or banned voice words anywhere in the rendered text
-//     - #court has 2 svg panels and 6 .arrow[data-side][data-dir] with tabindex 0 and an aria-label;
-//       focusing each arrow shows #court-tip with text, inside the viewport; Tab moves to the next arrow;
-//       each panel's arrows are in left-to-right DOM (Tab) order; every share label is within 10px (390) or
-//       12px (1440) of its own arrowhead's center and no two labels overlap
-//     - the player photo loads for Nadal
-//     - page height: at most 1,900px at 1440, at most 3,600px at 390 (default player and every quick pick)
-//     - 390 only: on the first screen (scrollY 0) the search box, the 1st/2nd switch, the bottom of the
-//       court panels and the top of the first sentence are all within 844px
+//     - #court svg has 6 lane share labels and 6 serve paths (each with its shade path); once the draw
+//       animation settles every path has stroke-dashoffset 0
+//     - #sides has 2 .side blocks and 6 .row[data-k] with tabindex 0 and an aria-label; each row's share and
+//       points won equal a pooled typical pro computed here from league.directions (sum n over matchups and
+//       both break-point states per gender / serve / side / direction; share = n / side total; win =
+//       n-weighted mean), in whole percents
+//     - the typical pro (men, 1st serve) flags both body rows "Wins least"
+//     - page height: at most 2,000px at 1440, at most 3,400px at 390
 //   index.html interaction (1440):
-//     - #players datalist has one option per player (447); typing a full name into #player-input loads it;
-//       a name that matches nobody keeps the typed text, shows "No charted player matches ..." and keeps the
-//       loaded player, and Esc restores the loaded name (names compare by nameKey(), as the page shows display
-//       spellings such as "John McEnroe")
-//     - #quick-picks has 5 links and each one loads the player it names
-//     - #serve-switch: 2 buttons; clicking 2nd serve flips aria-pressed and changes the arrow share labels
-//     - #sentences has 1 to 4 <p> for every quick pick and every waffle player, on both serves, each with
-//       no "league", no banned characters, no he/she and no placeholder text
-//     - details#sure is closed by default, opens, and has at least 2 tables with rows (Nadal)
-//     - the waffle has 447 .waffle-dot and 24 .waffle-dot.is-hit (headline.costly_players_s1), every hit is
-//       a <button> with an aria-label "<name>, tap to show"; clicking one loads that player on 1st serve and
-//       scrolls #tool into view
-//     - a player with no photo hides #player-photo
-//   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to the
-//     backup app, and #tool, #findings and the intro's number line are hidden.
-//   method.html at 1440 and 390: boots, no errors or failed requests, no horizontal scroll, no banned
-//     characters, KaTeX renders every .fx formula block (13 formulas plus the hypothesis line) with no
-//     errors, the credits table has one row per images.json player.
-//   Reduced motion (prefers-reduced-motion: reduce), index at 1440 and 390: boots with Nadal, the serve
-//     switch works and the arrow labels show their final values at once (no tween), no errors.
-//   Screenshots go to <outDir>/v4-<page>-<width>.png (full page) and v4-<page>-<width>-first.png (first screen).
+//     - the Nadal tab loads Rafael Nadal: deuce T and ad wide shares equal mix.data["m|Rafael Nadal|1"]
+//       (51%, 54%), the deuce wide row is .best with "Wins clearly more", the #who photo loads
+//     - hovering or focusing a row adds .hl to it alone and dims the other court paths (opacity 0.18)
+//     - #seg: 2nd serve flips aria-pressed and changes the court labels; 1st serve restores them
+//     - #find: #players datalist has one option per player (headline.players); typing a full name and Enter
+//       loads that player and adds a tab for them; a name that matches nobody shows "No charted player
+//       matches" in #find-msg and keeps the player
+//     - details#sure is closed by default, opens and has text; for a player it lists 6 li
+//     - #numbers: #vs has 4 bars whose values equal |body_in_m1|, |body_win_m1|, |body_in_w1|, |body_win_w1|
+//       (headline coefs, 1 decimal); #clear shows the ring with costly_players_s1 of players and exactly
+//       costly_players_s1 .chip buttons; clicking a chip loads that player on 1st serve, presses the chip
+//       and scrolls #tool into view
+//     - a player with no photo (in players, not in images.json) shows the ball placeholder, no img
+//   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to
+//     serve-iq.streamlit.app, every .needs-data part is hidden.
+//   method.html at 1440 and 390: boots, no errors or failed requests (same font rule), no horizontal scroll
+//     (cards closed and all open), no banned characters, 13 details.fcard all closed by default, KaTeX renders
+//     every .fx block with no errors after all cards are opened, opening #credits-fold shows one credits row
+//     per images.json player with a photo, method.html#f7 opens f7 and method.html#credits opens the fold.
+//   Reduced motion (prefers-reduced-motion: reduce), index at 1440 and 390: boots, every path has
+//     stroke-dashoffset 0 at once, switching serve updates the labels in the same task, no errors.
+//   Screenshots go to <outDir>/v5-index-<w>.png (full page), v5-index-<w>-first.png (first screen) and
+//   v5-method-<w>.png (full page).
 //
 // Prints a JSON summary to stdout and exits 1 if any check fails.
 
@@ -73,7 +78,8 @@ for (const f of ['index.html', 'method.html', 'data/serveiq.json', 'data/images.
 fs.mkdirSync(outDir, { recursive: true });
 const DATA = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/serveiq.json'), 'utf8'));
 const IMAGES = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/images.json'), 'utf8'));
-const N_CREDITS = Object.keys(IMAGES.players || {}).length;
+const IMG_PLAYERS = IMAGES.players || {};
+const N_CREDITS = Object.keys(IMG_PLAYERS).filter((k) => IMG_PLAYERS[k] && IMG_PLAYERS[k].src).length;
 const N_PLAYERS = DATA.headline.players;
 const N_HITS = DATA.headline.costly_players_s1;
 const SERVERS = (() => {
@@ -81,13 +87,48 @@ const SERVERS = (() => {
   const si = f.indexOf('server');
   return DATA.players.rows.map((r) => r[si]);
 })();
-const DEFAULT = 'Rafael Nadal';
+const DEFAULT_H2 = 'Typical pro, men';
+const NADAL = 'Rafael Nadal';
+const SIDES = ['deuce', 'ad'];
+const DIRS = ['wide', 'body', 'T'];
 // names: the page shows a display spelling for some players ("John McEnroe" for the data's "John Mcenroe",
 // "Jo-Wilfried Tsonga"), so names are compared by the same key js/data.js nameKey() uses
-const nameKey = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
-  .replace(/['\u2019]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const nameKey = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  .replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const sameName = (a, b) => nameKey(a) === nameKey(b);
-const LIMITS = { 1440: { w: 1440, h: 900, maxHeight: 1900 }, 390: { w: 390, h: 844, maxHeight: 3600 } };
+const LIMITS = { 1440: { w: 1440, h: 900, maxHeight: 2000 }, 390: { w: 390, h: 844, maxHeight: 3400 } };
+// the web font hosts: a failure there (no network) is a warning, not a failed check
+const FONT_HOST = /^https?:\/\/fonts\.(googleapis|gstatic)\.com\//;
+const pct = (x) => Math.round(100 * x);
+
+/* The typical pro, computed here from the data file (not from the page): per side and direction, n = sum of
+   n over every matchup and both is_break_point values; share = n / side total; win = n-weighted mean of win. */
+function pooledTypical(g, serve) {
+  const LD = DATA.league.directions;
+  const F = {};
+  LD.fields.forEach((f, i) => { F[f] = i; });
+  const acc = {};
+  SIDES.forEach((s) => { acc[s] = {}; DIRS.forEach((d) => { acc[s][d] = { n: 0, w: 0, wn: 0 }; }); });
+  for (const r of LD.rows) {
+    if (r[F.gender] !== g || r[F.serve_num] !== serve) continue;
+    const a = acc[r[F.side]] && acc[r[F.side]][r[F.direction]];
+    if (!a || typeof r[F.n] !== 'number') continue;
+    a.n += r[F.n];
+    if (typeof r[F.win] === 'number') { a.w += r[F.n] * r[F.win]; a.wn += r[F.n]; }
+  }
+  const out = {};
+  SIDES.forEach((s) => {
+    const tot = DIRS.reduce((t, d) => t + acc[s][d].n, 0);
+    DIRS.forEach((d) => { out[s + d] = { share: pct(acc[s][d].n / tot), win: pct(acc[s][d].w / acc[s][d].wn) }; });
+  });
+  return out;
+}
+// a player's 1st-serve share per side and direction from mix.data (field "share")
+function mixShare(key, side, dir) {
+  const i = DATA.mix.fields.indexOf('share');
+  const m = DATA.mix.data[key];
+  return m && m[side] && m[side].all && m[side].all[dir] ? m[side].all[dir][i] : null;
+}
 
 // ---------- load playwright ----------
 const HARNESS_DIRS = [
@@ -147,7 +188,6 @@ const checks = [];   // {name, pass, detail}
 const warnings = [];
 let tagNow = '';
 function check(name, pass, detail) { checks.push({ name, pass: !!pass, ...(detail !== undefined ? { detail } : {}) }); }
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function attachCollectors(page) {
   const log = { consoleErrors: [], moduleWarnings: [], pageErrors: [], failedRequests: [] };
@@ -156,12 +196,13 @@ function attachCollectors(page) {
     const line = `${m.text().slice(0, 300)}${where ? ' @ ' + where : ''}`;
     if (m.type() === 'warning' && /Serve IQ/.test(m.text())) { log.moduleWarnings.push(line); return; }
     if (m.type() !== 'error') return;
-    if (/\/favicon\.ico$/.test(where)) { warnings.push(`${tagNow}: ${line}`); return; }
+    if (/\/favicon\.ico$/.test(where) || FONT_HOST.test(where)) { warnings.push(`${tagNow}: ${line}`); return; }
     log.consoleErrors.push(line);
   });
   page.on('pageerror', (e) => log.pageErrors.push(String(e.message || e).slice(0, 300)));
-  page.on('requestfailed', (r) => log.failedRequests.push(`${r.failure()?.errorText || 'failed'} ${r.url()}`));
-  page.on('response', (r) => { if (r.status() >= 400) log.failedRequests.push(`HTTP ${r.status()} ${r.url()}`); });
+  const failed = (line, url) => { if (FONT_HOST.test(url)) warnings.push(`${tagNow}: font host: ${line}`); else log.failedRequests.push(line); };
+  page.on('requestfailed', (r) => failed(`${r.failure()?.errorText || 'failed'} ${r.url()}`, r.url()));
+  page.on('response', (r) => { if (r.status() >= 400) failed(`HTTP ${r.status()} ${r.url()}`, r.url()); });
   return log;
 }
 const errorsOf = (log) => [...log.consoleErrors, ...log.pageErrors, ...log.moduleWarnings];
@@ -176,25 +217,31 @@ async function newPage(browser, opts) {
   return { ctx, page, log };
 }
 
+// index: data bound, the stats panel and the court drawn, and "By the numbers" built (numbers.js runs after tool.js)
 async function waitForIndex(page) {
   await page.waitForFunction(() => document.documentElement.classList.contains('data-ready') ||
     document.documentElement.classList.contains('no-data'), null, { timeout: 20000 }).catch(() => {});
   await page.waitForFunction(() => {
-    const n = document.getElementById('player-name');
-    return n && n.textContent.trim() && document.querySelectorAll('#court .arrow').length >= 6 &&
-      document.querySelectorAll('#sentences p').length > 0;
+    const h = document.querySelector('#who h2');
+    return h && h.textContent.trim() && document.querySelectorAll('#sides .row[data-k]').length === 6 &&
+      document.querySelectorAll('#court path').length > 0 && document.querySelectorAll('#clear .chip').length > 0;
   }, null, { timeout: 15000 }).catch(() => {});
-  // findings.js runs after tool.js; give it a moment, then settle the arrow tween
-  await page.waitForFunction(() => document.querySelectorAll('.waffle .waffle-dot').length > 0, null, { timeout: 5000 }).catch(() => {});
-  await page.waitForTimeout(700);
+}
+// the draw animation is done when every court path has stroke-dashoffset 0
+const pathsSettled = () => {
+  const ps = [...document.querySelectorAll('#court path')];
+  return ps.length > 0 && ps.every((p) => parseFloat(getComputedStyle(p).strokeDashoffset) === 0);
+};
+async function waitForPaths(page) {
+  return page.waitForFunction(pathsSettled, null, { timeout: 8000 }).then(() => true).catch(() => false);
 }
 
 async function waitForMethod(page) {
   await page.waitForFunction(() => document.documentElement.classList.contains('data-ready') ||
     document.documentElement.classList.contains('no-data'), null, { timeout: 20000 }).catch(() => {});
-  await page.waitForFunction(() => document.querySelectorAll('.fx .katex, .fx.tex-raw, .tex-raw').length >= document.querySelectorAll('.fx').length &&
-    document.querySelectorAll('#credits-list tbody tr, #credits-list li').length > 0, null, { timeout: 20000 }).catch(() => {});
-  await page.waitForTimeout(300);
+  await page.waitForFunction(() => document.querySelectorAll('.fx.tex-ok, .fx.tex-raw').length >= document.querySelectorAll('.fx').length &&
+    document.querySelectorAll('#credits-list tbody tr, #credits-list .m-muted').length > 0 &&
+    !/load with the page/.test(document.getElementById('credits-list').textContent), null, { timeout: 20000 }).catch(() => {});
 }
 
 // All text in the DOM, including hidden parts and aria-labels / titles / tooltips, minus KaTeX, script and style.
@@ -247,6 +294,7 @@ async function overflow(page) {
     wideEls: [...document.querySelectorAll('body *')].filter((e) => {
       const r = e.getBoundingClientRect();
       if (r.width === 0 || getComputedStyle(e).position === 'fixed') return false;
+      if (r.right < 0) return false; // wholly off to the left: the visually hidden .skip pattern, no scroll
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
         if (getComputedStyle(p).overflowX !== 'visible') return false; // clipped or scrolls inside its own box
       }
@@ -255,89 +303,37 @@ async function overflow(page) {
   }));
 }
 
-const shareLabels = (page) => page.evaluate(() => [...document.querySelectorAll('#court .arrow')].map((a) => {
-  const s = a.querySelector('.a-share');
-  return `${a.getAttribute('data-side')}/${a.getAttribute('data-dir')}=${s ? s.textContent.trim() : ''}`;
+// the six lane share labels on the court (the 19px numbers above the far service line)
+const courtLabels = (page) => page.evaluate(() => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()));
+const segPressed = (page) => page.evaluate(() => [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')));
+const whoNow = (page) => page.evaluate(() => (document.querySelector('#who h2')?.textContent || '').replace(/\s+/g, ' ').trim());
+// rows as { k, share, win } in whole percents (null when not a number), plus class and flag
+const rowsNow = (page) => page.evaluate(() => [...document.querySelectorAll('#sides .row[data-k]')].map((r) => {
+  const num = (s) => { const m = /^(\d+)%$/.exec((s || '').replace(/\s+/g, '')); return m ? Number(m[1]) : null; };
+  return { k: r.getAttribute('data-k'), share: num(r.querySelector('.v')?.textContent), win: num(r.querySelector('.won')?.textContent),
+    cls: r.className, flag: (r.querySelector('.flag')?.textContent || '').trim(), tab: r.getAttribute('tabindex'), label: r.getAttribute('aria-label') || '' };
 }));
-const pressed = (page) => page.evaluate(() => [...document.querySelectorAll('#serve-switch button[aria-pressed]')].map((b) => b.getAttribute('aria-pressed')));
-const nameNow = (page) => page.evaluate(() => (document.getElementById('player-name')?.textContent || '').replace(/\s+/g, ' ').trim());
 
-// load a player the way a person does it: select the search text, type the name (input events fire per key)
-async function typePlayer(page, name) {
-  const inp = page.locator('#player-input');
+// type into #find the way a person does (input events per key), then Enter
+async function findPlayer(page, text) {
+  const inp = page.locator('#find');
   await inp.scrollIntoViewIfNeeded();
   await inp.click();
-  await inp.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
-  await inp.press('Backspace');
-  await inp.pressSequentially(name, { delay: 8 });
-  await page.waitForTimeout(700);
-  return nameNow(page);
+  await inp.fill('');
+  await inp.pressSequentially(text, { delay: 8 });
+  await inp.press('Enter');
 }
-
-// the six arrows: focusable, labelled, tooltip on focus inside the viewport
-async function arrowChecks(page, tag) {
-  const arrows = await page.evaluate(() => [...document.querySelectorAll('#court .arrow[data-side][data-dir]')].map((a) => ({
-    side: a.getAttribute('data-side'), dir: a.getAttribute('data-dir'), tab: a.getAttribute('tabindex'),
-    label: a.getAttribute('aria-label') || '',
-  })));
-  const panels = await page.locator('#court svg').count();
-  check(`${tag}: #court has 2 svg panels and 6 arrows with data-side / data-dir`, panels === 2 && arrows.length === 6 &&
-    new Set(arrows.map((a) => a.side + a.dir)).size === 6, { panels, arrows: arrows.length });
-  check(`${tag}: every arrow is focusable (tabindex 0) with an aria-label`, arrows.length === 6 && arrows.every((a) => a.tab === '0' && a.label.length > 10),
-    arrows.map((a) => `${a.side}/${a.dir} tab=${a.tab} label=${a.label.length}`));
-  // Tab order: in each panel the arrows come in the DOM left to right as drawn, whatever the shares are
-  const order = await page.evaluate(() => [...document.querySelectorAll('#court svg')].map((svg) =>
-    [...svg.querySelectorAll('.arrow')].map((a) => { const r = a.querySelector('.a-head').getBoundingClientRect(); return { dir: a.getAttribute('data-dir'), x: Math.round((r.left + r.right) / 2) }; })));
-  check(`${tag}: the arrows of each panel are in left-to-right order (Tab order)`, order.length === 2 && order.every((p) => p.every((a, i) => i === 0 || a.x > p[i - 1].x)),
-    order.map((p) => p.map((a) => a.dir + '@' + a.x).join(' ')));
-  // every share label sits over its own arrowhead (no label slid over a neighbor) and no two labels overlap
-  const labels = await page.evaluate(() => [...document.querySelectorAll('#court svg')].map((svg) => [...svg.querySelectorAll('.arrow')].map((a) => {
-    const s = a.querySelector('.a-share').getBoundingClientRect(), w = a.querySelector('.a-word').getBoundingClientRect(), h = a.querySelector('.a-head').getBoundingClientRect();
-    return { id: a.getAttribute('data-side') + '/' + a.getAttribute('data-dir'), off: Math.round(Math.abs((s.left + s.right) / 2 - (h.left + h.right) / 2)),
-      box: [Math.min(s.left, w.left), Math.min(s.top, w.top), Math.max(s.right, w.right), Math.max(s.bottom, w.bottom)] };
-  })));
-  const flat = labels.flat();
-  const overlap = (a, b) => a.box[0] < b.box[2] && b.box[0] < a.box[2] && a.box[1] < b.box[3] && b.box[1] < a.box[3];
-  const clashes = labels.flatMap((p) => p.flatMap((a, i) => p.slice(i + 1).filter((b) => overlap(a, b)).map((b) => a.id + ' x ' + b.id)));
-  // 10px on the phone (review finding); 12px on desktop, where a steep wide arrow's head box sits a little
-  // off its tip and the label is straight above the tip
-  const maxOff = /390/.test(tag) ? 10 : 12;
-  check(`${tag}: every share label is within ${maxOff}px of its own arrowhead and no labels overlap`, flat.length === 6 && flat.every((a) => a.off <= maxOff) && clashes.length === 0,
-    { offsets: flat.map((a) => a.id + '=' + a.off), clashes });
-  const tips = [];
-  for (let i = 0; i < arrows.length; i++) {
-    await page.locator('#court .arrow').nth(i).focus();
-    await page.waitForTimeout(120);
-    tips.push(await page.evaluate(() => {
-      const t = document.getElementById('court-tip');
-      if (!t) return { exists: false };
-      const r = t.getBoundingClientRect();
-      return { exists: true, hidden: t.hidden || getComputedStyle(t).display === 'none', text: t.textContent.trim(),
-        left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom),
-        vw: window.innerWidth, vh: window.innerHeight };
-    }));
-  }
-  const tipOk = (t) => t.exists && !t.hidden && t.text.length > 10 && t.left >= 0 && t.right <= t.vw && t.top >= 0 && t.bottom <= t.vh;
-  check(`${tag}: focusing each arrow shows #court-tip with text, inside the viewport`, tips.length === 6 && tips.every(tipOk),
-    tips.filter((t) => !tipOk(t)).slice(0, 3));
-  check(`${tag}: tooltips name the direction ("Out wide", "At the body", "Down the T")`,
-    tips.length === 6 && tips.every((t) => /^(Out wide|At the body|Down the T)\b/.test(t.text || '')), tips.map((t) => (t.text || '').slice(0, 40)));
-  await page.locator('#court .arrow').first().focus();
-  await page.keyboard.press('Tab');
-  await page.waitForTimeout(150);
-  const next = await page.evaluate(() => { const e = document.activeElement; return e && e.classList.contains('arrow') ? e.getAttribute('data-side') + '/' + e.getAttribute('data-dir') : (e ? e.tagName : null); });
-  check(`${tag}: Tab moves from one arrow to the next`, /\//.test(next || ''), next);
-  await page.keyboard.press('Escape');
-  await page.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
-  await page.waitForTimeout(100);
-  return tips;
-}
+const waitWho = (page, name) => page.waitForFunction((n) => {
+  const h = document.querySelector('#who h2');
+  return h && h.textContent.trim() === n;
+}, name, { timeout: 5000 }).then(() => true).catch(() => false);
 
 // ---------- main ----------
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}/`;
 const { browser, browserName } = await launchBrowser();
 const runs = [];
+const TYP_M1 = pooledTypical('m', 1);
 
 try {
   // warm-up: one throwaway load so the first measured run is not a cold start
@@ -358,28 +354,44 @@ try {
     await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
     await waitForIndex(page);
     const ready = await page.evaluate(() => document.documentElement.classList.contains('data-ready'));
-    const name = await nameNow(page);
-    const pr = await pressed(page);
     check(`${tag}: page boots and binds the data`, !gotoErr && ready, gotoErr || { ready });
-    check(`${tag}: default player is ${DEFAULT} on 1st serve`, name === DEFAULT && pr.length === 2 && pr[0] === 'true' && pr[1] === 'false', { name, pressed: pr });
-    const photo = await page.evaluate(() => { const i = document.getElementById('player-photo'); return i ? { hidden: i.hidden, ok: i.complete && i.naturalWidth > 0, w: Math.round(i.getBoundingClientRect().width) } : null; });
-    check(`${tag}: ${DEFAULT}'s photo loads, about 72 to 88px`, photo && !photo.hidden && photo.ok && photo.w >= 64 && photo.w <= 96, photo);
+    const def = await page.evaluate(() => ({
+      tab: document.querySelector('#tabs [data-key="m"]')?.getAttribute('aria-pressed') || null,
+      others: [...document.querySelectorAll('#tabs .tab:not([data-key="m"])')].filter((b) => b.getAttribute('aria-pressed') === 'true').length,
+    }));
+    const who = await whoNow(page);
+    const pr = await segPressed(page);
+    check(`${tag}: default view is the typical pro of the men on 1st serve`,
+      def.tab === 'true' && def.others === 0 && who === DEFAULT_H2 && pr.join() === 'true,false', { ...def, who, seg: pr });
+
+    // court
+    const settled = await waitForPaths(page);
+    const court = await page.evaluate(() => {
+      const ps = [...document.querySelectorAll('#court path')];
+      return { labels: [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()),
+        paths: ps.length, serve: ps.filter((p) => p.getAttribute('opacity') === '0.95').length,
+        offsets: ps.map((p) => getComputedStyle(p).strokeDashoffset) };
+    });
+    check(`${tag}: #court svg has 6 lane share labels and 6 serve paths (plus 6 shade paths)`,
+      court.labels.length === 6 && court.labels.every((l) => /^\d+%$/.test(l)) && court.serve === 6 && court.paths === 12, { labels: court.labels, serve: court.serve, paths: court.paths });
+    check(`${tag}: after the draw animation every court path has stroke-dashoffset 0`, settled, court.offsets);
+
+    // stats panel against the pooled typical pro
+    const rows = await rowsNow(page);
+    const sides = await page.locator('#sides .side').count();
+    check(`${tag}: #sides has 2 .side blocks and 6 .row[data-k] with tabindex 0 and an aria-label`,
+      sides === 2 && rows.length === 6 && new Set(rows.map((r) => r.k)).size === 6 && rows.every((r) => r.tab === '0' && r.label.length > 10),
+      { sides, rows: rows.map((r) => `${r.k} tab=${r.tab} label=${r.label.length}`) });
+    const mism = rows.filter((r) => !TYP_M1[r.k] || r.share !== TYP_M1[r.k].share || r.win !== TYP_M1[r.k].win)
+      .map((r) => ({ k: r.k, page: [r.share, r.win], data: TYP_M1[r.k] ? [TYP_M1[r.k].share, TYP_M1[r.k].win] : null }));
+    check(`${tag}: typical-pro rows match the pooled league.directions computation (share, points won, whole %)`,
+      rows.length === 6 && mism.length === 0, mism.length ? mism : rows.map((r) => `${r.k} ${r.share}/${r.win}`));
+    const least = rows.filter((r) => /\bworst\b/.test(r.cls) || r.flag);
+    check(`${tag}: the typical pro (men, 1st serve) flags both body rows "Wins least" and nothing else`,
+      least.length === 2 && least.every((r) => /body$/.test(r.k) && /\bworst\b/.test(r.cls) && r.flag === 'Wins least'), least);
 
     // first screen
-    await page.screenshot({ path: path.join(outDir, `v4-${tag}-first.png`), fullPage: false });
-    const first = await page.evaluate(() => {
-      const b = (sel) => { const e = document.querySelector(sel); if (!e) return null; const r = e.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom) }; };
-      const svgs = [...document.querySelectorAll('#court svg')].map((s) => s.getBoundingClientRect().bottom);
-      return { input: b('#player-input'), sw: b('#serve-switch'), courtBottom: svgs.length ? Math.round(Math.max(...svgs)) : null, sentence: b('#sentences p'), vh: window.innerHeight };
-    });
-    if (w === 390) {
-      const ok = first.input && first.sw && first.sentence && first.courtBottom !== null &&
-        first.input.bottom <= 844 && first.sw.bottom <= 844 && first.courtBottom <= 844 && first.sentence.top < 844;
-      check(`${tag}: first screen shows the search, the switch, the whole court and the start of the first sentence (within 844px)`, ok, first);
-    }
-
-    // arrows and tooltips
-    await arrowChecks(page, tag);
+    await page.screenshot({ path: path.join(outDir, `v5-${tag}-first.png`), fullPage: false });
 
     // whole-page checks
     const ov = await overflow(page);
@@ -389,26 +401,18 @@ try {
     check(`${tag}: no "league", he/she or banned voice words in the rendered page`, hits(scan, INDEX_BANNED).length === 0, hits(scan, INDEX_BANNED));
     const visible = await page.evaluate(() => document.body.innerText + '\n' + [...document.querySelectorAll('svg text')].map((t) => t.textContent).join(' '));
     check(`${tag}: no placeholder text (NaN, undefined, n/a, null)`, hits(visible, PLACEHOLDER).length === 0, hits(visible, PLACEHOLDER));
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    check(`${tag}: page height at most ${L.maxHeight.toLocaleString('en-US')}px`, height <= L.maxHeight, { height });
 
-    // heights: the default and every quick pick (details closed)
-    const heights = { [DEFAULT]: await page.evaluate(() => document.documentElement.scrollHeight) };
-    const picks = await page.evaluate(() => [...document.querySelectorAll('#quick-picks a')].map((a) => a.getAttribute('data-name') || a.textContent.trim()));
-    for (let i = 0; i < picks.length; i++) {
-      await page.locator('#quick-picks a').nth(i).click();
-      await page.waitForTimeout(600);
-      heights[await nameNow(page)] = await page.evaluate(() => document.documentElement.scrollHeight);
-    }
-    const maxH = Math.max(...Object.values(heights));
-    check(`${tag}: page height at most ${L.maxHeight.toLocaleString('en-US')}px (default and quick picks)`, maxH <= L.maxHeight, heights);
-    // back to the default for the full screenshot
-    await typePlayer(page, DEFAULT);
+    // full page: scroll through once so "By the numbers" fills, then back to the top
+    await page.locator('#numbers').scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => [...document.querySelectorAll('#vs [data-w]')].every((b) => b.style.width), null, { timeout: 3000 }).catch(() => {});
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, `v5-${tag}.png`), fullPage: true });
 
     check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
-    check(`${tag}: no failed requests`, log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag, heights, firstScreen: first });
+    check(`${tag}: no failed requests (font hosts are warnings)`, log.failedRequests.length === 0, log.failedRequests);
+    runs.push({ tag, height, labels: court.labels });
     await ctx.close();
   }
 
@@ -418,171 +422,166 @@ try {
     const { ctx, page, log } = await newPage(browser, { w: 1440, h: 900 });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await waitForIndex(page);
+    const out = {};
 
-    // search
+    // details#sure for the typical pro: closed, opens, has text
+    const sure0 = await page.evaluate(() => { const d = document.querySelector('details#sure'); return d ? d.open : null; });
+    await page.locator('details#sure > summary').click();
+    await page.waitForFunction(() => document.querySelector('details#sure').open, null, { timeout: 2000 }).catch(() => {});
+    const sureT = await page.evaluate(() => { const d = document.querySelector('details#sure'); return { open: d.open, text: d.querySelector('#sure-body').innerText.trim() }; });
+    await page.locator('details#sure > summary').click();
+
+    // tabs: Nadal
+    await page.locator('#tabs [data-key="Rafael Nadal"]').click();
+    const nadalOk = await waitWho(page, NADAL);
+    await page.waitForFunction(() => { const i = document.querySelector('#who img'); return i && i.complete; }, null, { timeout: 5000 }).catch(() => {});
+    const nadal = await rowsNow(page);
+    const img = await page.evaluate(() => { const i = document.querySelector('#who img'); return i ? { ok: i.complete && i.naturalWidth > 0, src: i.getAttribute('src') } : null; });
+    const tabPressed = await page.evaluate(() => document.querySelector('#tabs [data-key="Rafael Nadal"]').getAttribute('aria-pressed'));
+    const k1 = 'm|Rafael Nadal|1';
+    const want = { deuceT: pct(mixShare(k1, 'deuce', 'T')), adwide: pct(mixShare(k1, 'ad', 'wide')) };
+    const got = Object.fromEntries(nadal.map((r) => [r.k, r]));
+    check('interact: the Nadal tab loads Rafael Nadal (tab pressed, #who h2)', nadalOk && tabPressed === 'true', { who: await whoNow(page), tabPressed });
+    check(`interact: Nadal's deuce T row says ${want.deuceT}% and ad wide ${want.adwide}% (mix.data share; spec: 51%, 54%)`,
+      want.deuceT === 51 && want.adwide === 54 && got.deuceT?.share === want.deuceT && got.adwide?.share === want.adwide,
+      { want, page: { deuceT: got.deuceT?.share, adwide: got.adwide?.share } });
+    check('interact: Nadal\'s deuce wide row is .best with a "Wins clearly more" flag',
+      /\bbest\b/.test(got.deucewide?.cls || '') && got.deucewide?.flag === 'Wins clearly more', got.deucewide);
+    check('interact: Nadal\'s photo in #who loads', img && img.ok, img);
+
+    // hover / focus a row: .hl on that row alone, the other court paths dimmed to 0.18
+    const hlState = (k) => page.evaluate((key) => {
+      const SIDES = ['deuce', 'ad'], DIRS = ['wide', 'body', 'T'];
+      const i = SIDES.indexOf(key.startsWith('deuce') ? 'deuce' : 'ad') * 3 + DIRS.indexOf(key.replace(/^(deuce|ad)/, ''));
+      const ps = [...document.querySelectorAll('#court path')];
+      const op = ps.map((p) => getComputedStyle(p).opacity);
+      // paths come in (shade, path) pairs in SIDES x DIRS order
+      return { hl: [...document.querySelectorAll('#sides .row.hl')].map((r) => r.getAttribute('data-k')),
+        lit: op.every((o, j) => (Math.floor(j / 2) === i ? o === '1' : o === '0.18')), op };
+    }, k);
+    await page.locator('#sides .row[data-k="deuceT"]').hover();
+    const hov = await hlState('deuceT');
+    await page.mouse.move(5, 5);
+    await page.locator('#sides .row[data-k="adbody"]').focus();
+    const foc = await hlState('adbody');
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    const off = await page.evaluate(() => ({ hl: document.querySelectorAll('#sides .row.hl').length,
+      op: [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).opacity) }));
+    check('interact: hovering a row adds .hl to it and dims the other court paths to 0.18', hov.hl.join() === 'deuceT' && hov.lit, hov);
+    check('interact: focusing a row adds .hl to it and dims the other court paths to 0.18', foc.hl.join() === 'adbody' && foc.lit, foc);
+    check('interact: leaving the row clears .hl and the dimming', off.hl === 0 && off.op.every((o) => o === '1'), off);
+
+    // #seg: 2nd serve and back
+    const before = await courtLabels(page);
+    const p0 = await segPressed(page);
+    await page.locator('#seg button[data-serve="2"]').click();
+    await page.waitForFunction((b) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() !== b,
+      before.join(), { timeout: 3000 }).catch(() => {});
+    const after = await courtLabels(page);
+    const p1 = await segPressed(page);
+    check('interact: #seg 2nd serve flips aria-pressed', p0.join() === 'true,false' && p1.join() === 'false,true', { before: p0, after: p1 });
+    check('interact: 2nd serve changes the court labels', before.length === 6 && after.length === 6 && before.join() !== after.join() &&
+      after.every((s) => /^\d+%$/.test(s)), { before, after });
+    await page.locator('#seg button[data-serve="1"]').click();
+    await page.waitForFunction((b) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() === b,
+      before.join(), { timeout: 3000 }).catch(() => {});
+    const back = await courtLabels(page);
+    check('interact: back to 1st serve restores the court labels and aria-pressed', back.join() === before.join() && (await segPressed(page)).join() === 'true,false', { before, back });
+
+    // details#sure for a player
+    await page.locator('details#sure > summary').click();
+    await page.waitForFunction(() => document.querySelector('details#sure').open, null, { timeout: 2000 }).catch(() => {});
+    const sureP = await page.evaluate(() => { const d = document.querySelector('details#sure'); return { open: d.open, li: d.querySelectorAll('li').length, text: d.innerText }; });
+    await page.locator('details#sure > summary').click();
+    check('interact: details#sure is closed by default, opens and has text; for a player it lists 6 li',
+      sure0 === false && sureT.open && sureT.text.length > 40 && sureP.open && sureP.li === 6,
+      { closedByDefault: sure0 === false, typicalOpen: sureT.open, typicalText: sureT.text.length, playerOpen: sureP.open, li: sureP.li });
+    check('interact: "How sure are we?" text has no "league", placeholder or banned text',
+      hits(sureT.text + '\n' + sureP.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]).length === 0, hits(sureT.text + '\n' + sureP.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]));
+
+    // #find
     const opts = await page.evaluate(() => {
-      const i = document.getElementById('player-input');
+      const i = document.getElementById('find');
       const l = document.getElementById('players');
       return { list: i && i.getAttribute('list'), tag: l && l.tagName, n: l ? l.querySelectorAll('option').length : 0,
         values: l ? [...l.querySelectorAll('option')].map((o) => o.value) : [] };
     });
-    check(`interact: #players datalist has ${N_PLAYERS} options and #player-input uses it`, opts.list === 'players' && opts.tag === 'DATALIST' && opts.n === N_PLAYERS &&
-      SERVERS.every((s) => opts.values.some((v) => sameName(v, s))), { list: opts.list, tag: opts.tag, n: opts.n });
-    const typed = SERVERS.includes('Iga Swiatek') ? 'Iga Swiatek' : SERVERS[1];
-    const gotTyped = await typePlayer(page, typed);
-    check(`interact: typing "${typed}" into the search loads that player`, sameName(gotTyped, typed), gotTyped);
+    const optKeys = new Set(opts.values.map(nameKey));
+    check(`interact: #players datalist has one option per player (${N_PLAYERS}) and #find uses it`,
+      opts.list === 'players' && opts.tag === 'DATALIST' && opts.n === N_PLAYERS && SERVERS.length === N_PLAYERS && SERVERS.every((s) => optKeys.has(nameKey(s))),
+      { list: opts.list, tag: opts.tag, n: opts.n, missing: SERVERS.filter((s) => !optKeys.has(nameKey(s))).slice(0, 5) });
+    const TABS = ['Rafael Nadal', 'Novak Djokovic', 'Aryna Sabalenka', 'Iga Swiatek'];
+    const typed = SERVERS.includes('Roger Federer') ? 'Roger Federer' : SERVERS.find((s) => !TABS.includes(s));
+    await findPlayer(page, typed);
+    const typedOk = await waitWho(page, typed);
+    const typedTab = await page.evaluate((n) => { const b = document.querySelector('#tabs .tab[data-key="' + CSS.escape(n) + '"]'); return b ? b.getAttribute('aria-pressed') : null; }, typed);
+    check(`interact: typing "${typed}" + Enter in #find loads that player and adds a pressed tab for them`, typedOk && typedTab === 'true', { who: await whoNow(page), tab: typedTab });
+    await findPlayer(page, 'Zzqx');
+    await page.waitForFunction(() => /No charted player matches/.test(document.getElementById('find-msg').textContent), null, { timeout: 2000 }).catch(() => {});
+    const miss = await page.evaluate(() => ({ msg: document.getElementById('find-msg').textContent.trim(), who: document.querySelector('#who h2').textContent.trim() }));
+    check('interact: a name that matches nobody shows "No charted player matches" in #find-msg and keeps the player',
+      /^No charted player matches/.test(miss.msg) && miss.who === typed, miss);
+    await page.locator('#find').press('Escape');
 
-    // a name that matches nobody keeps the typed text, says so, and leaves the loaded player alone
-    {
-      const inp = page.locator('#player-input');
-      await inp.click();
-      await inp.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
-      await inp.press('Backspace');
-      await inp.pressSequentially('Zzqx', { delay: 8 });
-      await inp.press('Enter');
-      await page.waitForTimeout(200);
-      const miss = await page.evaluate(() => ({ value: document.getElementById('player-input').value,
-        msg: (document.getElementById('search-msg') || {}).textContent || '', name: document.getElementById('player-name').textContent.trim() }));
-      await inp.press('Escape');
-      await page.waitForTimeout(100);
-      const back = await page.evaluate(() => ({ value: document.getElementById('player-input').value, msg: (document.getElementById('search-msg') || {}).textContent || '' }));
-      check('interact: a name that matches nobody keeps the text, shows a "No charted player matches" line and keeps the player; Esc restores',
-        miss.value === 'Zzqx' && /^No charted player matches "Zzqx"\.$/.test(miss.msg) && sameName(miss.name, typed) && sameName(back.value, typed) && back.msg === '',
-        { miss, back });
-    }
-
-    // quick picks
-    const picks = await page.evaluate(() => [...document.querySelectorAll('#quick-picks a')].map((a) => ({ text: a.textContent.trim(), name: a.getAttribute('data-name') })));
-    const pickResults = [];
-    for (let i = 0; i < picks.length; i++) {
-      await page.locator('#quick-picks a').nth(i).click();
-      await page.waitForTimeout(500);
-      const n = await nameNow(page);
-      pickResults.push({ link: picks[i].text, loaded: n, ok: n.endsWith(picks[i].text) || sameName(n, picks[i].name) });
-    }
-    check('interact: #quick-picks has 5 links and each loads the player it names', picks.length === 5 && pickResults.every((r) => r.ok), pickResults);
-
-    // serve switch
-    await typePlayer(page, DEFAULT);
-    const before = await shareLabels(page);
-    const p0 = await pressed(page);
-    await page.locator('#serve-switch button').nth(1).click();
-    await page.waitForTimeout(800);
-    const after = await shareLabels(page);
-    const p1 = await pressed(page);
-    check('interact: #serve-switch has 2 buttons and 2nd serve flips aria-pressed', p0.join() === 'true,false' && p1.join() === 'false,true', { before: p0, after: p1 });
-    check('interact: switching to 2nd serve changes the arrow share labels', before.length === 6 && after.length === 6 && before.join() !== after.join() &&
-      after.every((s) => /=\d+%$/.test(s) || /=$/.test(s)), { before, after });
-    await page.locator('#serve-switch button').nth(0).click();
-    await page.waitForTimeout(800);
-    const back = await shareLabels(page);
-    check('interact: switching back to 1st serve restores the labels', back.join() === before.join(), { before, back });
-
-    // details#sure
-    const sure0 = await page.evaluate(() => { const d = document.querySelector('details#sure'); return d ? d.open : null; });
-    await page.locator('details#sure > summary').scrollIntoViewIfNeeded();
-    await page.locator('details#sure > summary').click();
-    await page.waitForTimeout(300);
-    const sure = await page.evaluate(() => {
-      const d = document.querySelector('details#sure');
-      const t = [...d.querySelectorAll('table')];
-      return { open: d.open, tables: t.length, rows: t.map((x) => x.querySelectorAll('tbody tr').length), text: d.innerText };
-    });
-    check('interact: details#sure is closed by default, opens, and has at least 2 tables with rows', sure0 === false && sure.open && sure.tables >= 2 && sure.rows.every((r) => r > 0),
-      { closedByDefault: sure0 === false, open: sure.open, tables: sure.tables, rows: sure.rows });
-    check('interact: "How sure are we?" text has no "league", placeholder or banned text',
-      hits(sure.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]).length === 0, hits(sure.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]));
-    await page.screenshot({ path: path.join(outDir, 'v4-interact-sure.png'), fullPage: false });
-    await page.locator('details#sure > summary').click();
-
-    // waffle
-    const waffle = await page.evaluate(() => {
-      const dots = [...document.querySelectorAll('.waffle .waffle-dot')];
-      const hitEls = [...document.querySelectorAll('.waffle .waffle-dot.is-hit')];
-      return { dots: dots.length, hits: hitEls.length, buttons: hitEls.filter((b) => b.tagName === 'BUTTON').length,
-        labels: hitEls.map((b) => b.getAttribute('aria-label') || ''), names: hitEls.map((b) => b.getAttribute('data-name') || (b.getAttribute('aria-label') || '').replace(/, tap to show$/, '')),
-        exists: !!document.getElementById('findings') };
-    });
-    check(`findings: #findings exists with ${N_PLAYERS} waffle dots`, waffle.exists && waffle.dots === N_PLAYERS, { exists: waffle.exists, dots: waffle.dots });
-    check(`findings: ${N_HITS} blue dots (headline.costly_players_s1), all buttons labelled "<name>, tap to show"`,
-      waffle.hits === N_HITS && waffle.buttons === N_HITS && waffle.labels.every((l) => /^.+, tap to show$/.test(l)) && waffle.names.every((n) => SERVERS.includes(n)),
-      { hits: waffle.hits, buttons: waffle.buttons, badLabels: waffle.labels.filter((l) => !/^.+, tap to show$/.test(l)).slice(0, 3) });
-    const target = waffle.names.find((n) => n !== DEFAULT) || waffle.names[0];
-    let clicked = null;
-    if (target) {
-      // start from 2nd serve, so the click must also switch back to 1st
-      await page.locator('#serve-switch button').nth(1).click();
-      await page.waitForTimeout(400);
-      const btn = page.locator('.waffle .waffle-dot.is-hit').nth(waffle.names.indexOf(target));
-      await btn.scrollIntoViewIfNeeded();
-      await btn.hover();
-      await page.waitForTimeout(150);
-      const tipText = await page.evaluate(() => [...document.querySelectorAll('#findings *')].filter((e) => e.children.length === 0 && !e.hidden &&
-        e.getClientRects().length && !e.closest('.waffle-dot') && /\S/.test(e.textContent) && !e.closest('p')).map((e) => e.textContent.trim()));
-      await btn.click();
-      await page.waitForTimeout(800);
-      clicked = await page.evaluate(() => {
-        const r = document.getElementById('tool').getBoundingClientRect();
-        return { name: (document.getElementById('player-name').textContent || '').trim(), toolTop: Math.round(r.top), toolBottom: Math.round(r.bottom), vh: window.innerHeight,
-          pressed: [...document.querySelectorAll('#serve-switch button')].map((b) => b.getAttribute('aria-pressed')).join() };
-      });
-      clicked.hoverTip = tipText;
-      check(`findings: hovering a blue dot shows the player's name`, tipText.some((t) => t.includes(target)), { target, shown: tipText.slice(0, 5) });
-      check(`findings: clicking a blue dot (${target}) loads that player on 1st serve and scrolls to #tool`,
-        sameName(clicked.name, target) && clicked.pressed === 'true,false' && clicked.toolTop < clicked.vh && clicked.toolBottom > 0, clicked);
-    } else {
-      check('findings: clicking a blue dot loads that player and scrolls to #tool', false, 'no blue dots');
-    }
-
-    // sentences for every quick pick and every waffle player, both serves (set through the search input)
-    const names = [...new Set([DEFAULT, ...picks.map((p) => p.name).filter(Boolean), ...waffle.names])];
-    const sent = await page.evaluate(async ([list]) => {
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      const input = document.getElementById('player-input');
-      const out = [];
-      for (const n of list) {
-        for (const sv of [1, 2]) {
-          input.value = n;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          await sleep(30);
-          document.querySelectorAll('#serve-switch button')[sv - 1].click();
-          await sleep(30);
-          const ps = [...document.querySelectorAll('#sentences p')].map((p) => p.textContent.replace(/\s+/g, ' ').trim());
-          const tips = [...document.querySelectorAll('#court .arrow')].map((a) => a.getAttribute('aria-label') || '');
-          out.push({ name: n, serve: sv, loaded: document.getElementById('player-name').textContent.trim(), ps, tips, sure: document.getElementById('sure').innerText });
-        }
-      }
-      input.blur();
-      return out;
-    }, [names]);
-    const BAD_S = [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER];
-    const badCount = sent.filter((s) => s.ps.length < 1 || s.ps.length > 4 || !sameName(s.loaded, s.name));
-    check(`sentences: 1 to 4 <p> in #sentences for ${names.length} players on both serves`, sent.length === 2 * names.length && badCount.length === 0,
-      badCount.slice(0, 5).map((s) => ({ name: s.name, serve: s.serve, loaded: s.loaded, n: s.ps.length })));
-    const badText = sent.map((s) => ({ name: s.name, serve: s.serve, hits: hits(s.ps.join('\n'), BAD_S) })).filter((s) => s.hits.length);
-    check('sentences: no "league", banned characters, he/she or placeholder text in any sentence', badText.length === 0, badText.slice(0, 5));
-    const badTips = sent.map((s) => ({ name: s.name, serve: s.serve, hits: hits(s.tips.join('\n') + '\n' + s.sure, BAD_S) })).filter((s) => s.hits.length);
-    check('sentences: no "league", banned characters, he/she or placeholder text in any arrow label or "How sure are we?"', badTips.length === 0, badTips.slice(0, 5));
-    const surnameUse = sent.filter((s) => s.ps.length && !s.ps.some((p) => nameKey(p).includes(nameKey(s.name.split(' ').slice(-1)[0]))));
-    check('sentences: the sentences name the player by surname', surnameUse.length === 0, surnameUse.slice(0, 3).map((s) => [s.name, s.ps[0]]));
-    const nadal2 = sent.find((s) => s.name === DEFAULT && s.serve === 2);
-    check('sentences: on 2nd serves Nadal has no clear winning direction', nadal2 && nadal2.ps.some((p) => /No direction wins clearly more points/.test(p)), nadal2 && nadal2.ps);
-
-    // a player with no photo hides the image
-    const noPhoto = SERVERS.find((s) => !(IMAGES.players || {})[s]);
+    // a player with no photo shows the ball placeholder
+    const noPhoto = SERVERS.find((s) => !IMG_PLAYERS[s]);
     if (noPhoto) {
-      await typePlayer(page, noPhoto);
-      const ph = await page.evaluate(() => { const i = document.getElementById('player-photo'); return { hidden: !i || i.hidden || getComputedStyle(i).display === 'none', name: document.getElementById('player-name').textContent.trim() }; });
-      check(`interact: a player with no photo (${noPhoto}) hides #player-photo`, sameName(ph.name, noPhoto) && ph.hidden, ph);
+      await findPlayer(page, noPhoto);
+      await page.waitForFunction((n) => { const h = document.querySelector('#who h2'); return h && h.textContent.trim() !== n; }, typed, { timeout: 5000 }).catch(() => {});
+      const ph = await page.evaluate(() => ({ who: document.querySelector('#who h2').textContent.trim(), img: !!document.querySelector('#who img'), ball: !!document.querySelector('#who .ball svg') }));
+      check(`interact: a player with no photo (${noPhoto}) shows the ball placeholder instead of an img`, sameName(ph.who, noPhoto) && !ph.img && ph.ball, ph);
+    } else {
+      check('interact: a player with no photo shows the ball placeholder', false, 'every player has a photo; nothing to test');
+    }
+
+    // #numbers: #vs bars
+    const vs = await page.evaluate(() => [...document.querySelectorAll('#vs .vs-row')].map((r) => ({
+      val: (r.querySelector('.val')?.textContent || '').trim(), bar: !!r.querySelector('b[data-w]') })));
+    const H = DATA.headline;
+    const wantVs = ['body_in_m1', 'body_win_m1', 'body_in_w1', 'body_win_w1'].map((k) => Math.abs(H[k].coef).toFixed(1));
+    check(`interact: #vs shows 4 bars whose values equal |body_in_m1|, |body_win_m1|, |body_in_w1|, |body_win_w1| (${wantVs.join(', ')})`,
+      vs.length === 4 && vs.every((r, i) => r.bar && r.val.split(' ')[0] === wantVs[i]), { page: vs.map((r) => r.val), want: wantVs });
+
+    // #numbers: #clear ring and chips
+    const ring = await page.evaluate(() => ({ big: document.querySelector('#clear .ring .big')?.textContent.trim(),
+      of: document.querySelector('#clear .ring .of')?.textContent.trim(), circle: !!document.querySelector('#clear .ring .ring-fill'),
+      chips: [...document.querySelectorAll('#clear .chip')].map((c) => ({ tag: c.tagName, name: c.getAttribute('data-name') })) }));
+    check(`interact: #clear ring shows ${N_HITS} of ${N_PLAYERS} (headline.costly_players_s1, players)`,
+      ring.circle && ring.big === String(N_HITS) && ring.of === `of ${N_PLAYERS}`, { big: ring.big, of: ring.of, circle: ring.circle });
+    check(`interact: #clear has exactly ${N_HITS} .chip buttons, each a charted player`,
+      ring.chips.length === N_HITS && ring.chips.every((c) => c.tag === 'BUTTON' && SERVERS.includes(c.name)), { chips: ring.chips.length });
+    const chipName = (ring.chips.find((c) => c.name !== NADAL && c.name !== typed) || ring.chips[0] || {}).name;
+    if (chipName) {
+      // start from 2nd serve, so the click must also switch back to 1st
+      await page.locator('#seg button[data-serve="2"]').click();
+      await page.waitForFunction(() => document.querySelector('#seg button[data-serve="2"]').getAttribute('aria-pressed') === 'true', null, { timeout: 2000 }).catch(() => {});
+      const chip = page.locator(`#clear .chip[data-name="${chipName}"]`);
+      await chip.scrollIntoViewIfNeeded();
+      await chip.click();
+      // smooth scroll: wait until #tool's top has reached the top part of the screen
+      await page.waitForFunction(() => { const r = document.getElementById('tool').getBoundingClientRect(); return r.top >= -2 && r.top < 120; }, null, { timeout: 5000 }).catch(() => {});
+      const clicked = await page.evaluate((n) => {
+        const r = document.getElementById('tool').getBoundingClientRect();
+        return { who: document.querySelector('#who h2').textContent.trim(), seg: [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')).join(),
+          chip: document.querySelector('#clear .chip[data-name="' + CSS.escape(n) + '"]').getAttribute('aria-pressed'),
+          otherChips: [...document.querySelectorAll('#clear .chip[aria-pressed="true"]')].length,
+          toolTop: Math.round(r.top), toolBottom: Math.round(r.bottom), vh: window.innerHeight };
+      }, chipName);
+      check(`interact: clicking the ${chipName} chip loads that player on 1st serve, presses the chip and scrolls #tool into view`,
+        sameName(clicked.who, chipName) && clicked.seg === 'true,false' && clicked.chip === 'true' && clicked.otherChips === 1 &&
+        clicked.toolTop >= -2 && clicked.toolTop < 120 && clicked.toolBottom > 0, clicked);
+      out.chip = { name: chipName, ...clicked };
+    } else {
+      check('interact: clicking a chip loads that player', false, 'no chips');
     }
 
     check('interact: no console errors, page errors or module warnings', errorsOf(log).length === 0, errorsOf(log));
-    check('interact: no failed requests', log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag: 'interaction', typed, picks: pickResults, sure: { tables: sure.tables, rows: sure.rows }, waffle: { dots: waffle.dots, hits: waffle.hits }, clicked, sentenceRuns: sent.length });
+    check('interact: no failed requests (font hosts are warnings)', log.failedRequests.length === 0, log.failedRequests);
+    runs.push({ tag: 'interaction', typed, noPhoto, vs: vs.map((r) => r.val), ring: { big: ring.big, of: ring.of, chips: ring.chips.length }, ...out });
     await ctx.close();
   }
 
-  // ---------- the data file fails (spec: #status shows an error line) ----------
+  // ---------- the data file fails: #status shows an error line ----------
   for (const w of [1440, 390]) {
     const L = LIMITS[w];
     const tag = `no-data-${w}`;
@@ -591,17 +590,16 @@ try {
     await page.route('**/data/serveiq.json', (r) => r.abort());
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.documentElement.classList.contains('no-data'), null, { timeout: 10000 }).catch(() => {});
-    await page.waitForTimeout(200);
     const st = await page.evaluate(() => {
-      const shown = (sel) => { const e = document.querySelector(sel); return !!e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0; };
+      const shown = (e) => !!e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0;
       const s = document.getElementById('status');
-      return { noData: document.documentElement.classList.contains('no-data'), status: shown('#status'), text: s ? s.textContent.trim() : '',
+      const needs = [...document.querySelectorAll('.needs-data')];
+      return { noData: document.documentElement.classList.contains('no-data'), status: shown(s), text: s ? s.textContent.trim() : '',
         link: !!(s && s.querySelector('a[href^="https://serve-iq.streamlit.app"]')),
-        tool: shown('#tool'), findings: shown('#findings'), src: shown('.intro-src'), h1: shown('#intro-h') };
+        needsData: needs.length, needsShown: needs.filter(shown).map((e) => e.id || e.className), h1: shown(document.getElementById('intro-h')) };
     });
-    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
-    check(`${tag}: when data/serveiq.json fails, #status explains it with a link to the backup app and the parts that need the data are hidden`,
-      st.noData && st.status && st.text.length > 20 && st.link && !st.tool && !st.findings && !st.src && st.h1, st);
+    check(`${tag}: when data/serveiq.json fails, #status explains it with a link to serve-iq.streamlit.app and every .needs-data part is hidden`,
+      st.noData && st.status && /could not be loaded/.test(st.text) && st.link && st.needsData >= 4 && st.needsShown.length === 0 && st.h1, st);
     await ctx.close();
   }
 
@@ -614,27 +612,55 @@ try {
     let gotoErr = null;
     await page.goto(base + 'method.html', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
     await waitForMethod(page);
-    const m = await page.evaluate(() => ({
-      ready: document.documentElement.classList.contains('data-ready'),
-      fx: document.querySelectorAll('.fx').length,
-      katex: document.querySelectorAll('.fx .katex').length,
-      katexErrors: document.querySelectorAll('.katex-error, .tex-raw').length,
-      cards: document.querySelectorAll('[id^="f"].fcard, details.fcard').length,
-      credits: document.querySelectorAll('#credits-list tbody tr, #credits-list li').length,
-      height: document.documentElement.scrollHeight,
-    }));
-    const ov = await overflow(page);
+    const ready = await page.evaluate(() => document.documentElement.classList.contains('data-ready'));
+    check(`${tag}: page boots and binds the data`, !gotoErr && ready, gotoErr || { ready });
+    const cards = await page.evaluate(() => [...document.querySelectorAll('details.fcard')].map((d) => ({ id: d.id, open: d.open })));
+    check(`${tag}: 13 details.fcard, all closed by default`, cards.length === 13 && cards.every((c) => !c.open), cards.filter((c) => c.open).map((c) => c.id).concat([`count=${cards.length}`]));
+    const ov0 = await overflow(page);
     const scan = await scanText(page);
-    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
-    check(`${tag}: page boots and binds the data`, !gotoErr && m.ready, gotoErr || { ready: m.ready });
-    check(`${tag}: KaTeX renders all 13 formulas and the hypothesis line with no errors`, m.cards === 13 && m.fx >= 14 && m.katex === m.fx && m.katexErrors === 0,
-      { cards: m.cards, fx: m.fx, katex: m.katex, errors: m.katexErrors });
-    check(`${tag}: photo credits list one row per images.json player (${N_CREDITS})`, m.credits === N_CREDITS, { credits: m.credits });
-    check(`${tag}: no horizontal page scroll`, ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0, ov);
+
+    // open every card (via JS), then KaTeX must be visible in every .fx block
+    await page.evaluate(() => document.querySelectorAll('details.fcard').forEach((d) => { d.open = true; }));
+    const fx = await page.evaluate(() => {
+      const all = [...document.querySelectorAll('.fx')];
+      return { fx: all.length, katex: all.filter((b) => b.querySelector('.katex') && b.getClientRects().length > 0 && b.getBoundingClientRect().height > 0).length,
+        errors: document.querySelectorAll('.katex-error, .tex-raw').length, open: document.querySelectorAll('details.fcard[open]').length };
+    });
+    check(`${tag}: after opening all 13 cards KaTeX renders every .fx block (${fx.fx}) with no errors`,
+      fx.open === 13 && fx.fx >= 14 && fx.katex === fx.fx && fx.errors === 0, fx);
+    const ov1 = await overflow(page);
+    check(`${tag}: no horizontal page scroll (cards closed and all open)`,
+      [ov0, ov1].every((ov) => ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0), { closed: ov0, open: ov1 });
     check(`${tag}: no banned characters or terms`, hits(scan, BANNED).length === 0, hits(scan, BANNED));
+
+    // credits fold
+    const fold0 = await page.evaluate(() => document.getElementById('credits-fold')?.open);
+    await page.locator('#credits-fold > summary').click();
+    await page.waitForFunction(() => document.getElementById('credits-fold').open, null, { timeout: 2000 }).catch(() => {});
+    const credits = await page.evaluate(() => ({ open: document.getElementById('credits-fold').open,
+      rows: [...document.querySelectorAll('#credits-list tbody tr')].filter((r) => r.getClientRects().length > 0).length }));
+    check(`${tag}: opening #credits-fold shows one credits row per images.json player (${N_CREDITS})`,
+      fold0 === false && credits.open && credits.rows === N_CREDITS, { closedByDefault: fold0 === false, ...credits });
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: path.join(outDir, `v5-${tag}.png`), fullPage: true });
+
+    // deep links: #f7 opens formula 7, #credits opens the credits fold (fresh loads)
+    const deep = {};
+    for (const [hash, test] of [['f7', () => document.getElementById('f7')?.open === true], ['credits', () => document.getElementById('credits-fold')?.open === true]]) {
+      const p2 = await ctx.newPage();
+      const log2 = attachCollectors(p2);
+      await p2.goto(base + 'method.html#' + hash, { waitUntil: 'domcontentloaded' });
+      deep[hash] = await p2.waitForFunction(test, null, { timeout: 10000 }).then(() => true).catch(() => false);
+      deep[hash + 'Errors'] = errorsOf(log2).concat(log2.failedRequests);
+      await p2.close();
+    }
+    check(`${tag}: method.html#f7 opens card f7`, deep.f7 && deep.f7Errors.length === 0, deep);
+    check(`${tag}: method.html#credits opens #credits-fold`, deep.credits && deep.creditsErrors.length === 0, deep);
+
     check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
-    check(`${tag}: no failed requests`, log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag, height: m.height });
+    check(`${tag}: no failed requests (font hosts are warnings)`, log.failedRequests.length === 0, log.failedRequests);
+    runs.push({ tag, fx: fx.fx, credits: credits.rows, height: await page.evaluate(() => document.documentElement.scrollHeight) });
     await ctx.close();
   }
 
@@ -646,18 +672,26 @@ try {
     const { ctx, page, log } = await newPage(browser, { w: L.w, h: L.h, reduce: true });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await waitForIndex(page);
-    const name = await nameNow(page);
-    const before = await shareLabels(page);
-    await page.locator('#serve-switch button').nth(1).click();
-    await sleep(60);
-    const soon = await shareLabels(page);
-    await page.waitForTimeout(900);
-    const settled = await shareLabels(page);
-    const pr = await pressed(page);
-    check(`${tag}: page boots with ${DEFAULT} under prefers-reduced-motion`, name === DEFAULT && before.length === 6, { name, arrows: before.length });
-    check(`${tag}: the serve switch works and the arrow labels are final at once (no tween)`, pr.join() === 'false,true' && soon.join() !== before.join() && soon.join() === settled.join(),
-      { before, soon, settled });
-    check(`${tag}: no errors`, errorsOf(log).length === 0, errorsOf(log));
+    const who = await whoNow(page);
+    // read in the same task as the boot check: no waiting for an animation
+    const at0 = await page.evaluate(() => [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).strokeDashoffset));
+    check(`${tag}: page boots (typical pro, men) under prefers-reduced-motion`, who === DEFAULT_H2, { who });
+    check(`${tag}: every court path has stroke-dashoffset 0 at once`, at0.length === 12 && at0.every((o) => parseFloat(o) === 0), at0);
+    // click and read the labels in one evaluate: they must already be final
+    const sw = await page.evaluate(() => {
+      const lab = () => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim());
+      const before = lab();
+      document.querySelector('#seg button[data-serve="2"]').click();
+      const soon = lab();
+      const offs = [...document.querySelectorAll('#court path')].map((p) => getComputedStyle(p).strokeDashoffset);
+      return { before, soon, offs, seg: [...document.querySelectorAll('#seg button')].map((b) => b.getAttribute('aria-pressed')).join() };
+    });
+    const settledLater = await page.waitForFunction((s) => [...document.querySelectorAll('#court text[font-size="19"]')].map((t) => t.textContent.trim()).join() === s,
+      sw.soon.join(), { timeout: 1000 }).then(() => true).catch(() => false);
+    check(`${tag}: switching to 2nd serve updates the labels at once and the paths stay at stroke-dashoffset 0`,
+      sw.seg === 'false,true' && sw.before.length === 6 && sw.soon.join() !== sw.before.join() && settledLater && sw.offs.every((o) => parseFloat(o) === 0),
+      { before: sw.before, soon: sw.soon, seg: sw.seg });
+    check(`${tag}: no errors`, errorsOf(log).length === 0 && log.failedRequests.length === 0, errorsOf(log).concat(log.failedRequests));
     await ctx.close();
   }
 } finally {

@@ -52,13 +52,15 @@ function markScrollableFormulas(root) {
   });
 }
 
-// a link to a formula (method.html#f7) opens it if the reader folded it
+// a link to a formula (method.html#f7) or to #credits opens the folded block
 function openHashTarget() {
   const h = decodeURIComponent((location.hash || "").slice(1));
   const t = h ? document.getElementById(h) : null;
   if (!t) return;
   const card = t.matches("details") ? t : t.closest("details");
   if (card && !card.open) card.open = true;
+  const fold = t.querySelector("details.m-fold");          // #credits: open the folded credit list
+  if (fold && !fold.open) fold.open = true;
   t.scrollIntoView({ block: "start", behavior: "auto" });
 }
 

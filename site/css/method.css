@@ -1,10 +1,10 @@
 /* Serve IQ method page. Loaded after css/site.css and uses its tokens (--ink, --muted, --rule, --blue).
-   One column, system font, no cards. KaTeX brings its own stylesheet. */
+   The navy header band comes from site.css (.head); below it one column, with each formula folded in a
+   light box. KaTeX brings its own stylesheet. */
 
 /* the column starts at the same left edge as the top bar's "Serve IQ" (.wrap) and is 720px wide */
 .method { padding-top: 32px; padding-bottom: 56px; }
 .method > * { max-width: 720px; }
-.method h1 { font-size: 36px; line-height: 1.15; }
 .m-lede { margin-top: 10px; font-size: 18px; }
 .method section { margin-top: 40px; }
 .method section + section { border-top: 1px solid var(--rule); padding-top: 32px; }
@@ -48,7 +48,6 @@
 
 @media (max-width: 600px) {
   .method { padding-top: 20px; padding-bottom: 40px; }
-  .method h1 { font-size: 28px; }
   .m-lede { font-size: 16px; }
   .method section { margin-top: 32px; }
   .method section + section { padding-top: 26px; }
@@ -60,3 +59,15 @@
   .credit-table th, .credit-table td { padding-right: 8px; }
 }
 .credit-table td:nth-child(3), .credit-table td:nth-child(4) { white-space: nowrap; }
+
+/* v5: header band (css/site.css .head) and folded blocks */
+.m-head h1 { font-size: clamp(32px, 4.4vw, 54px); }
+.method { padding-top: 28px; }
+.method h1, .method h2, .method h3 { font-stretch: 90%; }
+.method h2 { font-weight: 850; }
+.fcard { margin-top: 10px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 16px; }
+.fcard[open] { padding-bottom: 16px; }
+.fcard summary { width: auto; }
+.fnum { color: var(--blue); font-weight: 800; }
+.m-fold { margin-top: 12px; }
+.m-fold summary { cursor: pointer; font-weight: 700; color: var(--blue); }

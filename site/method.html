@@ -6,9 +6,12 @@
 <meta name="color-scheme" content="light">
 <title>Serve IQ Method</title>
 <meta name="description" content="How Serve IQ counts serves: the data, all 13 formulas, what the charts can and cannot see, limits, licenses and photo credits.">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0b1d42">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%233b6fb6%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&amp;display=swap">
 <link rel="stylesheet" href="css/site.css">
 <link rel="stylesheet" href="css/method.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
@@ -19,7 +22,7 @@
 
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="./" translate="no">Serve IQ</a>
+    <a class="brand" href="./" translate="no">Serve <b>IQ</b></a>
     <nav aria-label="Site">
       <a href="method.html" aria-current="page">Method</a>
       <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">GitHub</a>
@@ -27,13 +30,15 @@
   </div>
 </header>
 
-<p class="status wrap" id="status" role="status" aria-live="polite" hidden></p>
-
 <main id="main">
+<section class="head m-head" aria-labelledby="method-h">
+  <div class="wrap">
+    <p class="status" id="status" role="status" aria-live="polite" hidden></p>
+    <h1 id="method-h">Method</h1>
+    <p class="answer">How the numbers on Serve IQ are made. Open any formula to see the math the code runs.</p>
+  </div>
+</section>
 <article id="method" class="method wrap" aria-labelledby="method-h">
-
-  <h1 id="method-h">Method</h1>
-  <p class="m-lede">How the numbers on Serve IQ are made. The formulas further down are the ones the code runs.</p>
 
   <section id="m-counted" aria-labelledby="m-counted-h">
     <h2 id="m-counted-h">How I counted</h2>
@@ -63,35 +68,35 @@
 
     <h3 class="m-group" id="m-estimates">Estimates <span class="m-range">formulas 1 to 5</span></h3>
 
-    <details class="fcard" id="f1" open>
+    <details class="fcard" id="f1">
       <summary><span class="fnum">1</span> <span class="fname">Player share and win rate</span></summary>
       <div class="fx tex" data-display><code>\begin{aligned}&amp;\hat p=\frac{\sum_g y_g}{N},\quad N=\sum_g m_g \\ &amp;\widehat{SE}=\max\Big(\sqrt{\tfrac{G}{G-1}\sum_g\big(\tfrac{y_g-\hat p\,m_g}{N}\big)^2},\ \sqrt{\hat p(1-\hat p)/N}\Big) \\ &amp;\text{CI}=\big[\max(0,\hat p-t_{.975,G-1}\widehat{SE}),\ \min(1,\hat p+t_{.975,G-1}\widehat{SE})\big]\end{aligned}</code></div>
       <p>A player's matches are pooled, and the standard error treats each match as a cluster but is never smaller than the plain binomial one. For a share, y counts serves to direction d and m counts serves in the situation. For a win rate, y counts points won after serving d and m counts serves to d.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>ratio</code>, <code>summarise</code> in src/app_data.py</a></p>
     </details>
 
-    <details class="fcard" id="f2" open>
+    <details class="fcard" id="f2">
       <summary><span class="fnum">2</span> <span class="fname">Favorite-target share and its percentile</span></summary>
       <div class="fx tex" data-display><code>f=\max_d \hat s_d,\qquad \text{pct}_i=\frac{\#\{j\neq i: f_j&lt;f_i\}}{n_{\text{group}}-1}</code></div>
       <p>The favorite-target share f is the share of serves to the most-used direction on all points. The percentile is the share of the other listed players in the same tour, serve and side whose f is lower.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a>; percentile in <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/export_site.py"><code>load</code> in src/export_site.py</a></p>
     </details>
 
-    <details class="fcard" id="f3" open>
+    <details class="fcard" id="f3">
       <summary><span class="fnum">3</span> <span class="fname">Typical pro against the same opponents</span></summary>
       <div class="fx tex" data-display><code>\bar s_d=\sum_k\pi_k\,s^{L}_{k,d},\qquad \bar w_d=\sum_k\pi_k\,w^{L}_{k,d}</code></div>
       <p>The shares and win rates of all pros for each handedness matchup k are weighted by the player's own share of serves in that matchup. These typical-pro values pool break points and other points and include the player.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
     </details>
 
-    <details class="fcard" id="f4" open>
+    <details class="fcard" id="f4">
       <summary><span class="fnum">4</span> <span class="fname">Break-point shift</span></summary>
       <div class="fx tex" data-display><code>\Delta_d=\frac{n^{BP}_d}{N^{BP}}-\frac{n^{\neg BP}_d}{N^{\neg BP}}</code></div>
       <p>The share of serves to direction d on break points minus the share on all other points. For example, Rafael Nadal's deuce-side 1st serves went wide on <span data-h="nadal_deuce_wide_s1.other" data-f="pct1"></span> of other points and <span data-h="nadal_deuce_wide_s1.bp" data-f="pct1"></span> of break points.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
     </details>
 
-    <details class="fcard" id="f5" open>
+    <details class="fcard" id="f5">
       <summary><span class="fnum">5</span> <span class="fname">Upper-bound gain</span></summary>
       <div class="fx tex" data-display><code>\text{gain}=100\,(\hat w_{d^*}-\hat w_{\text{all}}),\qquad d^*=\arg\max_{d:\,n_d\ge30}\hat w_d</code></div>
       <p>Points per <span data-b="per100"></span> serves the server would gain by sending every serve to the direction that won most for them. It counts only when the win test has q &lt; <span data-b="q"></span>, and it is an upper bound: it ignores that returners adapt and it picks the best of several noisy rates.</p>
@@ -100,21 +105,21 @@
 
     <h3 class="m-group" id="m-tests">Tests and corrections <span class="m-range">formulas 6 to 8</span></h3>
 
-    <details class="fcard" id="f6" open>
+    <details class="fcard" id="f6">
       <summary><span class="fnum">6</span> <span class="fname">Mix compared with a typical pro</span></summary>
       <div class="fx tex" data-display><code>\begin{aligned}&amp;u_g=\tfrac1N\begin{pmatrix}n_{g,\text{wide}}-m_g\hat s_{\text{wide}}\\ n_{g,T}-m_g\hat s_T\end{pmatrix},\quad \hat V=\tfrac{G}{G-1}\sum_g u_gu_g^\top,\quad \delta=\begin{pmatrix}\hat s_{\text{wide}}-\bar s_{\text{wide}}\\ \hat s_T-\bar s_T\end{pmatrix} \\ &amp;W=\delta^\top\hat V^{-1}\delta,\qquad p=\Pr\big(F_{2,\,G-1}&gt;W/2\big)\end{aligned}</code></div>
       <p>A Wald test of whether the wide and T shares (body is the remainder) differ from the typical-pro values, with a match-clustered covariance. The typical-pro values are treated as fixed and there is no binomial floor.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
     </details>
 
-    <details class="fcard" id="f7" open>
+    <details class="fcard" id="f7">
       <summary><span class="fnum">7</span> <span class="fname">Generalized Cochran-Mantel-Haenszel test</span></summary>
       <div class="fx tex" data-display><code>\begin{aligned}&amp;D_i=\sum_h\Big(y_{hi}-n_{hi}\tfrac{S_h}{T_h}\Big) \\ &amp;V_{ij}=\sum_h\frac{S_h(T_h-S_h)}{T_h-1}\Big(\frac{n_{hi}}{T_h}\delta_{ij}-\frac{n_{hi}n_{hj}}{T_h^2}\Big),\ i,j\le k-1 \\ &amp;Q=D^\top V^{-1}D\ \sim\ \chi^2_{k-1}\end{aligned}</code></div>
       <p>The strata h are matches with more than one serve, so differences between matches cancel. In the win test the groups are directions with at least <span data-b="min_dir_n"></span> serves and success is winning the point. In the break-point test the groups are break points and other points and success is serving to d. The p-value is the asymptotic chi-square one.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>cmh</code> in src/app_data.py</a></p>
     </details>
 
-    <details class="fcard" id="f8" open>
+    <details class="fcard" id="f8">
       <summary><span class="fnum">8</span> <span class="fname">Benjamini-Hochberg false discovery rate</span></summary>
       <div class="fx tex" data-display><code>q_{(i)}=\min_{j\ge i}\ \min\Big(1,\frac{m\,p_{(j)}}{j}\Big)</code></div>
       <p>Each family is pooled across tours, serves and sides: m = <span data-b="tests_mix"></span> mix tests, <span data-b="tests_win"></span> win tests and <span data-b="tests_bp"></span> break-point tests. A test counts as clear when q &lt; <span data-b="q"></span>. There are <span data-h="bp_sig_tests" data-f="int"></span> clear break-point tests on <span data-h="bp_sig_patterns" data-f="int"></span> player, side and serve combinations.</p>
@@ -123,28 +128,28 @@
 
     <h3 class="m-group" id="m-league">Estimates across all pros <span class="m-range">formulas 9 to 12</span></h3>
 
-    <details class="fcard" id="f9" open>
+    <details class="fcard" id="f9">
       <summary><span class="fnum">9</span> <span class="fname">Two-way clustered variance</span></summary>
       <div class="fx tex" data-display><code>M_c=\frac{G_c}{G_c-1}\sum_{g\in c}\Big(\sum_{i\in g}u_i\Big)\Big(\sum_{i\in g}u_i\Big)^{\top},\qquad M=M_{\text{srv}}+M_{\text{ret}}-M_{\text{srv}\times\text{ret}}</code></div>
       <p>Standard errors across all pros allow for correlation within the same server, the same returner and the same server-returner pair. If the combined matrix is not positive semidefinite, the one-way matrix with the larger trace is used. Degrees of freedom are the smaller of the server and returner cluster counts minus one.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>twoway_meat</code> in src/baseline.py</a></p>
     </details>
 
-    <details class="fcard" id="f10" open>
+    <details class="fcard" id="f10">
       <summary><span class="fnum">10</span> <span class="fname">Direction ranges across all pros</span></summary>
       <div class="fx tex" data-display><code>u_i=\frac{y_i-\hat p\,n_i}{N},\qquad \hat p\pm t_{.975,\min(G_s,G_r)-1}\sqrt{M_{11}}\ \text{ clipped to } [0,1]</code></div>
       <p>Typical-pro shares and win rates use the two-way clustered variance above, with no binomial floor.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>ratio_ci</code> in src/baseline.py</a></p>
     </details>
 
-    <details class="fcard" id="f11" open>
+    <details class="fcard" id="f11">
       <summary><span class="fnum">11</span> <span class="fname">Within-server comparisons</span></summary>
       <div class="fx tex" data-display><code>\begin{aligned}&amp;\tilde y_i=y_i-\bar y_{f(i)},\quad \tilde x_i=x_i-\bar x_{f(i)},\quad \hat\beta=(\tilde X^\top\tilde X)^{-1}\tilde X^\top\tilde y \\ &amp;u_i=\tilde x_i\,(\tilde y_i-\tilde x_i^\top\hat\beta),\qquad \hat V=\frac{N-1}{N-K}(\tilde X^\top\tilde X)^{-1}M(\tilde X^\top\tilde X)^{-1}\end{aligned}</code></div>
       <p>Each serve is compared only with serves in the same fixed-effect group: server by side by matchup by break point for points won and serve in, and match by server by side for the break-point shift. The regressors are body and T indicators with wide as the baseline, or break-point and game-point indicators with the outcome "served to d". K counts only these regressors.</p>
       <p class="fcode">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>within_server</code> in src/baseline.py</a></p>
     </details>
 
-    <details class="fcard" id="f12" open>
+    <details class="fcard" id="f12">
       <summary><span class="fnum">12</span> <span class="fname">Serial repeats</span></summary>
       <div class="fx tex" data-display><code>R_h=\#\{t:d_{h,t}=d_{h,t-1}\},\qquad E_h=\frac{\sum_k n_{hk}(n_{hk}-1)}{n_h},\qquad \text{diff}=\frac{\sum_h(R_h-E_h)}{\sum_h(n_h-1)}</code></div>
       <p>Within each match by server by side group (one tour and serve number, in point order, at least two serves), the number of serves that repeat the previous direction is compared with the number expected if the same serves came in random order. Consecutive 2nd serves are not consecutive points.</p>
@@ -153,7 +158,7 @@
 
     <h3 class="m-group" id="m-replication">Replication <span class="m-range">formula 13</span></h3>
 
-    <details class="fcard" id="f13" open>
+    <details class="fcard" id="f13">
       <summary><span class="fnum">13</span> <span class="fname">Split-half stability</span></summary>
       <div class="fx tex" data-display><code>f^{A}_i=\max_d\hat s^{A}_{i,d},\quad e^{A}_i=\hat w^{A}_{i,T}-\hat w^{A}_{i,\text{wide}},\qquad r=\operatorname{corr}_i(f^A_i,f^B_i)</code></div>
       <p>Each player's matches are shuffled once (seed 0) and the first half goes to half A. The favorite-target share f and the T-minus-wide win edge e are computed in each half from plain proportions on 1st serves, and correlated across players within tour and side. This is one split, with no confidence interval and no Spearman-Brown correction.</p>
@@ -188,7 +193,10 @@
   <section id="credits" aria-labelledby="credits-h">
     <h2 id="credits-h">Photo credits</h2>
     <p>Every player photo on this site comes from Wikimedia Commons under a free license. Each row links to its license and to the file page.</p>
-    <div id="credits-list" class="m-credits"><p class="m-muted">Photo credits load with the page.</p></div>
+    <details class="m-fold" id="credits-fold">
+      <summary>Show all photo credits</summary>
+      <div id="credits-list" class="m-credits"><p class="m-muted">Photo credits load with the page.</p></div>
+    </details>
   </section>
 
 </article>

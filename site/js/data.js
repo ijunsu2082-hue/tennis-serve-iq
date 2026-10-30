@@ -77,7 +77,7 @@ export function fmt(v, f) {
   }
 }
 export function esc(s) {
-  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 // ------------------------------------------------------------ names
@@ -256,6 +256,50 @@ function build(raw, imagesRaw) {
       bp: { shifts, n_bp: t.n_bp, thin: (t.n_bp || 0) < meta.thresholds.bp_warn_n },
       win,
     };
+  };
+
+  /* typical(g, serve): the typical pro of one tour, pooled from league.directions over every matchup and
+     both break-point states: per side and direction, n = sum of n, share = n / side total, win = n-weighted
+     mean of win. No ranges (the pool is the whole tour). Cached per tour and serve. */
+  const LD = raw.league.directions;
+  const LDF = fieldIndex(LD);
+  const typCache = {};
+  D.typical = (g, serve) => {
+    const key = g + "|" + serve;
+    if (typCache[key]) return typCache[key];
+    const acc = {};
+    SIDES.forEach((s) => { acc[s] = {}; DIRS.forEach((d) => { acc[s][d] = { n: 0, w: 0, wn: 0 }; }); });
+    LD.rows.forEach((r) => {
+      if (r[LDF.gender] !== g || r[LDF.serve_num] !== serve) return;
+      const a = acc[r[LDF.side]] && acc[r[LDF.side]][r[LDF.direction]];
+      if (!a || !isNum(r[LDF.n])) return;
+      a.n += r[LDF.n];
+      if (isNum(r[LDF.win])) { a.w += r[LDF.n] * r[LDF.win]; a.wn += r[LDF.n]; }
+    });
+    const out = {};
+    SIDES.forEach((s) => {
+      const tot = DIRS.reduce((t, d) => t + acc[s][d].n, 0);
+      out[s] = {};
+      DIRS.forEach((d) => {
+        const a = acc[s][d];
+        out[s][d] = { n: a.n, share: tot > 0 ? a.n / tot : null, win: a.wn > 0 ? a.w / a.wn : null };
+      });
+    });
+    typCache[key] = out;
+    return out;
+  };
+  /* within(g, serve, question): one row of league.within (coef_pp, lo_pp, hi_pp, ...) or null */
+  const LW = raw.league.within;
+  const LWF = fieldIndex(LW);
+  D.within = (g, serve, question) => {
+    const r = LW.rows.find((x) => x[LWF.gender] === g && x[LWF.serve_num] === serve && x[LWF.question] === question);
+    return r ? rowObj(r, LWF) : null;
+  };
+  /* clearWin(g, name, serve): true when either side passes the win test (q_win below the threshold) */
+  D.clearWin = (g, name, serve) => {
+    const tr = raw.tests.data[g + "|" + name + "|" + serve];
+    if (!tr) return false;
+    return SIDES.some((s) => tr[s] && isNum(tr[s][TESTF.q_win]) && tr[s][TESTF.q_win] < meta.thresholds.q);
   };
 
   /* headline value by dotted key, e.g. "players", "body_win_m1.coef" */

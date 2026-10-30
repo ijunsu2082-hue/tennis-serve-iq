@@ -5,18 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Serve IQ</title>
-<meta name="description" content="Pick a pro tennis player and see which way they serve: wide, at the body or down the T, on the deuce and ad side. Built from the Match Charting Project.">
-<meta name="theme-color" content="#ffffff">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%233b6fb6%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<meta name="description" content="Where do pro tennis players aim the first serve, and which spot wins the point? Pick any of 447 players. Built from the Match Charting Project.">
+<meta name="theme-color" content="#0b1d42">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%230b1d42%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%2319a4ec%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&amp;display=swap">
 <link rel="stylesheet" href="css/site.css">
 <script type="module" src="js/main.js"></script>
 </head>
 <body data-page="index">
-<a class="skip" href="#tool">Skip to the tool</a>
+<a class="skip" href="#tool">Skip to the court</a>
 
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="./" translate="no">Serve IQ</a>
+    <a class="brand" href="./" translate="no">Serve <b>IQ</b></a>
     <nav aria-label="Site">
       <a href="method.html">Method</a>
       <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">GitHub</a>
@@ -24,58 +27,68 @@
   </div>
 </header>
 
-<p class="status wrap" id="status" role="status" aria-live="polite" hidden></p>
-
 <main id="main">
 
-<section class="intro wrap" aria-labelledby="intro-h">
-  <!-- Headline draft. The student rewrites this line. Review note for the student: "clearly" was added,
-       because every player's raw win rates differ a little by direction; only the clear differences are rare. -->
-  <h1 id="intro-h">Most pros have a serve habit. Very few win clearly more points with one direction than another.</h1>
-  <p class="intro-sub">Pick a player to see which way they serve.</p>
-  <p class="intro-src"><span data-h="players" data-f="int"></span> players and <span data-h="serves_listed" data-f="int"></span> of their charted serves, from the <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a>.</p>
+<section class="head" aria-labelledby="intro-h">
+  <div class="wrap">
+    <p class="status" id="status" role="status" aria-live="polite" hidden></p>
+    <h1 id="intro-h">Where do pros aim the first serve, <em>and which spot wins?</em></h1>
+    <p class="answer needs-data"><b>Wide and T win about the same.</b> Body serves go in <span class="up"><span data-h="body_in_m1.coef" data-f="abs1"></span> more</span> times per <span data-b="per100"></span> but win <span class="down"><span data-h="body_win_m1.coef" data-f="abs1"></span> fewer</span> points per <span data-b="per100"></span> (men, same player and side, compared with wide).</p>
+    <p class="src needs-data"><span data-h="serves_listed" data-f="int"></span> charted serves from <span data-h="players" data-f="int"></span> pros, <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a></p>
+  </div>
 </section>
 
-<section id="tool" class="tool wrap" aria-label="Serve directions by player">
-  <div class="t-search">
-    <label for="player-input">Player</label>
-    <input id="player-input" list="players" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go">
-    <datalist id="players"></datalist>
-  </div>
-
-  <p id="quick-picks" class="t-picks"></p>
-
-  <div id="serve-switch" class="t-switch" role="group" aria-label="Serve">
-    <button type="button" data-serve="1" aria-pressed="true">1st serve</button>
-    <button type="button" data-serve="2" aria-pressed="false">2nd serve</button>
-  </div>
-
-  <div class="t-player">
-    <img id="player-photo" alt="" width="80" height="80" hidden>
-    <div>
-      <p id="player-name" class="t-name"></p>
-      <p id="player-meta" class="t-meta"></p>
+<div class="picker needs-data">
+  <div class="wrap picker-in">
+    <div class="tabs" id="tabs" role="group" aria-label="Who to show"></div>
+    <div class="picker-right">
+      <div class="find">
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="#5b6577" stroke-width="2"/><path d="M11 11l3.5 3.5" stroke="#5b6577" stroke-width="2" stroke-linecap="round"/></svg>
+        <label class="skip" for="find">Find any player</label>
+        <input id="find" list="players" type="search" placeholder="Find a player" autocomplete="off" spellcheck="false" enterkeyhint="go">
+        <datalist id="players"></datalist>
+        <p class="find-msg" id="find-msg" aria-live="polite"></p>
+      </div>
     </div>
   </div>
+</div>
 
-  <div id="court" class="t-court court"></div>
+<section id="tool" class="tool needs-data" aria-label="Serve directions" tabindex="-1">
+  <div class="wrap grid">
+    <div class="panel courtbox">
+      <div class="court-top">
+        <p class="panel-h">Seen from behind the server</p>
+        <div class="seg" id="seg" role="group" aria-label="Serve">
+          <button type="button" data-serve="1" aria-pressed="true">1st serve</button>
+          <button type="button" data-serve="2" aria-pressed="false">2nd serve</button>
+        </div>
+      </div>
+      <svg id="court" viewBox="0 0 640 470" role="img" aria-labelledby="court-title"><title id="court-title">Serve directions on court</title></svg>
+      <div class="key"><span><i class="kd"></i>Deuce side serves</span><span><i class="ka"></i>Ad side serves</span></div>
+      <p class="cap">Thicker path, more serves. Paths show direction, not exact landing spots.</p>
+    </div>
 
-  <div id="sentences" class="t-sentences" aria-live="polite"></div>
-
-  <details id="sure" class="t-sure">
-    <summary>How sure are we?</summary>
-    <div class="sure-defs" id="sure-defs"></div>
-    <div id="sure-tables"></div>
-  </details>
+    <div class="panel stats" aria-live="polite">
+      <div class="who" id="who"></div>
+      <div id="sides"></div>
+      <p class="foot" id="foot"></p>
+      <details class="sure" id="sure">
+        <summary>How sure are we?</summary>
+        <div id="sure-body"></div>
+      </details>
+    </div>
+  </div>
 </section>
 
-<section id="findings" class="findings" aria-labelledby="findings-h">
- <div class="wrap">
-  <h2 id="findings-h">Does aiming one way win more points?</h2>
-  <p class="findings-lede" id="findings-lede">Only <b data-h="costly_players_s1" data-f="int"></b> of <b data-h="players" data-f="int"></b> players win clearly more first-serve points with one direction. <span id="findings-s2">On second serves, nobody does.</span></p>
-  <div class="waffle" id="waffle"></div>
-  <p class="findings-note">Each dot is a player. Blue dots are players who win clearly more first-serve points with one direction. Pick one to see that player on the court.</p>
- </div>
+<section id="numbers" class="numbers needs-data" aria-labelledby="numbers-h">
+  <div class="wrap">
+    <h2 class="sec-h" id="numbers-h">By the numbers</h2>
+    <p class="sec-sub">Every charted 1st serve, compared within the same player and side.</p>
+    <div class="num-grid">
+      <div class="panel np" id="vs"></div>
+      <div class="panel np" id="clear"></div>
+    </div>
+  </div>
 </section>
 
 </main>

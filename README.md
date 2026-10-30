@@ -33,18 +33,24 @@ for the same opponents (mix test, q < 0.05).
 
 ## What's on the site
 
-The site is one interactive court screen plus one finding, with the method on a second page.
+The site is one court screen, a short "By the numbers" section and a method page.
 
-- The court screen: pick a player and switch between 1st and 2nd serve. Two panels, deuce side and ad
-  side, draw one arrow per direction (wide, body, T), as wide as the share of serves that go there. Tap or
-  focus an arrow for the share, a typical pro's share against the same mix of right- and left-handed
-  returners, and the points won. The site says "typical pro" where the data and this README say "league
-  average". A few short sentences under the court give the habit, whether any direction wins clearly
-  more points, and any break-point shift; "How sure are we?" opens the tables with confidence intervals.
-  The arrows show the direction of the serve, not where the ball landed.
-- One finding: a dot for every listed player, with the players whose 1st-serve win rates differ by
-  direction in blue. Tap one to load that player into the court.
-- Method page: how the serves were counted, every formula, the limits and the photo credits.
+- The court screen: a tennis court seen from behind the server, as on TV. Serve paths fly from the deuce
+  and ad server positions to the three directions (wide, body, T) on each side, as thick as the share of
+  serves that go there. Next to it, a match-stats panel lists for each side and direction the share of
+  serves (as a bar) and the share of points the server won. Tabs switch between the typical pro of each
+  tour (every charted serve pooled) and a few well-known players; a search box finds any listed player;
+  a switch picks 1st or 2nd serve. For a player, a thin marker shows a typical pro with the same serving
+  hand against the same mix of right- and left-handed returners. The site says "typical pro" where the
+  data and this README say "league average". Tags appear only when the data back them: "Wins clearly
+  more" when a player's win test passes (q < 0.05), "Wins least" on the typical pro's body serves. "How
+  sure are we?" opens the confidence intervals. The paths show the direction of the serve, not where the
+  ball landed.
+- By the numbers: body serves compared with wide serves by the same player on the same side (they go in
+  more often but win fewer points), and a ring with the players whose 1st-serve win rates differ by
+  direction, each one a chip that loads that player into the court.
+- Method page: how the serves were counted, every formula (folded, one click to open), the limits and the
+  photo credits.
 
 The only photos are small player headshots from Wikimedia Commons.
 
@@ -79,7 +85,7 @@ button, click it and wait about a minute.
 
 Static site: serve the `site/` folder with any static server, for example
 `python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`. The
-main page is the court screen and the finding; `method.html` holds the full method, every formula, the limits
+main page is the court screen and "By the numbers"; `method.html` holds the full method, every formula, the limits
 and the photo credits.
 
 Deploy the Streamlit app: on [share.streamlit.io](https://share.streamlit.io), create an app from this

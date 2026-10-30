@@ -1,5 +1,5 @@
 /* Serve IQ UI helpers. ES module.
-   DOM shortcuts, debounce, the reduced-motion check (js/anim.js) and the SVG element helpers (js/court.js). */
+   DOM shortcuts, debounce, the reduced-motion check and the SVG element helper (js/court.js). */
 
 export const $ = (sel, root) => (root || document).querySelector(sel);
 export const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
@@ -24,9 +24,4 @@ export function el(tag, attrs, parent) {
   if (attrs) Object.keys(attrs).forEach((k) => { if (attrs[k] != null) e.setAttribute(k, attrs[k]); });
   if (parent) parent.appendChild(e);
   return e;
-}
-export function txt(parent, x, y, s, cls, anchor, extra) {
-  const t = el("text", Object.assign({ x: x, y: y, class: cls || null, "text-anchor": anchor || "start" }, extra || {}), parent);
-  t.textContent = s;
-  return t;
 }

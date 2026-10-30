@@ -8,11 +8,12 @@ Exit code 1 if any check FAILs. Prints PASS / FAIL / WARN per check, with file:l
             once DIR/index.html exists a missing site file (below) is a FAIL.
 
 Checks
-  0. Site files (v4 layout, spec "Files after v4"): DIR/index.html, DIR/method.html, DIR/data/serveiq.json,
-     DIR/data/images.json, DIR/css/{site,method}.css and DIR/js/{data,ui,main,court,tool,findings,method}.js
-     exist (DIR/js/anim.js is optional, kept as a tween helper). Must be gone: the v2 files DIR/app.js and
-     DIR/styles.css, the v3 files DIR/css/{base,hero,players,league}.css and DIR/js/{hero,players,league}.js,
-     and the folder DIR/img/scenes. Any other css / js file is a WARN. Every local href / src in both pages,
+  0. Site files (v5 layout): DIR/index.html, DIR/method.html, DIR/data/serveiq.json,
+     DIR/data/images.json, DIR/css/{site,method}.css and DIR/js/{data,ui,main,court,tool,numbers,method}.js
+     exist. Must be gone: the v2 files DIR/app.js and DIR/styles.css, the v3 files
+     DIR/css/{base,hero,players,league}.css and DIR/js/{hero,players,league}.js, the v4 files
+     DIR/js/{findings,anim}.js, the draft v5 files DIR/js/{strip,bars}.js, the folder DIR/img/scenes and the
+     design drafts in DIR/_concepts. Any other css / js file is a WARN. Every local href / src in both pages,
      every url(...) in the CSS and every relative ES module import resolves to a file.
   1. Data. The JSON is parsed with NaN / Infinity tokens rejected. Then, independently of
      src/export_site.py (csv module, not pandas), everything is recomputed from app/data/*.csv and
@@ -78,14 +79,15 @@ Checks
          custom properties in the css (the largest definition counts); px is read at a 16px font size
          (0.02em = 0.32px); negative values and "normal" pass; a value that cannot be read is a WARN.
        - no "prefers-color-scheme: dark", "data-theme" or "dataset.theme" (v4 is light only)
-       - index.html: no fonts.googleapis.com / fonts.gstatic.com, and index.html / css/site.css name none of
-         Inter, Barlow, Geist, Instrument in a font-family
+       - index.html: Google Fonts only for the one chosen face (every family= in a fonts.googleapis.com URL
+         is Archivo), and index.html / css/site.css name none of Inter, Barlow, Geist, Instrument in a
+         font-family
        - index.html static HTML has at most one <img> tag (the player headshot), counted by an HTML parser
          (comments and <script> contents are not tags)
   8. The word "league" (case-insensitive, whole word) is not shown on index.html. Checked:
        - index.html text nodes outside <script> / <style> / comments, and the attributes people read
          (aria-label, title, alt, placeholder, content, value, data-info)
-       - every string literal of DIR/js/tool.js, findings.js and court.js (the modules only index.html runs),
+       - every string literal of DIR/js/tool.js, numbers.js and court.js (the modules only index.html runs),
          found by a small JS lexer: '...' and "..." literals and template literals (${...} parts become a
          space, strings inside them are checked on their own); comments and regex literals are skipped.
      Heuristic for "user-visible": HTML tags are removed from the literal first (class="league-x" is not
@@ -242,16 +244,17 @@ def missing(check, rel):
     report("FAIL" if STRICT or (in_site and site_started()) else "WARN", check, f"{rel} does not exist yet")
 
 
-# v4 layout (spec "Files after v4"). js/anim.js may be kept as a tween helper, so it is optional.
+# v5 layout
 SITE_FILES = (["index.html", "method.html", "data/serveiq.json", "data/images.json"]
               + [f"css/{n}.css" for n in ["site", "method"]]
-              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "findings", "method"]])
-OPTIONAL_FILES = ["js/anim.js"]
-# files and folders that must be gone: v2 (app.js, styles.css) and v3 (the section css/js and scene photos)
+              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "numbers", "method"]])
+OPTIONAL_FILES = []
+# files and folders that must be gone: v2 (app.js, styles.css), v3 (the section css/js and scene photos),
+# v4 (findings.js, anim.js), the v5 drafts (strip.js, bars.js) and the design drafts folder
 LEGACY_FILES = (["app.js", "styles.css"]
                 + [f"css/{n}.css" for n in ["base", "hero", "players", "league"]]
-                + [f"js/{n}.js" for n in ["hero", "players", "league"]]
-                + ["img/scenes"])
+                + [f"js/{n}.js" for n in ["hero", "players", "league", "findings", "anim", "strip", "bars"]]
+                + ["img/scenes", "_concepts"])
 
 
 def rel_of(path):
@@ -277,18 +280,18 @@ def check_files():
             missing(C, f"{SITE_REL}/{name}")
             bad += 1
     if not bad:
-        report("PASS", C, f"all {len(SITE_FILES)} v4 site files exist (pages, data, css/site.css, css/method.css, js/*.js)")
+        report("PASS", C, f"all {len(SITE_FILES)} v5 site files exist (pages, data, css/site.css, css/method.css, js/*.js)")
     for name in LEGACY_FILES:
         if (SITE / name).exists():
-            report("FAIL", C, f"{SITE_REL}/{name} is a v2 / v3 file and must be removed (nothing should reference it)")
+            report("FAIL", C, f"{SITE_REL}/{name} is an old or draft file and must be removed (nothing should reference it)")
             bad += 1
     if not any((SITE / n).exists() for n in LEGACY_FILES):
-        report("PASS", C, f"the {len(LEGACY_FILES)} v2 / v3 files are gone ({', '.join(LEGACY_FILES)})")
+        report("PASS", C, f"the {len(LEGACY_FILES)} old and draft files are gone ({', '.join(LEGACY_FILES)})")
     known = set(SITE_FILES) | set(OPTIONAL_FILES)
     extra = [f"{d}/{q.name}" for d, files in (("css", site_css()), ("js", site_js())) for q in files
              if f"{d}/{q.name}" not in known]
     for e in extra:
-        report("WARN", C, f"{SITE_REL}/{e} is not in the v4 file list")
+        report("WARN", C, f"{SITE_REL}/{e} is not in the v5 file list")
 
     # local references
     refs = []  # (file, line, target path relative to the file's folder)
@@ -1448,6 +1451,7 @@ def css_vars():
 LETTER_SPACING_MAX_EM = 0.02
 ROOT_PX = 16  # px values are compared as em at a 16px font size (0.02em = 0.32px)
 BANNED_FONTS = ["Inter", "Barlow", "Geist", "Instrument"]
+ALLOWED_WEB_FONT = "Archivo"
 
 
 def spacing_em(value, cvars, seen=()):
@@ -1513,11 +1517,13 @@ def check_style():
 
     ip = SITE / "index.html"
     it = strip_html_comments(ip.read_text(encoding="utf-8"))
-    # d. system fonts on index.html
+    # d. Google Fonts only for the chosen face (Archivo)
     bad = 0
-    for m in re.finditer(r"(?i)fonts\.(?:googleapis|gstatic)\.com", it):
-        report("FAIL", C, f"{SITE_REL}/index.html:{line(it, m.start())}: web font host {m.group()!r} (system fonts only)")
-        bad += 1
+    for m in re.finditer(r"(?i)https://fonts\.googleapis\.com/[^\"'\s>]+", it):
+        fams = [f.split(":")[0].replace("+", " ") for f in re.findall(r"family=([^&]+)", m.group().replace("&amp;", "&"))]
+        if not fams or any(f != ALLOWED_WEB_FONT for f in fams):
+            report("FAIL", C, f"{SITE_REL}/index.html:{line(it, m.start())}: web font {fams or m.group()!r} (only {ALLOWED_WEB_FONT})")
+            bad += 1
     sp = SITE / "css" / "site.css"
     for rel, text in [(f"{SITE_REL}/index.html", it)] + ([(f"{SITE_REL}/css/site.css", strip_css_comments(sp.read_text(encoding="utf-8")))] if sp.exists() else []):
         for m in re.finditer(r"font-family\s*:\s*([^;}]+)", text, re.I):
@@ -1526,7 +1532,7 @@ def check_style():
                     report("FAIL", C, f"{rel}:{line(text, m.start())}: font {f!r} (system stack only)")
                     bad += 1
     if not bad:
-        report("PASS", C, "index.html loads no web fonts and site.css names none of " + ", ".join(BANNED_FONTS))
+        report("PASS", C, f"index.html loads no web font but {ALLOWED_WEB_FONT} and site.css names none of " + ", ".join(BANNED_FONTS))
 
     # e. at most one <img> in the static index.html (the player headshot)
     class Imgs(HTMLParser):
@@ -1546,7 +1552,7 @@ def check_style():
 # ---------------------------------------------------------------- check 8: "league" on index.html
 
 LEAGUE = re.compile(r"(?i)\bleague\b")
-LEAGUE_JS = ["tool.js", "findings.js", "court.js"]  # the modules only index.html runs
+LEAGUE_JS = ["tool.js", "numbers.js", "court.js"]  # the modules only index.html runs
 
 
 def league_visible(s):
