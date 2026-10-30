@@ -1808,7 +1808,7 @@ def check_match():
         rel = f.relative_to(MODEL_DIR)
         if not f.is_file() or MODEL_IGNORED & set(rel.parts[:-1]) or f.name == ".DS_Store":
             continue
-        if f.suffix.lower() in (".mp4", ".mov", ".pt"):
+        if f.suffix.lower() in (".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v", ".pt", ".pth", ".onnx", ".mlmodel", ".engine"):
             report("FAIL", C, f"match_model/{rel.as_posix()}: video or model weights must not ship")
             bad += 1
             continue
@@ -1816,8 +1816,9 @@ def check_match():
             text = f.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
-        if "/Users/" in text:
-            report("FAIL", C, f"match_model/{rel.as_posix()}: contains a local /Users/ path")
+        local = [p for p in ("/Users/", "/home/", "/private/tmp/", "/private/var/") if p in text]
+        if local:
+            report("FAIL", C, f"match_model/{rel.as_posix()}: contains a local path ({local[0]})")
             bad += 1
         if rel.parts[0] == "out" and "video_abs" in text:
             report("FAIL", C, f"match_model/{rel.as_posix()}: contains video_abs (a local video path)")

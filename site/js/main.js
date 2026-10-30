@@ -1,6 +1,6 @@
 /* Serve IQ boot. ES module.
-   index.html (<body data-page="index">) boots itself: data, [data-h] / [data-b] binding, then tool.js and
-   numbers.js. Each section module exports init(ctx), ctx = { data, ui }, and is imported with try/catch so
+   index.html (<body data-page="index">) boots itself: data, [data-h] / [data-b] binding, then tool.js, explore.js
+   and match.js. Each section module exports init(ctx), ctx = { data, ui }, and is imported with try/catch so
    a missing or broken module never breaks the rest of the page.
    method.html loads js/method.js, which calls boot([]) from here and then renders itself. */
 

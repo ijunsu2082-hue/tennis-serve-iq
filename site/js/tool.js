@@ -11,9 +11,11 @@
                        returners serves). When the top two are within NO_CLEAR_FAVORITE they are both
                        the typical-pro lane ("splits"), and the baseline is the player's average share
                        over the two.
-     scouting edge     favorite share minus that baseline, shown only when the favorite's 95% range sits
-                       above the range of every other typical-pro lane; "same lane" when the favorite is
-                       the only typical-pro lane.
+     scouting edge     favorite share minus that baseline, shown only when edgeShown() passes: a clear
+                       favorite, a mix that differs from the typical pro (q_mix below the threshold) and
+                       the favorite's 95% range above the range of every other typical-pro lane; "same
+                       lane" when the favorite is the only typical-pro lane. The explorer fills a dot on
+                       the same gate.
      serves needed     z^2 (p1 + p2 - d^2) / d^2 with d = p1 - p2, the two largest shares on all points
                        (the favorite's lead clears its 95% range); matches = that times matches / serves.
      break points      a change is shown only when its test passes (bp_<dir>_q below the threshold),
@@ -61,6 +63,10 @@ export function edge(cells, fav) {
     others.every((d) => isNum(cells[d].share_hi) && f.share_lo > cells[d].share_hi);
   return { typ, base, same, clear, value: f && isNum(base) ? f.share - base : null };
 }
+/* edgeShown(ins, e): the scouting-edge gate, shared with the explorer so the card and the dots agree */
+export function edgeShown(ins, e) {
+  return !!ins.favorite && ins.mix.differs && e.clear && e.value > 0;
+}
 /* need(cells, test): { serves, matches } to spot the lean on all points, or null without a leader */
 export function need(cells, test) {
   const sh = DIRS.map((d) => cells[d].share).filter(isNum).sort((a, b) => b - a);
@@ -107,8 +113,9 @@ function bpLine(v, s) {
   const b = v.ins[s].bp;
   const thin = b.thin ? " Few break points, so treat this as rough." : "";
   if (!b.shifts.length) return "No clear change on break points (" + fInt(b.n_bp) + " break points)." + thin;
-  const parts = b.shifts.map((x) => lane(x.dir) + " " + (x.change > 0 ? per100(x.change) + " more" : per100(-x.change) + " fewer"));
-  return "On break points: " + parts.join(", ") + " times in 100 (" + fInt(b.n_bp) + " break points)." + thin;
+  const parts = b.shifts.map((x) => lane(x.dir) + " " + per100(Math.abs(x.change)) + (x.change > 0 ? " more" : " fewer"));
+  const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0];
+  return "On break points: " + list + " in 100 than on other points (" + fInt(b.n_bp) + " break points)." + thin;
 }
 
 function resultHtml(v) {
@@ -130,7 +137,7 @@ function resultHtml(v) {
   else if (best && best !== S.pick) h += "<p class='line'>Best call: " + lane(best) + ", " + per100(cur[best].share) + " in 100.</p>";
   if (S.sit === "all") {
     if (e.same) h += "<p class='line'>Same lane as the typical pro: scouting adds nothing on this side.</p>";
-    else if (e.clear && e.value > 0) h += "<p class='line good'>Scouting edge: " + per100(e.value) + " more in 100 than guessing like the typical pro.</p>";
+    else if (edgeShown(v.ins[s], e)) h += "<p class='line good'>Scouting edge: " + per100(e.value) + " more in 100 than guessing like the typical pro.</p>";
     else h += "<p class='line'>Too close to call against the typical pro.</p>";
   } else {
     h += "<p class='line" + (v.ins[s].bp.shifts.length ? " chip" : "") + "'>" + bpLine(v, s) + "</p>";
@@ -162,10 +169,12 @@ function cardHtml(v) {
   }
   if (isNum(ins.favPct)) h += "<dt>How lopsided</dt><dd>More lopsided than " + fPct(ins.favPct, 0) + " of pros on this side</dd>";
   h += "<dt>Against the typical pro</dt><dd>" + (ins.mix.differs ? "A different mix of lanes, beyond chance" : "No clear difference in the mix") + "</dd>";
-  h += "<dt>Break points</dt><dd>" + bpLine(v, s) + "</dd>";
+  // the row is already labeled, so the card drops the "On break points: " lead of the result line
+  const bpc = bpLine(v, s).replace(/^On break points: /, "");
+  h += "<dt>Break points</dt><dd>" + bpc.charAt(0).toUpperCase() + bpc.slice(1) + "</dd>";
   if (nd) {
     const m = nd.matches;
-    h += "<dt>To spot this lean</dt><dd>About " + fInt(nd.serves) + " charted serves from this side, " +
+    h += "<dt>" + (ins.favorite ? "To spot this lean" : "To tell the top two apart") + "</dt><dd>About " + fInt(nd.serves) + " charted serves from this side, " +
       (!isNum(m) ? "" : m < 1 ? "less than one match" : "about " + fInt(m) + (Math.round(m) === 1 ? " match" : " matches")) + "</dd>";
   }
   h += "<dt>Charted</dt><dd class='tnum'>" + fInt(ins.n) + " serves in " + fInt(ins.matches) + " matches</dd></dl>";
@@ -328,5 +337,5 @@ export async function init(ctx) {
     const d = e.detail || {};
     if (d.name) select(d.name, d.serve, d.side);
   });
-  ctx.tool = { select, edge, need, typicalLanes, favOf, get state() { return Object.assign({}, S); } };
+  ctx.tool = { select, edge, edgeShown, need, typicalLanes, favOf, get state() { return Object.assign({}, S); } };
 }

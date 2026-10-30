@@ -49,12 +49,13 @@ The site is one page with three parts, plus a method page.
   is compared with other pros on that side, whether the mix differs from the typical pro, any break-point
   change that passes its test (with a note when there are fewer than 100 break points), and about how many
   charted serves and matches it takes to spot the lean. The scouting edge (how many more calls in 100 than
-  guessing like the typical pro) is shown only when the favorite's range sits above the typical pro's lane.
+  guessing like the typical pro) is shown only when the side has a clear favorite, its mix differs from the
+  typical pro's, and the favorite's range sits above the typical pro's lane.
   When the typical pro's top two lanes are within three points, both count and the comparison uses their
   average.
 - Find the sides worth scouting: one dot per player and side, by scouting edge and by the biggest
   break-point change. Dots are filled only when the edge passes its gate and ringed only when a break-point
-  change passes its test; those dots load the side into the court.
+  change passes its test with at least 100 break points; those dots load the side into the court.
 - Scout it from video: the match model's pipeline, its chart of a short demo clip next to a chart made by
   eye, and how much video a habit needs (see Match model below).
 - Method page: how the serves were counted, every formula (folded, one click to open), how a call is

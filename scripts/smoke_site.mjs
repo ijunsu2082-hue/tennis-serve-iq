@@ -37,8 +37,11 @@
 //     - Henin quick pick (ad): the typical-pro split note and the averaged bar
 //     - every quick pick passes the scouting-edge gate (computed here)
 //     - clicking a lane on the court itself (not a button) makes the call
-//     - #explore: one dot per 1st-serve player-side, the filled count equals the gated count computed here, only
-//       live dots take focus, the Women filter shows the women's sides, and Enter on a live dot loads it
+//     - Medvedev deuce (no clear favorite): no scouting-edge line; 2nd serve shows the 2nd-serve share
+//     - a sweep of every player, serve, side and situation: no placeholder or banned text in the result or card
+//     - #explore: one dot per 1st-serve player-side; the filled, ringed and same-lane counts equal the ones
+//       computed here (the same gate as the card); the chart is one tab stop and the arrow keys move along the
+//       live dots; the Women filter shows the women's sides, and Enter on a live dot loads it
 //     - #match: the strip has one item per point in data/match.json, and the claim prints named of served
 //   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to
 //     serve-iq.streamlit.app, every .needs-data part is hidden.
@@ -135,6 +138,8 @@ function need(name, side) {
   const n = (Z * Z * (p1 + p2 - d * d)) / (d * d);
   return { serves: n, matches: (n * t.matches) / t.n };
 }
+// the scouting-edge gate of js/tool.js edgeShown(): a clear favorite, q_mix below the threshold, the range rule
+const gate = (name, side) => { const e = edge(name, side); return favorite(name, side) !== null && test(name, side).q_mix < Q && e.clear && e.value > 0; };
 const bpShifts = (name, side) => { const t = test(name, side); return DIRS.filter((d) => typeof t['bp_' + d + '_q'] === 'number' && t['bp_' + d + '_q'] < Q); };
 
 // ---------- load playwright ----------
@@ -473,7 +478,49 @@ try {
 
     // every quick pick passes the gate
     const gates = PICKS.map(([n, s]) => ({ n, s, ...edge(n, s) }));
-    check(`${tag}: every quick pick passes the scouting-edge gate`, gates.every((g) => g.clear && g.value > 0), gates.map((g) => [g.n, g.s, g.clear, r100(g.value)]));
+    check(`${tag}: every quick pick passes the scouting-edge gate`, PICKS.every(([n, s]) => gate(n, s)), gates.map((g) => [g.n, g.s, g.clear, r100(g.value)]));
+
+    // Medvedev deuce: no clear favorite (top two within 0.03), so no scouting-edge line even though the range rule passes
+    const MD = 'Daniil Medvedev', mde = edge(MD, 'deuce');
+    await findPlayer(page, MD);
+    await page.locator('#seg-side button[data-side="deuce"]').click();
+    await callLane(page, 'wide');
+    st = await state(page);
+    check(`${tag}: Medvedev deuce: no clear favorite, so "Too close to call" and no scouting-edge line (range rule alone: ${mde.clear})`,
+      favorite(MD, 'deuce') === null && !gate(MD, 'deuce') && st.lines.some((l) => /^No clear favorite/.test(l)) &&
+      st.lines.some((l) => /^Too close to call/.test(l)) && !st.lines.some((l) => /^Scouting edge/.test(l)), st.lines);
+
+    // 2nd serve: the big number is the 2nd-serve share (Kyrgios ad, out wide)
+    await page.locator('#picks .pick[data-name="Nick Kyrgios"]').click();
+    await page.locator('#seg-serve button[data-serve="2"]').click();
+    await callLane(page, 'wide');
+    st = await state(page);
+    const k2 = cells(K, 'ad', 'all', 2);
+    check(`${tag}: 2nd serve: prompt says second serve and the big number is the 2nd-serve share (${r100(k2.wide.share)})`,
+      /the second serve goes/.test(st.prompt) && st.big === r100(k2.wide.share) && /2nd serves/.test(st.card), { prompt: st.prompt, big: st.big });
+    await page.locator('#seg-serve button[data-serve="1"]').click();
+
+    // every player, serve, side and situation: the result and the card have no placeholders or banned text
+    const sweep = await page.evaluate(async (names) => {
+      const bad = [];
+      for (const sit of ['all', 'bp']) {
+        document.querySelector(`#seg-sit button[data-sit="${sit}"]`).click();
+        for (const name of names) for (const serve of [1, 2]) for (const side of ['deuce', 'ad']) {
+          document.dispatchEvent(new CustomEvent('serveiq:select', { detail: { name, serve, side } }));
+          const b = document.querySelector('#lanebtns .lanebtn');
+          if (!b) { bad.push([name, serve, side, sit, 'no lane buttons']); continue; }
+          b.click();
+          const t = (document.getElementById('result').textContent || '') + ' ' + (document.getElementById('card').textContent || '');
+          if (/\bNaN\b|undefined|\bn\/a\b|\bnull\b|Infinity|\[object/.test(t)) bad.push([name, serve, side, sit, t.slice(0, 160)]);
+        }
+      }
+      document.querySelector('#seg-sit button[data-sit="all"]').click();
+      return { n: names.length, bad: bad.slice(0, 8), nBad: bad.length };
+    }, DATA.players.rows.map((r) => r[DATA.players.fields.indexOf('server')]));
+    check(`${tag}: all ${sweep.n} players x 2 serves x 2 sides x 2 situations: no placeholder text in the result or the card`, sweep.nBad === 0, sweep);
+    const sweepScan = await scanText(page);
+    check(`${tag}: after the sweep, no banned characters or voice words`, hits(sweepScan, BANNED).length === 0 && hits(sweepScan, INDEX_BANNED).length === 0,
+      hits(sweepScan, BANNED).concat(hits(sweepScan, INDEX_BANNED)));
 
     // a click on the court lane itself makes the call
     await act(page, 'again');
@@ -491,14 +538,25 @@ try {
     const allSides = [];
     for (const n of DATA.players.rows.map((r) => r[DATA.players.fields.indexOf('server')])) {
       if (!DATA.mix.data[genderOf(n) + '|' + n + '|1']) continue;
-      for (const s of SIDES) { const e = edge(n, s); allSides.push({ n, s, filled: test(n, s).q_mix < Q && e.clear && e.value > 0 }); }
+      for (const s of SIDES) {
+        const t = test(n, s);
+        allSides.push({ n, s, filled: gate(n, s), same: edge(n, s).same, ring: (t.n_bp || 0) >= DATA.meta.thresholds.bp_warn_n && bpShifts(n, s).length > 0 });
+      }
     }
     const wantFilled = allSides.filter((x) => x.filled).length;
+    const wantRing = allSides.filter((x) => x.ring).length, wantSame = allSides.filter((x) => x.same).length;
     const ex = await page.evaluate(() => ({ dots: document.querySelectorAll('#scatter circle.dot').length,
       filled: [...document.querySelectorAll('#scatter circle.dot')].filter((c) => c.getAttribute('fill') === '#0a62d6').length,
       live: document.querySelectorAll('#scatter circle.dot.live[tabindex="0"]').length, cap: document.getElementById('scatter-cap')?.textContent || '' }));
-    check(`${tag}: explorer has ${allSides.length} dots and ${wantFilled} filled (computed here); only live dots take focus`,
-      ex.dots === allSides.length && ex.filled === wantFilled && ex.live > 0 && ex.live < ex.dots && ex.cap.includes(fInt(wantFilled)), ex);
+    check(`${tag}: explorer has ${allSides.length} dots, ${wantFilled} filled, ${wantRing} ringed, ${wantSame} same lane (computed here); one tab stop`,
+      ex.dots === allSides.length && ex.filled === wantFilled && ex.live === 1 && ex.cap.includes(`${fInt(wantFilled)} sides with a clear scouting edge`) &&
+      ex.cap.includes(`${fInt(wantRing)} with a clear break-point change`) && ex.cap.includes(`${fInt(wantSame)} of ${fInt(allSides.length)} sides lean`), ex);
+    // the arrow keys move the tab stop along the live dots
+    await page.locator('#scatter circle.dot.live[tabindex="0"]').focus();
+    const first = await page.evaluate(() => document.activeElement.getAttribute('aria-label'));
+    await page.keyboard.press('ArrowRight');
+    const moved = await page.evaluate(() => ({ label: document.activeElement.getAttribute('aria-label'), stops: document.querySelectorAll('#scatter [tabindex="0"]').length }));
+    check(`${tag}: ArrowRight moves focus to the next live dot and keeps one tab stop`, moved.label && moved.label !== first && moved.stops === 1, { first, moved });
     await page.locator('#seg-tour button[data-tour="w"]').click();
     const nW = await page.evaluate(() => document.querySelectorAll('#scatter circle.dot').length);
     const wantW = allSides.filter((x) => genderOf(x.n) === 'w').length;

@@ -3,10 +3,12 @@
      x  the scouting edge: favorite share minus the share in the typical pro's lane (js/tool.js edge()),
         in points per 100; 0 when the favorite is the typical pro's lane
      y  the largest break-point change of any lane (|bp_<dir>|), in points per 100
-   A dot is filled only when the edge passes the gate (q_mix below the threshold and the favorite's 95% range
-   above every other typical-pro lane); a red ring marks a break-point change whose test passes with at least
-   bp_warn_n break points. Everything else is a small hollow dot. Filled and ringed dots are buttons: click or
-   Enter loads that player and side into the court and scrolls up. Counts in the caption are computed here. */
+   A dot is filled only when the edge passes the card's gate (js/tool.js edgeShown(): a clear favorite, q_mix
+   below the threshold and the favorite's 95% range above every other typical-pro lane); a red ring marks a
+   break-point change whose test passes with at least bp_warn_n break points. Everything else is a small
+   hollow dot. Filled and ringed dots are buttons with one tab stop for the chart (roving tabindex: the arrow
+   keys move left and right through them); click or Enter loads that player and side into the court and
+   scrolls up. Counts in the caption are computed here. */
 
 import { SIDES, DIRS, esc, fInt, isNum, surname } from "./data.js";
 import { $, $$, el, reducedMotion } from "./ui.js";
@@ -31,7 +33,7 @@ function build() {
       const bpClear = (t.n_bp || 0) >= bpMin && ins.bp.shifts.length > 0;
       out.push({
         name: p.server, g: p.gender, side: s, fav, x: e.same ? 0 : Math.max(0, e.value || 0), y: Math.abs(y), ydir, ysign: y,
-        same: e.same, filled: ins.mix.differs && e.clear && e.value > 0, ring: bpClear, n_bp: t.n_bp, q: qth,
+        same: e.same, filled: tool.edgeShown(ins, e), ring: bpClear, n_bp: t.n_bp, q: qth,
       });
     });
   });
@@ -50,7 +52,7 @@ function describe(d) {
   const who = surname(d.name) + ", " + d.side + " side";
   const edgeTxt = d.same ? "leans where the typical pro does" : d.filled ? Math.round(100 * d.x) + " more in 100 than guessing like the typical pro"
     : "too close to call against the typical pro";
-  const bpTxt = d.ring ? "on break points " + LANE[d.ydir] + " " + Math.round(100 * Math.abs(d.ysign)) + (d.ysign > 0 ? " more" : " fewer") + " in 100"
+  const bpTxt = d.ring ? "on break points " + LANE[d.ydir] + " " + Math.round(100 * Math.abs(d.ysign)) + (d.ysign > 0 ? " more" : " fewer") + " in 100 than on other points"
     : "no clear change on break points";
   return who + ": " + edgeTxt + "; " + bpTxt + ".";
 }
@@ -78,16 +80,18 @@ function draw() {
   // dots: hollow first, then filled and ringed on top
   const g = el("g", {}, svg);
   const order = list.slice().sort((a, b) => (a.filled || a.ring ? 1 : 0) - (b.filled || b.ring ? 1 : 0));
+  const live = [];
   order.forEach((d) => {
-    const live = d.filled || d.ring;
+    const isLive = d.filled || d.ring;
     const c = el("circle", {
-      cx: X(d.x).toFixed(1), cy: Y(d.y).toFixed(1), r: live ? 6 : 3.2,
-      fill: d.filled ? "#0a62d6" : live ? "#fff" : "none",
+      cx: X(d.x).toFixed(1), cy: Y(d.y).toFixed(1), r: isLive ? 6 : 3.2,
+      fill: d.filled ? "#0a62d6" : isLive ? "#fff" : "none",
       stroke: d.ring ? "#d7263d" : d.filled ? "#0a62d6" : "#aab4c4", "stroke-width": d.ring ? 2.6 : 1.2,
-      class: live ? "dot live" : "dot",
+      class: isLive ? "dot live" : "dot",
     }, g);
-    if (!live) return;
-    c.setAttribute("tabindex", "0");
+    if (!isLive) return;
+    live.push({ c, x: d.x, y: d.y });
+    c.setAttribute("tabindex", "-1");
     c.setAttribute("role", "button");
     c.setAttribute("aria-label", describe(d) + " Load on the court.");
     c.dataset.name = d.name; c.dataset.side = d.side;
@@ -103,13 +107,25 @@ function draw() {
     c.addEventListener("click", go);
     c.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   });
+  // one tab stop for the whole chart: the arrow keys walk the live dots left to right (then bottom to top)
+  live.sort((a, b) => a.x - b.x || a.y - b.y);
+  live.forEach((o, i) => {
+    if (i === 0) o.c.setAttribute("tabindex", "0");
+    o.c.addEventListener("focus", () => live.forEach((x) => x.c.setAttribute("tabindex", x === o ? "0" : "-1")));
+    o.c.addEventListener("keydown", (e) => {
+      const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, Home: -live.length, End: live.length }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      live[Math.max(0, Math.min(live.length - 1, i + step))].c.focus();
+    });
+  });
   // caption, all counts from the dots shown
   const same = list.filter((d) => d.same).length, filled = list.filter((d) => d.filled).length, ring = list.filter((d) => d.ring).length;
-  $("#scatter-cap").innerHTML = "<span class='k k-fill'></span>" + fInt(filled) + " sides with a clear scouting edge " +
-    "<span class='k k-ring'></span>" + fInt(ring) + " with a clear break-point change " +
-    "<span class='k k-hollow'></span>the rest. " + fInt(same) + " of " + fInt(list.length) + " sides lean where the typical pro does. " +
-    "Direction clearly changes who wins the point for " + fInt(D.h("costly_players_s1")) + " of " + fInt(D.h("players")) + " players.";
-  $("#scatter-read").textContent = "Point at a blue or red dot, then click it to load that side on the court.";
+  $("#scatter-cap").innerHTML = "<span class='k k-fill'></span>" + fInt(filled) + " sides with a clear scouting edge, " +
+    "<span class='k k-ring'></span>" + fInt(ring) + " with a clear break-point change, " +
+    "<span class='k k-hollow'></span>the rest neither. " + fInt(same) + " of " + fInt(list.length) + " sides lean where the typical pro does. " +
+    "Win rates clearly differ by direction for " + fInt(D.h("costly_players_s1")) + " of " + fInt(D.h("players")) + " players.";
+  $("#scatter-read").textContent = "Point at a blue or red dot (or Tab in and use the arrow keys), then click or press Enter to load it on the court.";
 }
 
 export async function init(ctx) {

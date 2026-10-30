@@ -9,8 +9,8 @@ This folder is part of the Serve IQ repository. The test video, the virtual envi
 ```bash
 cd match_model
 python3.13 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m tennis analyze videoplayback.mp4
-open out/videoplayback/report.html
+.venv/bin/python -m tennis analyze your_match.mp4
+open out/your_match/report.html
 ```
 
 You can also drop videos into `inbox/` and run `.venv/bin/python -m tennis inbox`.
