@@ -1,12 +1,13 @@
 # Serve IQ
 
-**Where pro tennis players serve, and whether any direction wins more points.**
+**Where will the serve go, and does it change on break points? A serve scouting tool for returners, plus a model that charts serves from match video.**
 
 Serve IQ uses 2.56 million charted professional serves from the Match Charting Project. After the exclusions
 listed under Limits, 2,473,821 serves are analyzed. Pick any of 447 players
-(249 men, 198 women) to see where they serve on each side of the court, how that compares with a typical
-pro facing the same opponents, how it changes on break points, and whether any direction wins more points
-than the others. Shares and win rates come with 95% confidence intervals.
+(249 men, 198 women), call where their serve goes on each side of the court, and see how often they served
+there, how that compares with a typical pro facing the same opponents, and how it changes on break points.
+Shares and win rates come with 95% confidence intervals. For players nobody charts, the match model in
+`match_model/` reads a broadcast match video and writes the same kind of chart.
 
 Live site: https://serve-iq.netlify.app (backup: https://serve-iq.streamlit.app)
 
@@ -22,35 +23,42 @@ Live site: https://serve-iq.netlify.app (backup: https://serve-iq.streamlit.app)
 | Break points shift the mix a little. | On break points servers go wide 1.2 to 1.7 percentage points more often on 1st serves (same server, match and side). 62 player by side by serve patterns show a significant shift. Example: Rafael Nadal's deuce-side 1st serve goes wide on 30.0% of other points and 45.0% of break points. |
 | Servers switch more than a random order would. | Men's 1st serves repeat their previous direction 1.60 percentage points less often than a random order would; women's 4.89 less. |
 
-Most pros have a recognizable serve habit. Only a few of them have a court side where win rates differ by
-direction. The site shows who those players are and draws every listed player's serve directions on a court.
+Most pros have a lopsided serve habit that holds up from one half of their matches to the other. Only a
+few of them have a court side where win rates differ by direction. So the useful question for a returner is
+not which lane wins, but where this server tends to go, and whether that changes under pressure.
 
 The charts only record where each serve went (wide, body or T). They do not record the returner. The
 favorite-target share is the share of serves to a server's most-used target: if a returner always leaned
 toward that target, they would be right this often, and a server who split evenly across three targets would
-give one in three. We call a server predictable on a side when the mix is lopsided and differs from the league average
-for the same opponents (mix test, q < 0.05).
+give one in three. A side's mix "differs from the typical pro" when the mix test passes (q < 0.05). Servers
+also switch lanes more often than a random order would, so the site calls a habit lopsided: it says where
+a server tends to go overall, not what comes next.
 
 ## What's on the site
 
-The site is one court screen, a short "By the numbers" section and a method page.
+The site is one page with three parts, plus a method page.
 
-- The court screen: a tennis court seen from behind the server, as on TV. Serve paths fly from the deuce
-  and ad server positions to the three directions (wide, body, T) on each side, as thick as the share of
-  serves that go there. Next to it, a match-stats panel lists for each side and direction the share of
-  serves (as a bar) and the share of points the server won. Tabs switch between the typical pro of each
-  tour (every charted serve pooled) and a few well-known players; a search box finds any listed player;
-  a switch picks 1st or 2nd serve. For a player, a thin marker shows a typical pro with the same serving
-  hand against the same mix of right- and left-handed returners. The site says "typical pro" where the
-  data and this README say "league average". Tags appear only when the data back them: "Wins clearly
-  more" when a player's win test passes (q < 0.05), "Wins least" on the typical pro's body serves. "How
-  sure are we?" opens the confidence intervals. The paths show the direction of the serve, not where the
-  ball landed.
-- By the numbers: body serves compared with wide serves by the same player on the same side (they go in
-  more often but win fewer points), and a ring with the players whose 1st-serve win rates differ by
-  direction, each one a chip that loads that player into the court.
-- Method page: how the serves were counted, every formula (folded, one click to open), the limits and the
-  photo credits.
+- Call the serve: a court seen from behind the server, as on TV. The visitor picks a player (quick picks, or
+  search any of the listed players), a side and 1st or 2nd serve, then taps the lane where they expect the
+  serve: out wide, at the body or down the middle. The real serve paths draw in, and a result block shows
+  how often the player served to that lane, next to the lane a typical pro serves to most (facing the same
+  mix of right- and left-handed returners) and a random guess. Nothing is sampled: a call always scores the
+  share of serves that went there. "Now make it a break point" switches to break points and the paths
+  re-weight.
+- The scouting card, which opens after a call: the favorite lane with its 95% range, how lopsided the habit
+  is compared with other pros on that side, whether the mix differs from the typical pro, any break-point
+  change that passes its test (with a note when there are fewer than 100 break points), and about how many
+  charted serves and matches it takes to spot the lean. The scouting edge (how many more calls in 100 than
+  guessing like the typical pro) is shown only when the favorite's range sits above the typical pro's lane.
+  When the typical pro's top two lanes are within three points, both count and the comparison uses their
+  average.
+- Find the sides worth scouting: one dot per player and side, by scouting edge and by the biggest
+  break-point change. Dots are filled only when the edge passes its gate and ringed only when a break-point
+  change passes its test; those dots load the side into the court.
+- Scout it from video: the match model's pipeline, its chart of a short demo clip next to a chart made by
+  eye, and how much video a habit needs (see Match model below).
+- Method page: how the serves were counted, every formula (folded, one click to open), how a call is
+  scored, how the match model charts serves, the limits and the photo credits.
 
 The only photos are small player headshots from Wikimedia Commons.
 
@@ -68,6 +76,29 @@ The Streamlit backup app keeps the fuller dashboard, in three tabs:
 In break-point mode the league comparison values are all-points league values, labeled "league, all
 points", because the league expectation is not split by break point.
 
+## Match model
+
+`match_model/` is a separate Python 3.13 program for macOS. It reads a broadcast match video and writes a
+point-by-point chart in Match Charting Project notation: server, deuce or ad side, break points, the serve
+lane, the point winner and more. The score bug gives the server, side and winner; detected court lines put
+the ball bounce in meters; the bounce is sorted into equal thirds of the service box width as wide, body
+or T. See `match_model/README.md` to run it.
+
+What has been checked: on its 10-point demo clip (Sinner and Alcaraz), the model named the lane for 8 of
+10 serves, and all 8 matched a chart of the same points made by eye; it read the point winner right on
+10 of 10. `src/export_match.py` writes that comparison to `site/data/match.json`, and `scripts/check_site.py`
+rebuilds it. The clip is the one the rules were tuned on, so this is not a blind test, and it has no break
+points.
+
+What it means for scouting: one match gives a side about 37 first serves. Across the listed pros, the
+median side needs about 375 first serves (middle half 112 to 1,533) before its favorite lane leads by more
+than its 95% range, which is about 10 matches of video (middle half 3 to 40). So the model is the first
+step toward scouting a player nobody charts, not a finished scouting tool.
+
+Limits of the model: it needs a Mac (the score bug is read with Apple Vision) and a broadcast score bug;
+videos without one run in a beta mode. Its lanes come from a strict thirds rule, while volunteers chart the
+pro data by eye, and the two have not been compared on the same serves.
+
 ## Run it
 
 Streamlit app (the backup site):
@@ -84,9 +115,10 @@ Streamlit tier puts the backup app to sleep when nobody has used it for a while;
 button, click it and wait about a minute.
 
 Static site: serve the `site/` folder with any static server, for example
-`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`. The
-main page is the court screen and "By the numbers"; `method.html` holds the full method, every formula, the limits
-and the photo credits.
+`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py` and
+`python src/export_match.py`. The main page is the call-the-serve court, the scouting card, the explorer and
+the match model section; `method.html` holds the full method, every formula, the limits and the photo
+credits.
 
 Deploy the Streamlit app: on [share.streamlit.io](https://share.streamlit.io), create an app from this
 repository with main file `app/streamlit_app.py` and Python 3.12 under Advanced settings (the pinned numpy
@@ -257,6 +289,8 @@ r = \mathrm{corr}_i\left( f^{A}_i, f^{B}_i \right)$$
 - A test that finds no significant difference does not show that every direction wins equally: a small edge
   may be too small to detect with this much data.
 - Tiebreak points (3%), serves with no recorded direction (0.2%) and no-ad deciding points are left out.
+- The match model has been checked on one short clip that its rules were tuned on. It has not been tested
+  on new matches or on break points.
 
 ## Repository
 
@@ -269,6 +303,8 @@ src/reconcile.py       checks the rebuild against the project's own totals
 src/baseline.py        league-wide baseline, clustered CIs, within-server effects
 src/app_data.py        per-player tables, tests and stability checks for the app
 src/export_site.py     data files for the static site
+src/export_match.py    the match model's demo chart and the serves-needed numbers for the site
+match_model/           the video charting model (Python 3.13, macOS, GNU AGPLv3)
 scripts/fetch_images.py  downloads the freely licensed player photos and writes site/data/images.json
 ```
 
@@ -279,7 +315,9 @@ by Jeff Sackmann and contributors, licensed
 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). The derived tables in `app/data/`
 are shared under the same license. Non-commercial use only.
 
-Code in this repository (`app/`, `src/`) is released under the MIT License; see `LICENSE`.
+Code in this repository (`app/`, `src/`, `site/`, `scripts/`) is released under the MIT License; see
+`LICENSE`. The match model in `match_model/` uses Ultralytics YOLO and is released under the GNU AGPLv3;
+see `match_model/LICENSE`. The demo video and the model weights are not included.
 
 The player photos in `site/img/players/` come from Wikimedia Commons under their own free licenses (CC BY,
 CC BY-SA or public domain). Each author and license is listed on the site's Method page under Photo credits

@@ -419,6 +419,8 @@ try {
     await callLane(page, 'T');
     const drawn = await settled(page, 'ad');
     let st = await state(page);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(150);
     await page.screenshot({ path: path.join(outDir, 'v6-index-1440-called.png'), fullPage: false });
     const want = { big: r100(kc.T.share), you: r100(kc.T.share), typ: r100(ke.base), rnd: 33 };
     check(`${tag}: Kyrgios ad, down the middle: big number and bars equal the data (${JSON.stringify(want)})`,
