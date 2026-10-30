@@ -3,450 +3,87 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>Serve IQ</title>
-<meta name="description" content="An interactive tennis serve dashboard: where pro players serve (wide, body or T), how their mix compares with the league, and whether any direction wins more points. Built from the Match Charting Project.">
-<meta name="theme-color" content="#0a1a33">
-<script>
-  (function () {
-    var d = document.documentElement;
-    try {
-      var t = localStorage.getItem("serveiq-theme");
-      if (t === "light" || t === "dark") d.setAttribute("data-theme", t);
-    } catch (e) { /* storage blocked: follow the system setting */ }
-    d.classList.add("js");
-    /* if js/anim.js never starts, show every reveal target anyway */
-    window.__siqRevealTimer = setTimeout(function () { d.classList.add("reveal-all"); }, 3000);
-  })();
-</script>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%23d8f21c%22/%3E%3Cpath d=%22M5 7.5a18 18 0 0 1 0 17M27 7.5a18 18 0 0 0 0 17%22 fill=%22none%22 stroke=%22%230a1a33%22 stroke-width=%222.4%22/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:opsz,wght@14..32,400..700&display=swap">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/hero.css">
-<link rel="stylesheet" href="css/players.css">
-<link rel="stylesheet" href="css/league.css">
+<meta name="description" content="Pick a pro tennis player and see which way they serve: wide, at the body or down the T, on the deuce and ad side. Built from the Match Charting Project.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%225%22 fill=%22%233b6fb6%22/%3E%3Cpath d=%22M9 4v24M23 4v24M9 16h14M16 9v14%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/site.css">
 <script type="module" src="js/main.js"></script>
 </head>
 <body data-page="index">
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" href="#tool">Skip to the tool</a>
 
 <header class="topbar">
-  <div class="container">
-    <a class="wordmark" href="#top" translate="no" aria-label="Serve IQ, back to top">
-      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="14" fill="#d8f21c"/><path d="M5 7.5a18 18 0 0 1 0 17M27 7.5a18 18 0 0 0 0 17" fill="none" stroke="#0a1a33" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <span>Serve <b>IQ</b></span>
-    </a>
-    <nav class="nav-links" id="nav-links" aria-label="Sections">
-      <a href="#players">Players</a>
-      <a href="#league">League</a>
-      <a href="#how">How it works</a>
+  <div class="wrap topbar-in">
+    <a class="brand" href="./" translate="no">Serve IQ</a>
+    <nav aria-label="Site">
       <a href="method.html">Method</a>
+      <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">GitHub</a>
     </nav>
-    <div class="nav-actions">
-      <button type="button" class="icon-btn" data-theme-toggle aria-label="Switch color theme"></button>
-      <button type="button" class="icon-btn nav-toggle" data-nav-toggle aria-controls="nav-links" aria-expanded="false" aria-label="Menu"></button>
-    </div>
   </div>
 </header>
 
-<p class="status" id="status" role="status" aria-live="polite" hidden></p>
+<p class="status wrap" id="status" role="status" aria-live="polite" hidden></p>
 
 <main id="main">
 
-<!-- BEGIN hero -->
-<section id="top" class="hero" aria-labelledby="hero-h">
-  <div class="hero-stage on-dark">
-    <div class="hero-media" aria-hidden="true">
-      <img class="hero-img" data-hero-img data-parallax="0.22" src="img/scenes/hero.webp" alt="" width="1920" height="1280" fetchpriority="high" decoding="async">
-    </div>
-    <div class="hero-shade" aria-hidden="true"></div>
-    <div class="container hero-inner">
-      <div class="hero-copy" data-reveal>
-        <p class="eyebrow hero-eyebrow">Pro tennis serve analytics</p>
-        <h1 id="hero-h" class="hero-title" translate="no">Serve <span class="hero-iq">IQ</span></h1>
-        <p class="hero-sub needs-data">Where <span class="hero-num" data-h="players" data-f="int"></span> pro players aim their serve, and how often each direction wins the point.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#players">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-            Scout a player
-          </a>
-          <a class="btn btn-ghost hero-ghost" href="#league">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-            League trends
-          </a>
-        </div>
-      </div>
-    </div>
-    <a class="hero-credit" data-hero-credit href="method.html#credits"><span class="hero-credit-full">Photo credit</span><span class="hero-credit-short"></span></a>
-  </div>
-
-  <div class="container hero-kpis needs-data">
-    <ul class="kpi-strip" data-stagger aria-label="Key numbers">
-      <li class="kpi kpi-accent hero-kpi" data-reveal>
-        <span class="kpi-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6.1 4.4 1.8 5 4.9"/></svg>
-        </span>
-        <span class="kpi-value" data-h="players" data-f="int" data-countup></span>
-        <span class="kpi-label">Players scouted</span>
-        <button type="button" class="info" data-hero-info="players" data-info="Men and women with enough charted serves on both court sides to test." aria-label="About players scouted"></button>
-      </li>
-      <li class="kpi kpi-accent hero-kpi" data-reveal>
-        <span class="kpi-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M5.2 6.2a12 12 0 0 1 0 11.6M18.8 6.2a12 12 0 0 0 0 11.6"/></svg>
-        </span>
-        <span class="kpi-value" data-h="serves_analysed" data-f="int" data-countup></span>
-        <span class="kpi-label">Serves analyzed</span>
-        <button type="button" class="info" data-hero-info="serves" data-info="Charted serves with a recorded direction, after tiebreak and no-ad deciding points are left out." aria-label="About serves analyzed"></button>
-      </li>
-      <li class="kpi kpi-accent hero-kpi" data-reveal>
-        <span class="kpi-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>
-        </span>
-        <span class="kpi-value" data-h="mix_differs_share_s1" data-f="pct0" data-countup></span>
-        <span class="kpi-label">1st-serve patterns unlike the league</span>
-        <button type="button" class="info" data-hero-info="mix" data-info="Each player counts twice, once per court side. On this share of sides, where 1st serves go differs from the league against the same kinds of opponents." aria-label="About serve patterns unlike the league"></button>
-      </li>
-      <li class="kpi kpi-accent hero-kpi" data-reveal>
-        <span class="kpi-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v3M8 20h8"/></svg>
-        </span>
-        <span class="kpi-value"><span data-h="costly_players_s1" data-f="int" data-countup></span><span class="kpi-of"> of <span data-h="players" data-f="int"></span></span></span>
-        <span class="kpi-label">1st-serve win rate differs by direction</span>
-        <button type="button" class="info" data-hero-info="win" data-info="Players with a court side where 1st-serve win rate differs by direction, after false discovery control. None do on 2nd serves." aria-label="About win rate by direction"></button>
-      </li>
-    </ul>
-  </div>
+<section class="intro wrap" aria-labelledby="intro-h">
+  <!-- Headline draft. The student rewrites this line. Review note for the student: "clearly" was added,
+       because every player's raw win rates differ a little by direction; only the clear differences are rare. -->
+  <h1 id="intro-h">Most pros have a serve habit. Very few win clearly more points with one direction than another.</h1>
+  <p class="intro-sub">Pick a player to see which way they serve.</p>
+  <p class="intro-src"><span data-h="players" data-f="int"></span> players and <span data-h="serves_listed" data-f="int"></span> of their charted serves, from the <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a>.</p>
 </section>
-<!-- END hero -->
 
-<!-- BEGIN players -->
-<section id="players" class="section players" aria-labelledby="players-h">
-  <div class="container">
-    <div class="section-head pl-head-title" data-reveal>
-      <div>
-        <h2 id="players-h">Scout a server</h2>
-      </div>
-    </div>
+<section id="tool" class="tool wrap" aria-label="Serve directions by player">
+  <div class="t-search">
+    <label for="player-input">Player</label>
+    <input id="player-input" list="players" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go">
+    <datalist id="players"></datalist>
+  </div>
 
-    <div class="needs-data">
-      <div class="pl-head" data-reveal>
-      <div class="pl-picker">
-        <div class="pl-picker-top">
-          <div class="control">
-            <span class="visually-hidden" id="pl-tour-l">Tour</span>
-            <div id="pl-tour" aria-labelledby="pl-tour-l"></div>
-          </div>
-          <div class="control pl-find">
-            <label class="visually-hidden" for="pl-q">Find a player</label>
-            <div class="cbx">
-              <svg class="icon cbx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-              <input id="pl-q" class="input cbx-input" type="text" spellcheck="false" autocomplete="off" placeholder="Search players">
-              <ul id="pl-list" class="listbox cbx-list" aria-label="Players" hidden></ul>
-            </div>
-          </div>
-        </div>
-        <div class="pl-chips-wrap at-start">
-          <button type="button" class="pl-chips-btn pl-chips-l" id="pl-chips-l" aria-label="Scroll featured players left"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg></button>
-          <ul class="chip-row pl-chips" id="pl-chips" aria-label="Featured players"></ul>
-          <button type="button" class="pl-chips-btn pl-chips-r" id="pl-chips-r" aria-label="Scroll featured players right"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg></button>
-        </div>
-      </div>
+  <p id="quick-picks" class="t-picks"></p>
 
-      <div class="pl-card on-dark" id="pl-card">
-        <div class="pl-card-bg" aria-hidden="true"></div>
-        <div class="pl-photo" id="pl-photo"></div>
-        <div class="pl-id">
-          <h3 class="pl-name" id="pl-name"></h3>
-          <div class="pl-tags" id="pl-tags"></div>
-        </div>
-        <dl class="pl-stats">
-          <div><dt>Matches</dt><dd id="pl-matches"></dd></div>
-          <div><dt>Serves analyzed</dt><dd id="pl-serves"></dd></div>
-          <div><dt id="pl-known-l">1st serves</dt><dd id="pl-known"></dd></div>
-        </dl>
-        <div class="pl-vs" id="pl-vs" hidden></div>
-      </div>
-      </div>
+  <div id="serve-switch" class="t-switch" role="group" aria-label="Serve">
+    <button type="button" data-serve="1" aria-pressed="true">1st serve</button>
+    <button type="button" data-serve="2" aria-pressed="false">2nd serve</button>
+  </div>
 
-      <div class="pl-grid">
-        <article class="card pl-court-card" data-reveal>
-          <div class="card-head">
-            <div>
-              <h3 class="card-title" id="pl-court-title">Serve direction by side</h3>
-            </div>
-            <button type="button" class="info" data-info="A schematic court, drawn to scale and seen from behind the server. Each serve is coded wide, body or T, so the zones stand for directions, not landing spots." aria-label="About the court"></button>
-          </div>
-          <div class="pl-controls">
-            <div class="control">
-              <span class="visually-hidden" id="pl-serve-l">Serve</span>
-              <div id="pl-serve" aria-labelledby="pl-serve-l"></div>
-            </div>
-            <div class="control">
-              <span class="visually-hidden" id="pl-sit-l">Points</span>
-              <div id="pl-sit" aria-labelledby="pl-sit-l"></div>
-            </div>
-            <div class="control pl-cmp-control">
-              <span class="control-label" id="pl-cmp-l">Compare with</span>
-              <div class="pl-cmp-row">
-                <div id="pl-cmp" aria-labelledby="pl-cmp-l"></div>
-                <div class="cbx pl-cmp-box" id="pl-cmp-box" hidden>
-                  <label class="visually-hidden" for="pl-cq">Player to compare with</label>
-                  <svg class="icon cbx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-                  <input id="pl-cq" class="input cbx-input" type="text" spellcheck="false" autocomplete="off" placeholder="Search a player">
-                  <ul id="pl-clist" class="listbox cbx-list" aria-label="Players to compare with" hidden></ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div id="pl-bpwarn"></div>
-          <div class="chart court" id="pl-court"></div>
-          <p class="pl-readout" id="pl-readout" aria-hidden="true"></p>
-          <div class="key pl-court-key" id="pl-court-key"></div>
-        </article>
-
-        <div class="pl-side">
-          <article class="card pl-detail" id="pl-detail" data-reveal></article>
-        </div>
-      </div>
-
-      <article class="card pl-badges-card" data-reveal>
-        <div class="card-head">
-          <div>
-            <p class="card-tag">Scouting badges</p>
-            <h3 class="card-title">What stands out</h3>
-          </div>
-          <button type="button" class="info" id="pl-badges-info" data-info="Badges with a q value are test results that allow for testing many players at once. A smaller q is stronger evidence. The favorite badge describes the serve mix." aria-label="About the badges"></button>
-        </div>
-        <p class="card-caption pl-badges-note" id="pl-badges-note" hidden>Favorite, mix and win badges use all points.</p>
-        <div id="pl-badges"></div>
-      </article>
-
-      <div class="grid grid-2 pl-charts">
-        <article class="card" data-reveal>
-          <div class="card-head">
-            <div>
-              <p class="card-tag">Points won by direction</p>
-              <h3 class="card-title" id="pl-win-title">Win rate after each direction</h3>
-            </div>
-            <button type="button" class="info" id="pl-win-info" data-info="If a server mixed directions perfectly, every direction would win the same share of points. A 1st serve's win counts the whole point, including points where the 1st serve missed." aria-label="About points won by direction"></button>
-          </div>
-          <div class="key" id="pl-win-key"></div>
-          <div class="chart" id="pl-win"></div>
-          <div class="visually-hidden"><table id="pl-win-table"></table></div>
-        </article>
-        <article class="card" data-reveal>
-          <div class="card-head">
-            <div>
-              <p class="card-tag">Break points</p>
-              <h3 class="card-title" id="pl-bp-title">Break points and other points</h3>
-            </div>
-            <button type="button" class="info" id="pl-bp-info" data-info="Compares the serve mix on break points with other points in the same matches. Flagged shifts stay clear after allowing for the many players tested." aria-label="About break-point shifts"></button>
-          </div>
-          <div class="key" id="pl-bp-key"></div>
-          <div class="chart" id="pl-bp"></div>
-          <div class="visually-hidden"><table id="pl-bp-table"></table></div>
-          <p class="card-caption" id="pl-bp-cap" hidden></p>
-        </article>
-      </div>
-      <p class="visually-hidden" id="pl-live" role="status" aria-live="polite"></p>
-      <p class="visually-hidden" id="pl-zone-live" aria-live="polite"></p>
+  <div class="t-player">
+    <img id="player-photo" alt="" width="80" height="80" hidden>
+    <div>
+      <p id="player-name" class="t-name"></p>
+      <p id="player-meta" class="t-meta"></p>
     </div>
   </div>
+
+  <div id="court" class="t-court court"></div>
+
+  <div id="sentences" class="t-sentences" aria-live="polite"></div>
+
+  <details id="sure" class="t-sure">
+    <summary>How sure are we?</summary>
+    <div class="sure-defs" id="sure-defs"></div>
+    <div id="sure-tables"></div>
+  </details>
 </section>
-<!-- END players -->
 
-<!-- BEGIN league -->
-<section id="league" class="league" aria-labelledby="league-h">
-  <div class="lg-banner on-dark">
-    <div class="lg-banner-media" aria-hidden="true">
-      <img class="lg-banner-img" data-lg-img data-parallax="0.12" src="img/scenes/stadium.webp" alt="" width="1200" height="802" loading="lazy" decoding="async">
-    </div>
-    <div class="lg-banner-shade" aria-hidden="true"></div>
-    <div class="container lg-banner-inner" data-reveal>
-      <p class="eyebrow lg-eyebrow">League dashboard</p>
-      <h2 id="league-h">League trends</h2>
-      <p class="lg-scope needs-data"><span class="lg-scope-num" data-h="serves_analysed" data-f="int"></span> serves analyzed</p>
-    </div>
-    <a class="lg-credit" data-lg-credit href="method.html#credits">Photo credit</a>
-  </div>
-
-  <div class="container lg-body needs-data">
-    <div class="lg-toolbar" role="group" aria-label="League filters">
-      <div class="control">
-        <span class="control-label" id="lg-tour-l">Tour</span>
-        <div data-lg-tour aria-labelledby="lg-tour-l">
-          <button type="button" data-value="m">Men</button>
-          <button type="button" data-value="w">Women</button>
-        </div>
-      </div>
-      <div class="control">
-        <span class="control-label" id="lg-serve-l">Serve</span>
-        <div data-lg-serve aria-labelledby="lg-serve-l">
-          <button type="button" data-value="1">1st</button>
-          <button type="button" data-value="2">2nd</button>
-        </div>
-      </div>
-      <div class="control lg-mu">
-        <span class="control-label" id="lg-mu-l">Hands, server vs returner</span>
-        <div data-lg-matchup aria-labelledby="lg-mu-l">
-          <button type="button" data-value="RvR" aria-label="Righty vs righty">R vs R</button>
-          <button type="button" data-value="RvL" aria-label="Righty vs lefty">R vs L</button>
-          <button type="button" data-value="LvR" aria-label="Lefty vs righty">L vs R</button>
-          <button type="button" data-value="LvL" aria-label="Lefty vs lefty">L vs L</button>
-        </div>
-      </div>
-      <span class="lg-toolbar-info" data-lg-slot="toolbar-info"></span>
-    </div>
-
-    <div class="lg-grid" data-stagger>
-      <article class="card lg-card" id="lg-a" data-reveal aria-labelledby="lg-a-title">
-        <header class="lg-card-head">
-          <span class="lg-letter" aria-hidden="true">A</span>
-          <div class="lg-head-text">
-            <p class="card-tag">Points won by direction</p>
-            <h3 class="card-title" id="lg-a-title" data-lg-slot="title"></h3>
-          </div>
-          <span data-lg-slot="info"></span>
-        </header>
-        <div class="lg-tags" data-lg-slot="tags"></div>
-        <div class="lg-stats" data-lg-slot="stats"></div>
-        <div class="key lg-key" data-lg-slot="key"></div>
-        <div class="chart lg-chart" data-lg-slot="chart"></div>
-        <p class="card-caption" data-lg-slot="caption"></p>
-        <div class="lg-foot"><button type="button" class="lg-table-btn" data-lg-table-btn aria-expanded="false" aria-controls="lg-a-table">Show table</button></div>
-        <div class="table-wrap lg-table" id="lg-a-table" data-lg-slot="table" hidden></div>
-      </article>
-
-      <article class="card lg-card" id="lg-b" data-reveal aria-labelledby="lg-b-title">
-        <header class="lg-card-head">
-          <span class="lg-letter" aria-hidden="true">B</span>
-          <div class="lg-head-text">
-            <p class="card-tag">Break points</p>
-            <h3 class="card-title" id="lg-b-title" data-lg-slot="title"></h3>
-          </div>
-          <span data-lg-slot="info"></span>
-        </header>
-        <div class="lg-tags" data-lg-slot="tags"></div>
-        <div class="lg-stats" data-lg-slot="stats"></div>
-        <div class="key lg-key" data-lg-slot="key"></div>
-        <div class="chart lg-chart" data-lg-slot="chart"></div>
-        <p class="card-caption" data-lg-slot="caption"></p>
-        <div class="lg-foot"><button type="button" class="lg-table-btn" data-lg-table-btn aria-expanded="false" aria-controls="lg-b-table">Show table</button></div>
-        <div class="table-wrap lg-table" id="lg-b-table" data-lg-slot="table" hidden></div>
-      </article>
-
-      <article class="card lg-card" id="lg-c" data-reveal aria-labelledby="lg-c-title">
-        <header class="lg-card-head">
-          <span class="lg-letter" aria-hidden="true">C</span>
-          <div class="lg-head-text">
-            <p class="card-tag">What repeats across halves</p>
-            <h3 class="card-title" id="lg-c-title" data-lg-slot="title"></h3>
-          </div>
-          <span data-lg-slot="info"></span>
-        </header>
-        <div class="lg-tags" data-lg-slot="tags"></div>
-        <div class="lg-stats" data-lg-slot="stats"></div>
-        <div class="key lg-key" data-lg-slot="key"></div>
-        <div class="chart lg-chart" data-lg-slot="chart"></div>
-        <p class="card-caption" data-lg-slot="caption"></p>
-        <div class="lg-foot"><button type="button" class="lg-table-btn" data-lg-table-btn aria-expanded="false" aria-controls="lg-c-table">Show table</button></div>
-        <div class="table-wrap lg-table" id="lg-c-table" data-lg-slot="table" hidden></div>
-      </article>
-
-      <article class="card lg-card" id="lg-d" data-reveal aria-labelledby="lg-d-title">
-        <header class="lg-card-head">
-          <span class="lg-letter" aria-hidden="true">D</span>
-          <div class="lg-head-text">
-            <p class="card-tag">Repeating the last direction</p>
-            <h3 class="card-title" id="lg-d-title" data-lg-slot="title"></h3>
-          </div>
-          <span data-lg-slot="info"></span>
-        </header>
-        <div class="lg-tags" data-lg-slot="tags"></div>
-        <div class="lg-stats" data-lg-slot="stats"></div>
-        <div class="key lg-key" data-lg-slot="key"></div>
-        <div class="chart lg-chart" data-lg-slot="chart"></div>
-        <p class="card-caption" data-lg-slot="caption"></p>
-        <div class="lg-foot"><button type="button" class="lg-table-btn" data-lg-table-btn aria-expanded="false" aria-controls="lg-d-table">Show table</button></div>
-        <div class="table-wrap lg-table" id="lg-d-table" data-lg-slot="table" hidden></div>
-      </article>
-    </div>
-  </div>
+<section id="findings" class="findings" aria-labelledby="findings-h">
+ <div class="wrap">
+  <h2 id="findings-h">Does aiming one way win more points?</h2>
+  <p class="findings-lede" id="findings-lede">Only <b data-h="costly_players_s1" data-f="int"></b> of <b data-h="players" data-f="int"></b> players win clearly more first-serve points with one direction. <span id="findings-s2">On second serves, nobody does.</span></p>
+  <div class="waffle" id="waffle"></div>
+  <p class="findings-note">Each dot is a player. Blue dots are players who win clearly more first-serve points with one direction. Pick one to see that player on the court.</p>
+ </div>
 </section>
-<!-- END league -->
-
-<!-- BEGIN how -->
-<section id="how" class="section how on-dark" aria-labelledby="how-h">
-  <div class="how-media" aria-hidden="true">
-    <img class="how-img" data-how-img data-parallax="0.12" src="img/scenes/court.webp" alt="" width="1200" height="799" loading="lazy" decoding="async">
-  </div>
-  <div class="how-shade" aria-hidden="true"></div>
-  <div class="container how-inner">
-    <div class="section-head how-head" data-reveal>
-      <div>
-        <p class="eyebrow">Under the hood</p>
-        <h2 id="how-h">How it works</h2>
-      </div>
-    </div>
-    <ol class="how-steps" data-stagger>
-      <li class="how-step" data-reveal>
-        <div class="how-top">
-          <span class="how-icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="7" y="5" width="18" height="23" rx="3"/><path d="M12 5V3.5h8V5"/><path d="M11.5 13l2 2 3.5-4M11.5 21l2 2 3.5-4M20 13h1.5M20 21h1.5"/></svg>
-          </span>
-        </div>
-        <h3 class="how-title">Charted points</h3>
-        <p class="how-text">Volunteers chart pro matches point by point: serve direction and who won.</p>
-        <p class="how-stat needs-data"><span class="how-stat-v" data-how-total data-countup></span> <span class="how-stat-l">serves charted</span></p>
-      </li>
-      <li class="how-step" data-reveal>
-        <div class="how-top">
-          <span class="how-icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="4" y="6" width="24" height="20" rx="3"/><path d="M4 12h24M4 19h24M12 6v20"/></svg>
-          </span>
-        </div>
-        <h3 class="how-title">One row per serve</h3>
-        <p class="how-text">Each serve becomes a row: player, court side, direction, score and result.</p>
-        <p class="how-stat needs-data"><span class="how-stat-v" data-h="serves_analysed" data-f="int" data-countup></span> <span class="how-stat-l">rows kept</span></p>
-      </li>
-      <li class="how-step" data-reveal>
-        <div class="how-top">
-          <span class="how-icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M16 4v24M8 28h16"/><path d="M5 10h22"/><path d="M9 10l-4 8a4 4 0 0 0 8 0l-4-8zM23 10l-4 8a4 4 0 0 0 8 0l-4-8z"/></svg>
-          </span>
-        </div>
-        <h3 class="how-title">Fair tests</h3>
-        <p class="how-text">Three kinds of test for each player and court side, with false discovery control.</p>
-        <p class="how-stat needs-data"><span class="how-stat-v" data-how-tests data-countup></span> <span class="how-stat-l">tests, checked for lucky hits</span> <button type="button" class="info how-info" data-how-info data-info="Mix tests compare a player-side with the league. Win and break-point tests compare directions within the player's own points. Each family keeps its own false discovery rate." aria-label="About the tests"></button></p>
-      </li>
-    </ol>
-    <div class="how-cta" data-reveal>
-      <a class="btn btn-primary" href="method.html">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 4h10l4 4v12H5z"/><path d="M14 4v5h5M9 13h6M9 17h4"/></svg>
-        <span class="hide-sm">Full method and all thirteen formulas</span><span class="show-sm">Full method, all formulas</span>
-      </a>
-    </div>
-  </div>
-</section>
-<!-- END how -->
 
 </main>
 
 <footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <a class="wordmark" href="#top" translate="no" aria-label="Serve IQ, back to top">
-        <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="14" fill="#d8f21c"/><path d="M5 7.5a18 18 0 0 1 0 17M27 7.5a18 18 0 0 0 0 17" fill="none" stroke="#0a1a33" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span>Serve <b>IQ</b></span>
-      </a>
-      <ul class="footer-links">
-        <li><a href="method.html">Method</a></li>
-        <li><a href="method.html#credits">Photo credits</a></li>
-        <li><a href="https://github.com/ijunsu2082-hue/tennis-serve-iq"><svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 19c-4.5 1.4-4.5-2.2-6.3-2.7M15 21.5v-3.4a3 3 0 0 0-.8-2.3c2.8-.3 5.6-1.4 5.6-6.1a4.7 4.7 0 0 0-1.3-3.3 4.4 4.4 0 0 0-.1-3.3s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.6 2.8 5.6 3.1 5.6 3.1a4.4 4.4 0 0 0-.1 3.3 4.7 4.7 0 0 0-1.3 3.3c0 4.6 2.8 5.8 5.5 6.1a3 3 0 0 0-.8 2.3v3.4"/></svg>GitHub</a></li>
-      </ul>
-    </div>
-    <p class="footer-note license-note" id="license">Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a> by Jeff Sackmann and contributors, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>, non-commercial use. Code: MIT license. Photos: Wikimedia Commons, see <a href="method.html#credits">photo credits</a>.</p>
+  <div class="wrap">
+    <p class="license-note" id="license">Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a> by Jeff Sackmann and contributors (<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>). Code: MIT. Photos: Wikimedia Commons, credits on the <a href="method.html#credits">Method page</a>.</p>
+    <p class="footer-links"><a href="method.html">Method</a> <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">GitHub</a></p>
   </div>
 </footer>
 </body>

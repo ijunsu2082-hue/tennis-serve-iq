@@ -8,10 +8,12 @@ Exit code 1 if any check FAILs. Prints PASS / FAIL / WARN per check, with file:l
             once DIR/index.html exists a missing site file (below) is a FAIL.
 
 Checks
-  0. Site files (v3 layout): DIR/index.html, DIR/method.html, DIR/data/serveiq.json, DIR/data/images.json,
-     DIR/css/{base,hero,players,league,method}.css and DIR/js/{data,ui,anim,main,hero,players,court,league,
-     method}.js exist. The v2 files DIR/app.js and DIR/styles.css must be gone. Every local href / src in
-     both pages, every url(...) in the CSS and every relative ES module import resolves to a file.
+  0. Site files (v4 layout, spec "Files after v4"): DIR/index.html, DIR/method.html, DIR/data/serveiq.json,
+     DIR/data/images.json, DIR/css/{site,method}.css and DIR/js/{data,ui,main,court,tool,findings,method}.js
+     exist (DIR/js/anim.js is optional, kept as a tween helper). Must be gone: the v2 files DIR/app.js and
+     DIR/styles.css, the v3 files DIR/css/{base,hero,players,league}.css and DIR/js/{hero,players,league}.js,
+     and the folder DIR/img/scenes. Any other css / js file is a WARN. Every local href / src in both pages,
+     every url(...) in the CSS and every relative ES module import resolves to a file.
   1. Data. The JSON is parsed with NaN / Infinity tokens rejected. Then, independently of
      src/export_site.py (csv module, not pandas), everything is recomputed from app/data/*.csv and
      compared field by field, by field name, with the JSON:
@@ -43,28 +45,56 @@ Checks
        both pages: \\d+(\\.\\d+)?\\s?% and \\d+\\.\\d+ are FAIL (4-digit years 1990 to 2030 allowed).
        index.html: every other digit in prose is also a FAIL (spec: no digits typed into index.html prose;
                    numbers come from serveiq.json at runtime through data-h / data-b / JS).
-       method.html: integers 1 to N (N = the number of formula cards) are formula labels and pass; other
-                   integers above 10 are WARN. The page's formula count must equal N, and index.html's
-                   "all <number word> formulas" button must name N.
-  3b. Text budget for index.html (spec: <= 220 words of visible prose). Counted from the static HTML inside
+       method.html: integers 1 to N (N = the number of formula cards, id="f1" ... or details.fcard) are
+                   formula labels and pass; other integers above 10 are WARN.
+     method.html must keep all thirteen formula cards (N == 13). Any formula count either page states
+     ("13 formulas", "all thirteen formulas", a data-value="13" stat) must equal N. index.html need not
+     state one.
+  3b. Text budget for index.html (spec v4: <= 100 words of visible prose). Counted from the static HTML inside
      <main>: every word (a token with at least one letter) of every text node, excluding svg and chart
      hosts (.chart, .key, .court), tables, controls (button, a.btn, label, input, select, option,
      textarea, [role=radio], .control-label), .visually-hidden text, KPI values and tokens without letters
-     (numbers). Text that JS writes from the data (league titles and captions, badges) and popover
-     sentences behind a "?" are not in the static HTML; the smoke test (scripts/smoke_site.mjs) limits
-     those (titles <= 9 words, captions <= 20 words). The footer is outside <main>, so credits are excluded.
+     (numbers). Text that JS writes from the data (the sentences, tooltips, tables) is not in the static
+     HTML; the smoke test (scripts/smoke_site.mjs) checks it. The footer is outside <main>, so credits are
+     excluded.
   4. Every JSON key the site reads exists, in DIR/js/*.js, DIR/index.html and DIR/method.html:
        headline keys: headline.KEY  H.KEY  headline["KEY"]  H["KEY"]  D.h("KEY")  H("KEY") (dotted paths
                       and .SUB / ["SUB"] allowed); data-h="KEY" / data-h="KEY.SUB" / data-headline="KEY"
        meta.KEY, thresholds.KEY (meta.thresholds), data-b="KEY" / D.b("KEY") (the data.js BB map, whose
        meta. reads are checked too), col(raw.TABLE, "FIELD"), MIXF.FIELD / TESTF.FIELD (mix / tests fields),
        D.within(..., "QUESTION", FE) questions and FE_* fixed effects (league.within), stability
-       metric === "X" (league.stability), D.scene("KEY") (images.json scenes).
-  6. DIR/data/images.json: every player key is an exact server name in serveiq.json, every entry has
-     non-empty src / author / license / license_url / source, src is img/players/<slug(name)>.webp (players)
-     or img/scenes/<key>.webp (scenes) and the file exists, the license is CC0, Public domain, CC BY <v> or
+       metric === "X" (league.stability). D.scene("KEY") / data-scene="KEY" are FAILs: scene photos are gone.
+  6. DIR/data/images.json: the only top-level key is "players" (a "scenes" key is a FAIL), every player key
+     is an exact server name in serveiq.json, every entry has non-empty src / license / license_url /
+     source and a credit (the "author" field; "credit" is accepted as the same thing), src is
+     img/players/<slug(name)>.webp and the file exists, the license is CC0, Public domain, CC BY <v> or
      CC BY-SA <v>, the source is a https://commons.wikimedia.org/wiki/File: page, every file under DIR/img
-     is listed (no uncredited photo ships), and DIR/img totals at most 4,000,000 bytes.
+     is listed (no uncredited photo ships, so nothing outside img/players), and DIR/img totals at most
+     4,000,000 bytes.
+  7. v4 visual rules, in every DIR/css/*.css, DIR/js/*.js and both pages, with comments blanked first
+     (CSS /* */, HTML <!-- -->, JS // and /* */):
+       - no text-transform: uppercase (or JS textTransform = "uppercase")
+       - letter-spacing (CSS, or JS letterSpacing = "...") at most 0.02em. var(--x) is resolved from the
+         custom properties in the css (the largest definition counts); px is read at a 16px font size
+         (0.02em = 0.32px); negative values and "normal" pass; a value that cannot be read is a WARN.
+       - no "prefers-color-scheme: dark", "data-theme" or "dataset.theme" (v4 is light only)
+       - index.html: no fonts.googleapis.com / fonts.gstatic.com, and index.html / css/site.css name none of
+         Inter, Barlow, Geist, Instrument in a font-family
+       - index.html static HTML has at most one <img> tag (the player headshot), counted by an HTML parser
+         (comments and <script> contents are not tags)
+  8. The word "league" (case-insensitive, whole word) is not shown on index.html. Checked:
+       - index.html text nodes outside <script> / <style> / comments, and the attributes people read
+         (aria-label, title, alt, placeholder, content, value, data-info)
+       - every string literal of DIR/js/tool.js, findings.js and court.js (the modules only index.html runs),
+         found by a small JS lexer: '...' and "..." literals and template literals (${...} parts become a
+         space, strings inside them are checked on their own); comments and regex literals are skipped.
+     Heuristic for "user-visible": HTML tags are removed from the literal first (class="league-x" is not
+     text). If "league" is still there, the literal is code (a data key, dotted path, selector or class
+     name such as "league", "league.directions") only when it has no whitespace, no "<" and the word is
+     lowercase; anything else ("Typical league", "League", "<td>League</td>") is a FAIL. Identifiers
+     (leagueRows, league_share, D.LDIR, a variable named league) are not strings, so they always pass;
+     "league_share" and "leagueRows" also do not contain "league" as a whole word. Text built by joining
+     fragments ("lea" + "gue") is not caught here; the smoke test scans the rendered page for it.
   5. README.md, docs/SUBMISSION.md and the string literals of app/streamlit_app.py (docstrings,
      comments, raw strings, f-string {...} fields, plotly %{...} fields, hex colors and rgba(...)
      skipped): every number token must be one of the explicitly NAMED values in allowed_numbers().
@@ -212,10 +242,16 @@ def missing(check, rel):
     report("FAIL" if STRICT or (in_site and site_started()) else "WARN", check, f"{rel} does not exist yet")
 
 
+# v4 layout (spec "Files after v4"). js/anim.js may be kept as a tween helper, so it is optional.
 SITE_FILES = (["index.html", "method.html", "data/serveiq.json", "data/images.json"]
-              + [f"css/{n}.css" for n in ["base", "hero", "players", "league", "method"]]
-              + [f"js/{n}.js" for n in ["data", "ui", "anim", "main", "hero", "players", "court", "league", "method"]])
-LEGACY_FILES = ["app.js", "styles.css"]
+              + [f"css/{n}.css" for n in ["site", "method"]]
+              + [f"js/{n}.js" for n in ["data", "ui", "main", "court", "tool", "findings", "method"]])
+OPTIONAL_FILES = ["js/anim.js"]
+# files and folders that must be gone: v2 (app.js, styles.css) and v3 (the section css/js and scene photos)
+LEGACY_FILES = (["app.js", "styles.css"]
+                + [f"css/{n}.css" for n in ["base", "hero", "players", "league"]]
+                + [f"js/{n}.js" for n in ["hero", "players", "league"]]
+                + ["img/scenes"])
 
 
 def rel_of(path):
@@ -241,13 +277,18 @@ def check_files():
             missing(C, f"{SITE_REL}/{name}")
             bad += 1
     if not bad:
-        report("PASS", C, f"all {len(SITE_FILES)} v3 site files exist (pages, data, css/*.css, js/*.js)")
+        report("PASS", C, f"all {len(SITE_FILES)} v4 site files exist (pages, data, css/site.css, css/method.css, js/*.js)")
     for name in LEGACY_FILES:
         if (SITE / name).exists():
-            report("FAIL", C, f"{SITE_REL}/{name} is the v2 file and must be removed (nothing should reference it)")
+            report("FAIL", C, f"{SITE_REL}/{name} is a v2 / v3 file and must be removed (nothing should reference it)")
             bad += 1
     if not any((SITE / n).exists() for n in LEGACY_FILES):
-        report("PASS", C, "v2 app.js and styles.css are gone")
+        report("PASS", C, f"the {len(LEGACY_FILES)} v2 / v3 files are gone ({', '.join(LEGACY_FILES)})")
+    known = set(SITE_FILES) | set(OPTIONAL_FILES)
+    extra = [f"{d}/{q.name}" for d, files in (("css", site_css()), ("js", site_js())) for q in files
+             if f"{d}/{q.name}" not in known]
+    for e in extra:
+        report("WARN", C, f"{SITE_REL}/{e} is not in the v4 file list")
 
     # local references
     refs = []  # (file, line, target path relative to the file's folder)
@@ -928,10 +969,8 @@ def check_copy():
 def check_html_numbers():
     C = "3 html-numbers"
     lic_ver = re.compile(r"\bCC(?:0|[ -]BY(?:-(?:SA|NC|ND))*)[ -]v?(\d+(?:\.\d+)?)\b")
-    n_formulas = None
+    n_formulas = formula_cards()
     mp = SITE / "method.html"
-    if mp.exists():
-        n_formulas = len(re.findall(r"""<details\b[^>]*\bclass\s*=\s*["'][^"']*\bfcard\b""", mp.read_text(encoding="utf-8")))
     for page in ["index.html", "method.html"]:
         p = SITE / page
         rel = f"{SITE_REL}/{page}"
@@ -983,25 +1022,42 @@ def check_html_numbers():
             what = "no digits in prose" if page == "index.html" else "no percentages or decimals in prose"
             report("PASS", C, f"{rel}: {what} ({len(items)} text nodes and attributes, {warn} integer warnings)")
 
-    # the formula count, stated on both pages, matches the formula cards
+    # method.html keeps all thirteen formula cards, and any formula count stated on either page matches them
     if n_formulas is not None:
+        report("PASS" if n_formulas == FORMULA_COUNT else "FAIL", C,
+               f"method.html has {n_formulas} formula cards (id f1, f2, ...), want {FORMULA_COUNT}")
         words = {10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen"}
-        mt = mp.read_text(encoding="utf-8")
-        stat = re.search(r"""data-value="(\d+)"[^>]*>(\d*)<[^>]*>\s*<span class="m-stat-label">formulas""", mt)
-        ok = stat is not None and int(stat.group(1)) == n_formulas and stat.group(2) in ("", str(n_formulas))
-        report("PASS" if ok else "FAIL", C, f"method.html formula count stat matches its {n_formulas} formula cards"
-               + ("" if ok else f" (found {stat.groups() if stat else None})"))
-        ip = SITE / "index.html"
-        if ip.exists():
-            m = re.search(r"(?i)\ball\s+(\w+)\s+formulas\b", ip.read_text(encoding="utf-8"))
-            ok = m is not None and m.group(1).lower() == words.get(n_formulas, str(n_formulas))
-            report("PASS" if ok else "FAIL", C, f"index.html names all {words.get(n_formulas)} formulas"
-                   + ("" if ok else f" (found {m.group(1) if m else None!r})"))
+        back = {w: n for n, w in words.items()}
+        for page in ["index.html", "method.html"]:
+            p = SITE / page
+            if not p.exists():
+                continue
+            pt = p.read_text(encoding="utf-8")
+            stated = [(m.group(1), pt.count("\n", 0, m.start()) + 1)
+                      for m in re.finditer(r"(?i)\b(\d+|" + "|".join(words.values()) + r")\s+formulas\b", pt)]
+            stated += [(m.group(1), pt.count("\n", 0, m.start()) + 1)
+                       for m in re.finditer(r"""data-value="(\d+)"[^>]*>\d*<[^>]*>\s*<span class="[^"]*">formulas""", pt)]
+            wrong = [(v, ln) for v, ln in stated if (int(v) if v.isdigit() else back.get(v.lower())) != n_formulas]
+            for v, ln in wrong:
+                report("FAIL", C, f"{SITE_REL}/{page}:{ln}: states {v!r} formulas, but method.html has {n_formulas}")
+            if not wrong:
+                report("PASS", C, f"{SITE_REL}/{page}: every formula count it states ({len(stated)}) matches the {n_formulas} formula cards")
+
+
+def formula_cards():
+    """Number of formula cards on method.html: distinct id="fN" (fallback: details.fcard). None if no page."""
+    mp = SITE / "method.html"
+    if not mp.exists():
+        return None
+    mt = mp.read_text(encoding="utf-8")
+    ids = set(re.findall(r"""\bid\s*=\s*["']f(\d+)["']""", mt))
+    return len(ids) or len(re.findall(r"""<details\b[^>]*\bclass\s*=\s*["'][^"']*\bfcard\b""", mt))
 
 
 PROSE_SKIP_TAGS = {"script", "style", "svg", "button", "label", "input", "select", "option", "textarea", "table"}
 PROSE_SKIP_CLASSES = {"chart", "key", "court", "control-label", "visually-hidden", "kpi-value", "btn", "lg-letter"}
-WORD_BUDGET = 220
+WORD_BUDGET = 100
+FORMULA_COUNT = 13
 
 
 def prose_words(text):
@@ -1133,6 +1189,9 @@ def check_keys(J):
             elif sub and (not isinstance(H[top], dict) or sub not in H[top]):
                 report("FAIL", C, f"{f}:{i}: headline.{top}.{sub} is not in the JSON")
                 bad += 1
+        elif kind == "scene":
+            report("FAIL", C, f"{f}:{i}: scene {top!r}: scene photos are gone in v4 (players only)")
+            bad += 1
         elif top not in sets.get(kind, set()):
             report("FAIL", C, f"{f}:{i}: {kind} {top!r} is not in the data")
             bad += 1
@@ -1178,8 +1237,15 @@ def check_images(J):
             servers = {r[si] for r in P.get("rows", [])}
     bad = 0
     listed = set()
-    entries = [("players", k, v) for k, v in (I.get("players") or {}).items()] + \
-              [("scenes", k, v) for k, v in (I.get("scenes") or {}).items()]
+    for k in I:
+        if k != "players":
+            report("FAIL", C, f"{rel}: top-level key {k!r} is not allowed (v4 has player photos only"
+                              + (", the scenes are gone)" if k == "scenes" else ")"))
+            bad += 1
+    if not I.get("players"):
+        report("FAIL", C, f"{rel}: no player photos")
+        bad += 1
+    entries = [("players", k, v) for k, v in (I.get("players") or {}).items()]
     for group, key, e in entries:
         where = f"{rel} {group}[{key!r}]"
         if group == "players" and key not in servers:
@@ -1189,12 +1255,16 @@ def check_images(J):
             report("FAIL", C, f"{where}: not an object")
             bad += 1
             continue
-        for f in ["src", "author", "license", "license_url", "source"]:
+        for f in ["src", "license", "license_url", "source"]:
             if not isinstance(e.get(f), str) or not e[f].strip():
                 report("FAIL", C, f"{where}: {f} is missing or empty")
                 bad += 1
+        # the credit line names the author ("author"; "credit" is accepted as the same field)
+        if not any(isinstance(e.get(f), str) and e[f].strip() for f in ("author", "credit")):
+            report("FAIL", C, f"{where}: credit (author) is missing or empty")
+            bad += 1
         src = e.get("src") or ""
-        want = f"img/players/{slug(key)}.webp" if group == "players" else f"img/scenes/{key}.webp"
+        want = f"img/players/{slug(key)}.webp"
         if src != want:
             report("FAIL", C, f"{where}: src {src!r} should be {want!r}")
             bad += 1
@@ -1228,8 +1298,306 @@ def check_images(J):
         report("PASS", C, f"{SITE_REL}/img is {total:,} bytes in {len(files)} files (budget {IMG_BUDGET:,})")
     if not bad:
         n_p = len(I.get("players") or {})
-        n_s = len(I.get("scenes") or {})
-        report("PASS", C, f"{rel}: {n_p} player and {n_s} scene photos, every key and file is valid, license names are free and sources are Commons file pages (format check only, offline; authors are not compared with Commons)")
+        report("PASS", C, f"{rel}: {n_p} player photos and no scenes; every entry has src, credit (author), license, license_url and a Commons source, every key and file is valid (format check only, offline; authors are not compared with Commons)")
+
+
+# ---------------------------------------------------------------- check 7: v4 visual rules
+
+_JS_IDENT = re.compile(r"[A-Za-z_$][\w$]*")
+_JS_NUM = re.compile(r"\d[\w.]*")
+_JS_KW_BEFORE_REGEX = {"return", "typeof", "case", "do", "else", "in", "of", "new", "delete", "void", "throw",
+                       "instanceof", "yield", "await"}
+
+
+def js_lex(text):
+    """Small JavaScript lexer. Returns (strings, comments):
+    strings:  [(offset, value)] for every '...' / "..." literal and every template literal, whose ${...}
+              expressions are replaced by a space (strings inside those expressions are listed on their own)
+    comments: [(start, end)] spans of // and /* */ comments.
+    Regex literals are recognized by the usual heuristic (a / after an operator, an opening bracket or a
+    keyword such as return starts a regex) and skipped."""
+    strings, comments, n = [], [], len(text)
+
+    def lex(i, in_expr):
+        depth, prev = 0, "("
+        while i < n:
+            c = text[i]
+            if c in " \t\r\n":
+                i += 1
+                continue
+            if text.startswith("//", i):
+                j = text.find("\n", i)
+                j = n if j < 0 else j
+                comments.append((i, j))
+                i = j
+                continue
+            if text.startswith("/*", i):
+                j = text.find("*/", i + 2)
+                j = n if j < 0 else j + 2
+                comments.append((i, j))
+                i = j
+                continue
+            if c in "'\"":
+                j, buf = i + 1, []
+                while j < n and text[j] != c and text[j] != "\n":
+                    if text[j] == "\\":
+                        buf.append(text[j:j + 2])
+                        j += 2
+                        continue
+                    buf.append(text[j])
+                    j += 1
+                strings.append((i, "".join(buf)))
+                i, prev = j + 1, "a"
+                continue
+            if c == "`":
+                j, buf = i + 1, []
+                while j < n and text[j] != "`":
+                    if text[j] == "\\":
+                        buf.append(text[j:j + 2])
+                        j += 2
+                        continue
+                    if text.startswith("${", j):
+                        j = lex(j + 2, True)
+                        buf.append(" ")
+                        continue
+                    buf.append(text[j])
+                    j += 1
+                strings.append((i, "".join(buf)))
+                i, prev = j + 1, "a"
+                continue
+            if c == "/" and (prev == "kw" or prev in "(,=:[!&|?{};+-*%<>~^"):
+                j, in_class = i + 1, False
+                while j < n and text[j] != "\n":
+                    ch = text[j]
+                    if ch == "\\":
+                        j += 2
+                        continue
+                    if ch == "[":
+                        in_class = True
+                    elif ch == "]":
+                        in_class = False
+                    elif ch == "/" and not in_class:
+                        break
+                    j += 1
+                j += 1
+                while j < n and text[j].isalpha():
+                    j += 1
+                i, prev = j, "a"
+                continue
+            if in_expr:
+                if c == "{":
+                    depth += 1
+                elif c == "}":
+                    if depth == 0:
+                        return i + 1
+                    depth -= 1
+            m = _JS_IDENT.match(text, i)
+            if m:
+                prev = "kw" if m.group() in _JS_KW_BEFORE_REGEX else "a"
+                i = m.end()
+                continue
+            m = _JS_NUM.match(text, i)
+            if m:
+                prev, i = "a", m.end()
+                continue
+            prev, i = c, i + 1
+        return i
+
+    lex(0, False)
+    return strings, comments
+
+
+def strip_css_comments(text):
+    for m in list(re.finditer(r"/\*.*?\*/", text, re.S)):
+        text = blank(text, m.start(), m.end())
+    return text
+
+
+def strip_html_comments(text):
+    for m in list(re.finditer(r"<!--.*?-->", text, re.S)):
+        text = blank(text, m.start(), m.end())
+    return text
+
+
+def strip_js_comments(text):
+    for a, b in js_lex(text)[1]:
+        text = blank(text, a, b)
+    return text
+
+
+def style_sources():
+    """(rel, text) of every css, js and html file of the site, with comments blanked."""
+    out = [(f"{SITE_REL}/css/{p.name}", strip_css_comments(p.read_text(encoding="utf-8"))) for p in site_css()]
+    out += [(f"{SITE_REL}/js/{p.name}", strip_js_comments(p.read_text(encoding="utf-8"))) for p in site_js()]
+    for page in ["index.html", "method.html"]:
+        p = SITE / page
+        if p.exists():
+            out.append((f"{SITE_REL}/{page}", strip_html_comments(p.read_text(encoding="utf-8"))))
+    return out
+
+
+def css_vars():
+    """Custom property values from every site css file: {--name: [values]}."""
+    out = defaultdict(list)
+    for p in site_css():
+        for m in re.finditer(r"(--[\w-]+)\s*:\s*([^;}]+)", strip_css_comments(p.read_text(encoding="utf-8"))):
+            out[m.group(1)].append(m.group(2).strip())
+    return out
+
+
+LETTER_SPACING_MAX_EM = 0.02
+ROOT_PX = 16  # px values are compared as em at a 16px font size (0.02em = 0.32px)
+BANNED_FONTS = ["Inter", "Barlow", "Geist", "Instrument"]
+
+
+def spacing_em(value, cvars, seen=()):
+    """Largest letter-spacing of a CSS value in em (None if unknown). var() is resolved from the css."""
+    v = re.sub(r"\s*!\s*important\s*$", "", value.strip(), flags=re.I).strip().lower()
+    m = re.fullmatch(r"var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)", v)
+    if m:
+        name, fallback = m.group(1), m.group(2)
+        vals = [x for x in cvars.get(name, []) if name not in seen]
+        got = [spacing_em(x, cvars, seen + (name,)) for x in vals] or ([spacing_em(fallback, cvars, seen)] if fallback else [])
+        got = [g for g in got if g is not None]
+        return max(got) if got else None
+    if v in ("normal", "inherit", "initial", "unset", "revert", "0"):
+        return 0.0
+    m = re.fullmatch(r"(-?\d*\.?\d+)\s*(em|rem|px)?", v)
+    if not m:
+        return None
+    x = float(m.group(1))
+    return x / ROOT_PX if m.group(2) == "px" else x
+
+
+def check_style():
+    C = "7 v4 style"
+    if not site_started():
+        missing(C, f"{SITE_REL}/index.html")
+        return
+    src = style_sources()
+    cvars = css_vars()
+    line = lambda text, off: text.count("\n", 0, off) + 1
+
+    # a. no uppercase labels
+    bad = 0
+    for rel, text in src:
+        for m in re.finditer(r"(?i)text-transform\s*:\s*uppercase|textTransform\s*=\s*[\"'`]uppercase", text):
+            report("FAIL", C, f"{rel}:{line(text, m.start())}: text-transform uppercase ({m.group()!r})")
+            bad += 1
+    if not bad:
+        report("PASS", C, f"no text-transform: uppercase in {len(src)} css / js / html files")
+
+    # b. letter-spacing at most 0.02em
+    bad = n = 0
+    for rel, text in src:
+        for m in re.finditer(r"(?i)letter-spacing\s*:\s*([^;}\"'\n]+)|letterSpacing\s*=\s*[\"'`]([^\"'`]+)", text):
+            n += 1
+            val = (m.group(1) or m.group(2)).strip()
+            em = spacing_em(val, cvars)
+            if em is None:
+                report("WARN", C, f"{rel}:{line(text, m.start())}: letter-spacing {val!r} could not be read")
+            elif em > LETTER_SPACING_MAX_EM + 1e-9:
+                report("FAIL", C, f"{rel}:{line(text, m.start())}: letter-spacing {val!r} is above {LETTER_SPACING_MAX_EM}em")
+                bad += 1
+    if not bad:
+        report("PASS", C, f"all {n} letter-spacing values are at most {LETTER_SPACING_MAX_EM}em")
+
+    # c. no dark mode or theme toggle
+    bad = 0
+    for rel, text in src:
+        for m in re.finditer(r"(?i)prefers-color-scheme\s*:\s*dark|data-theme|dataset\.theme\b", text):
+            report("FAIL", C, f"{rel}:{line(text, m.start())}: dark mode / theme code {m.group()!r} (v4 is light only)")
+            bad += 1
+    if not bad:
+        report("PASS", C, "no prefers-color-scheme: dark, data-theme or dataset.theme in css / js / html")
+
+    ip = SITE / "index.html"
+    it = strip_html_comments(ip.read_text(encoding="utf-8"))
+    # d. system fonts on index.html
+    bad = 0
+    for m in re.finditer(r"(?i)fonts\.(?:googleapis|gstatic)\.com", it):
+        report("FAIL", C, f"{SITE_REL}/index.html:{line(it, m.start())}: web font host {m.group()!r} (system fonts only)")
+        bad += 1
+    sp = SITE / "css" / "site.css"
+    for rel, text in [(f"{SITE_REL}/index.html", it)] + ([(f"{SITE_REL}/css/site.css", strip_css_comments(sp.read_text(encoding="utf-8")))] if sp.exists() else []):
+        for m in re.finditer(r"font-family\s*:\s*([^;}]+)", text, re.I):
+            for f in BANNED_FONTS:
+                if re.search(r"\b" + f + r"\b", m.group(1)):
+                    report("FAIL", C, f"{rel}:{line(text, m.start())}: font {f!r} (system stack only)")
+                    bad += 1
+    if not bad:
+        report("PASS", C, "index.html loads no web fonts and site.css names none of " + ", ".join(BANNED_FONTS))
+
+    # e. at most one <img> in the static index.html (the player headshot)
+    class Imgs(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.n = 0
+
+        def handle_starttag(self, tag, attrs):
+            self.n += tag == "img"
+
+        handle_startendtag = handle_starttag
+    ps = Imgs()
+    ps.feed(it)
+    report("PASS" if ps.n <= 1 else "FAIL", C, f"index.html static HTML has {ps.n} <img> tag(s) (at most 1)")
+
+
+# ---------------------------------------------------------------- check 8: "league" on index.html
+
+LEAGUE = re.compile(r"(?i)\bleague\b")
+LEAGUE_JS = ["tool.js", "findings.js", "court.js"]  # the modules only index.html runs
+
+
+def league_visible(s):
+    """True if a JS string literal shows the word "league" to people (see check 8 in the docstring)."""
+    shown = re.sub(r"<[^>]*>", " ", s)               # tags and their attributes (class="league-x") are not text
+    if not LEAGUE.search(shown):
+        return False
+    code_like = not re.search(r"\s|<", s) and not re.search(r"\b(?:League|LEAGUE)\b", s)
+    return not code_like
+
+
+def check_league_word():
+    C = "8 league word"
+    p = SITE / "index.html"
+    rel = f"{SITE_REL}/index.html"
+    if not p.exists():
+        missing(C, rel)
+        return
+    text = strip_html_comments(p.read_text(encoding="utf-8"))
+    skip, texts = html_regions(text, lambda tag, a: tag in ("script", "style"))
+    bad = 0
+    line = lambda t, off: t.count("\n", 0, off) + 1
+    for off, data in texts:
+        if any(a <= off < b for a, b in skip):
+            continue
+        for m in LEAGUE.finditer(data):
+            report("FAIL", C, f"{rel}:{line(text, off + m.start())}: 'league' in page text (say 'typical pro')")
+            bad += 1
+    for m in re.finditer(r"""\s(aria-label|title|alt|placeholder|content|value|data-info)\s*=\s*("[^"]*"|'[^']*')""", text):
+        if any(a <= m.start() < b for a, b in skip):
+            continue
+        if LEAGUE.search(m.group(2)):
+            report("FAIL", C, f"{rel}:{line(text, m.start())}: 'league' in {m.group(1)}= (say 'typical pro')")
+            bad += 1
+    n = 0
+    for name in LEAGUE_JS:
+        f = SITE / "js" / name
+        if not f.exists():
+            if name != "court.js":
+                missing(C, f"{SITE_REL}/js/{name}")
+            continue
+        src = f.read_text(encoding="utf-8")
+        strings, _ = js_lex(src)
+        n += len(strings)
+        for off, s in strings:
+            if league_visible(s):
+                report("FAIL", C, f"{SITE_REL}/js/{name}:{line(src, off)}: user-visible string with 'league': {s[:80]!r}")
+                bad += 1
+    if not bad:
+        report("PASS", C, f"no 'league' in index.html text or attributes, or in any user-visible string literal ({n} literals scanned) of js/"
+               + ", js/".join(LEAGUE_JS) + " (identifiers and data keys are fine)")
 
 
 # ---------------------------------------------------------------- check 5: numbers in README / SUBMISSION / app
@@ -1396,6 +1764,8 @@ def main():
     if J is not None:
         check_keys(J)
     check_images(J)
+    check_style()
+    check_league_word()
     mine, _, fam = recompute()
     check_doc_numbers(mine, fam)
     n = {s: sum(1 for r in results if r[0] == s) for s in ["PASS", "FAIL", "WARN"]}

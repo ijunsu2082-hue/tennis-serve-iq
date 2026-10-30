@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Serve IQ static-site smoke test (headless browser), v3 dashboard layout.
+// Serve IQ static-site smoke test (headless browser), v4: one court screen plus one finding.
 //
 // Usage:  node scripts/smoke_site.mjs <siteDir> <outDir> [port]
 //
@@ -7,22 +7,46 @@
 //   1. normal module resolution,
 //   2. $PLAYWRIGHT_DIR (a folder with node_modules/playwright),
 //   4. /private/tmp/serveiq-harness  (npm i playwright@1.49.1 there).
-// Browser: Playwright's bundled Chromium if installed, else system Google Chrome
-// (channel "chrome"), else $CHROME_PATH, else the Chrome app path on macOS.
+// Browser: system Google Chrome (channel "chrome") first, else Playwright's bundled Chromium, else
+// $CHROME_PATH, else the Chrome app path on macOS. The script serves <siteDir> itself on 127.0.0.1
+// (port 0 = any free port), so it never needs another server.
 //
-// What it checks (each line of the JSON summary is one check):
-//   index.html and method.html at 1440 and 375 px, light and dark: page loads, zero console errors,
-//   zero "Serve IQ:" module warnings, zero failed requests, no horizontal overflow, no banned characters or
-//   terms, no leftover placeholder text (n/a, NaN, undefined), no broken or unloaded images after scrolling
-//   the whole page, dark scheme changes the body background. method.html: KaTeX renders every formula with
-//   no errors, the credits list has one entry per images.json entry and every credit photo loads.
-//   index.html interaction (1440, light): combobox keyboard selection of Rafael Nadal, 1st serve, break
-//   points, deuce-side wide zone shows 45.0% (break points) and 30.0% (other points), compare mode with a
-//   second player, hash state restores the player, Women switch and a woman picked by search, court zones are
-//   keyboard focusable, league controls change the cards, a league table opens. Mobile menu opens at 375.
-//   Reduced motion: every reveal target is visible at once and count-ups show their final value, on both
-//   pages. JS fallback: with js/main.js blocked, hidden reveal targets become visible after the head timer.
-//   Full-page screenshots go to <outDir>/<page>-<width>-<scheme>.png.
+// What it checks (each line of the JSON summary is one check), against the DOM contract of the v4 spec:
+//   index.html at 1440x900 and 390x844:
+//     - the page boots (html.data-ready), the default player is Rafael Nadal on 1st serve
+//     - zero console errors, page errors, "Serve IQ:" module warnings and failed requests
+//     - no horizontal page scroll; no banned characters, placeholder text (NaN, undefined, n/a, null),
+//       the word "league", he/she pronouns or banned voice words anywhere in the rendered text
+//     - #court has 2 svg panels and 6 .arrow[data-side][data-dir] with tabindex 0 and an aria-label;
+//       focusing each arrow shows #court-tip with text, inside the viewport; Tab moves to the next arrow;
+//       each panel's arrows are in left-to-right DOM (Tab) order; every share label is within 10px (390) or
+//       12px (1440) of its own arrowhead's center and no two labels overlap
+//     - the player photo loads for Nadal
+//     - page height: at most 1,900px at 1440, at most 3,600px at 390 (default player and every quick pick)
+//     - 390 only: on the first screen (scrollY 0) the search box, the 1st/2nd switch, the bottom of the
+//       court panels and the top of the first sentence are all within 844px
+//   index.html interaction (1440):
+//     - #players datalist has one option per player (447); typing a full name into #player-input loads it;
+//       a name that matches nobody keeps the typed text, shows "No charted player matches ..." and keeps the
+//       loaded player, and Esc restores the loaded name (names compare by nameKey(), as the page shows display
+//       spellings such as "John McEnroe")
+//     - #quick-picks has 5 links and each one loads the player it names
+//     - #serve-switch: 2 buttons; clicking 2nd serve flips aria-pressed and changes the arrow share labels
+//     - #sentences has 1 to 4 <p> for every quick pick and every waffle player, on both serves, each with
+//       no "league", no banned characters, no he/she and no placeholder text
+//     - details#sure is closed by default, opens, and has at least 2 tables with rows (Nadal)
+//     - the waffle has 447 .waffle-dot and 24 .waffle-dot.is-hit (headline.costly_players_s1), every hit is
+//       a <button> with an aria-label "<name>, tap to show"; clicking one loads that player on 1st serve and
+//       scrolls #tool into view
+//     - a player with no photo hides #player-photo
+//   data/serveiq.json aborted, index at 1440 and 390: html.no-data, #status shows the error with a link to the
+//     backup app, and #tool, #findings and the intro's number line are hidden.
+//   method.html at 1440 and 390: boots, no errors or failed requests, no horizontal scroll, no banned
+//     characters, KaTeX renders every .fx formula block (13 formulas plus the hypothesis line) with no
+//     errors, the credits table has one row per images.json player.
+//   Reduced motion (prefers-reduced-motion: reduce), index at 1440 and 390: boots with Nadal, the serve
+//     switch works and the arrow labels show their final values at once (no tween), no errors.
+//   Screenshots go to <outDir>/v4-<page>-<width>.png (full page) and v4-<page>-<width>-first.png (first screen).
 //
 // Prints a JSON summary to stdout and exits 1 if any check fails.
 
@@ -49,7 +73,21 @@ for (const f of ['index.html', 'method.html', 'data/serveiq.json', 'data/images.
 fs.mkdirSync(outDir, { recursive: true });
 const DATA = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/serveiq.json'), 'utf8'));
 const IMAGES = JSON.parse(fs.readFileSync(path.join(siteDir, 'data/images.json'), 'utf8'));
-const N_CREDITS = Object.keys(IMAGES.players || {}).length + Object.keys(IMAGES.scenes || {}).length;
+const N_CREDITS = Object.keys(IMAGES.players || {}).length;
+const N_PLAYERS = DATA.headline.players;
+const N_HITS = DATA.headline.costly_players_s1;
+const SERVERS = (() => {
+  const f = DATA.players.fields;
+  const si = f.indexOf('server');
+  return DATA.players.rows.map((r) => r[si]);
+})();
+const DEFAULT = 'Rafael Nadal';
+// names: the page shows a display spelling for some players ("John McEnroe" for the data's "John Mcenroe",
+// "Jo-Wilfried Tsonga"), so names are compared by the same key js/data.js nameKey() uses
+const nameKey = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  .replace(/['\u2019]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const sameName = (a, b) => nameKey(a) === nameKey(b);
+const LIMITS = { 1440: { w: 1440, h: 900, maxHeight: 1900 }, 390: { w: 390, h: 844, maxHeight: 3600 } };
 
 // ---------- load playwright ----------
 const HARNESS_DIRS = [
@@ -68,8 +106,8 @@ const { chromium } = await loadPlaywright();
 
 async function launchBrowser() {
   const attempts = [
-    ['bundled chromium', {}],
     ['system chrome (channel)', { channel: 'chrome' }],
+    ['bundled chromium', {}],
   ];
   if (process.env.CHROME_PATH) attempts.push(['CHROME_PATH', { executablePath: process.env.CHROME_PATH }]);
   attempts.push(['system chrome (path)', { executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' }]);
@@ -84,14 +122,10 @@ async function launchBrowser() {
 
 // ---------- static server ----------
 const MIME = {
-  '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
-  '.csv': 'text/csv; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.md': 'text/markdown; charset=utf-8',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif', '.webp': 'image/webp', '.ico': 'image/x-icon',
-  '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf',
-  '.xml': 'application/xml', '.webmanifest': 'application/manifest+json', '.map': 'application/json',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif',
+  '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.map': 'application/json',
 };
 function startServer() {
   const server = http.createServer((req, res) => {
@@ -101,10 +135,7 @@ function startServer() {
       if (!file.startsWith(siteDir)) { res.writeHead(403); return res.end('forbidden'); }
       if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
       if (!fs.existsSync(file)) { res.writeHead(404, { 'content-type': 'text/plain' }); return res.end('not found'); }
-      res.writeHead(200, {
-        'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-        'cache-control': 'no-store',
-      });
+      res.writeHead(200, { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-store' });
       fs.createReadStream(file).pipe(res);
     } catch (e) { res.writeHead(500); res.end(String(e)); }
   });
@@ -116,7 +147,7 @@ const checks = [];   // {name, pass, detail}
 const warnings = [];
 let tagNow = '';
 function check(name, pass, detail) { checks.push({ name, pass: !!pass, ...(detail !== undefined ? { detail } : {}) }); }
-const fmtInt = (v) => Number(v).toLocaleString('en-US');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function attachCollectors(page) {
   const log = { consoleErrors: [], moduleWarnings: [], pageErrors: [], failedRequests: [] };
@@ -125,110 +156,52 @@ function attachCollectors(page) {
     const line = `${m.text().slice(0, 300)}${where ? ' @ ' + where : ''}`;
     if (m.type() === 'warning' && /Serve IQ/.test(m.text())) { log.moduleWarnings.push(line); return; }
     if (m.type() !== 'error') return;
-    // A missing /favicon.ico is requested by the browser itself; report it but do not fail on it.
     if (/\/favicon\.ico$/.test(where)) { warnings.push(`${tagNow}: ${line}`); return; }
     log.consoleErrors.push(line);
   });
   page.on('pageerror', (e) => log.pageErrors.push(String(e.message || e).slice(0, 300)));
-  page.on('requestfailed', (r) => {
-    const why = r.failure()?.errorText || 'failed';
-    if (/ERR_ABORTED/.test(why) && /fonts\.(googleapis|gstatic)/.test(r.url())) return; // font request cancelled by navigation
-    log.failedRequests.push(`${why} ${r.url()}`);
-  });
+  page.on('requestfailed', (r) => log.failedRequests.push(`${r.failure()?.errorText || 'failed'} ${r.url()}`));
   page.on('response', (r) => { if (r.status() >= 400) log.failedRequests.push(`HTTP ${r.status()} ${r.url()}`); });
   return log;
 }
 const errorsOf = (log) => [...log.consoleErrors, ...log.pageErrors, ...log.moduleWarnings];
 
-// record image load errors before the page's own handler removes the broken <img>
-const INIT_SCRIPT = `
-  window.__imgErrors = [];
-  addEventListener('error', function (e) {
-    var t = e.target;
-    if (t && t.tagName === 'IMG') window.__imgErrors.push(t.currentSrc || t.src || '(no src)');
-  }, true);
-`;
+async function newPage(browser, opts) {
+  const ctx = await browser.newContext({
+    viewport: { width: opts.w, height: opts.h }, colorScheme: 'light',
+    isMobile: opts.w < 768, hasTouch: opts.w < 768, reducedMotion: opts.reduce ? 'reduce' : 'no-preference',
+  });
+  const page = await ctx.newPage();
+  const log = attachCollectors(page);
+  return { ctx, page, log };
+}
 
-async function waitForBoot(page, which) {
+async function waitForIndex(page) {
   await page.waitForFunction(() => document.documentElement.classList.contains('data-ready') ||
     document.documentElement.classList.contains('no-data'), null, { timeout: 20000 }).catch(() => {});
-  if (which === 'index') {
-    await page.waitForFunction(() => {
-      const n = document.getElementById('pl-name');
-      const t = document.querySelector('#lg-a [data-lg-slot="title"]');
-      return n && n.textContent.trim() && t && t.textContent.trim() && document.querySelectorAll('#pl-court .zone').length >= 6;
-    }, null, { timeout: 15000 }).catch(() => {});
-  } else {
-    await page.waitForFunction(() => document.querySelectorAll('#credits-list .credit').length > 0 &&
-      document.querySelectorAll('.fx .katex, .fx .tex-raw, .fx code').length > 0, null, { timeout: 15000 }).catch(() => {});
-  }
+  await page.waitForFunction(() => {
+    const n = document.getElementById('player-name');
+    return n && n.textContent.trim() && document.querySelectorAll('#court .arrow').length >= 6 &&
+      document.querySelectorAll('#sentences p').length > 0;
+  }, null, { timeout: 15000 }).catch(() => {});
+  // findings.js runs after tool.js; give it a moment, then settle the arrow tween
+  await page.waitForFunction(() => document.querySelectorAll('.waffle .waffle-dot').length > 0, null, { timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(700);
+}
+
+async function waitForMethod(page) {
+  await page.waitForFunction(() => document.documentElement.classList.contains('data-ready') ||
+    document.documentElement.classList.contains('no-data'), null, { timeout: 20000 }).catch(() => {});
+  await page.waitForFunction(() => document.querySelectorAll('.fx .katex, .fx.tex-raw, .tex-raw').length >= document.querySelectorAll('.fx').length &&
+    document.querySelectorAll('#credits-list tbody tr, #credits-list li').length > 0, null, { timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(300);
 }
 
-// scroll the whole page so reveal targets, count-ups and lazy images run, then return to the top
-async function scrollThrough(page) {
-  await page.evaluate(async () => {
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-    const step = Math.max(200, Math.floor(window.innerHeight * 0.6));
-    for (let y = 0; y <= document.documentElement.scrollHeight; y += step) {
-      window.scrollTo(0, y);
-      await sleep(110);
-    }
-    window.scrollTo(0, document.documentElement.scrollHeight);
-    await sleep(400);
-  });
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-  await page.evaluate(() => document.fonts && document.fonts.ready).catch(() => {});
-  await page.waitForTimeout(1400); // count-ups (1.2 s) and grow-ins finish
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-reveal]')].every((e) => !e.getClientRects().length || Number(getComputedStyle(e).opacity) >= 0.99),
-    null, { timeout: 6000, polling: 100 }).catch(() => {});
-}
-
-// Static runs only: stop CSS transitions so a reveal that has started (is-in set) is measured at its end
-// state, not mid-fade on a busy machine. A target the observer never reached still reads opacity 0.
-// Motion itself is tested by the reduced-motion and JS-fallback runs.
-async function freezeTransitions(page) {
-  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' }).catch(() => {});
-  await page.waitForTimeout(100);
-}
-
-// method.html: scroll the credits list into view and wait until every thumbnail is decoded
-async function creditImagesLoaded(page) {
-  await page.evaluate(async () => {
-    const list = document.getElementById('credits-list');
-    if (!list) return;
-    const imgs = [...list.querySelectorAll('img')];
-    for (const i of imgs) { if (i.loading === 'lazy') i.loading = 'eager'; }
-    list.scrollIntoView({ block: 'start' });
-    await Promise.race([
-      Promise.all(imgs.map((i) => (i.decode ? i.decode() : Promise.resolve()).catch(() => {}))),
-      new Promise((r) => setTimeout(r, 8000)),
-    ]);
-  }).catch(() => {});
-  await page.waitForFunction(() => [...document.querySelectorAll('#credits-list img')].every((i) => i.complete && i.naturalWidth > 0),
-    null, { timeout: 8000, polling: 100 }).catch(() => {});
-  return page.evaluate(() => [...document.querySelectorAll('#credits-list img')].filter((i) => i.complete && i.naturalWidth > 0).length);
-}
-
-async function imageState(page) {
-  // lazy images off to the side (the chip row scrolls inside itself) are forced to load, then every <img> is checked
-  await page.evaluate(() => [...document.images].forEach((i) => { if (i.loading === 'lazy') i.loading = 'eager'; }));
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 10000, polling: 100 }).catch(() => {});
-  return page.evaluate(() => {
-    const imgs = [...document.images];
-    const broken = imgs.filter((i) => i.complete && i.naturalWidth === 0 && i.getAttribute('src')).map((i) => i.getAttribute('src'));
-    const unloaded = imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src'));
-    return { total: imgs.length, loaded: imgs.filter((i) => i.complete && i.naturalWidth > 0).length, broken, unloaded, errors: window.__imgErrors || [] };
-  });
-}
-
-// All text in the DOM, including hidden panels and aria-labels / popover sentences, minus KaTeX, script and style.
+// All text in the DOM, including hidden parts and aria-labels / titles / tooltips, minus KaTeX, script and style.
 async function scanText(page) {
   return page.evaluate(() => {
     const clone = document.body.cloneNode(true);
     clone.querySelectorAll('script,style,noscript,.katex,.katex-mathml,annotation,.tex,.fx').forEach((n) => n.remove());
-    // one line per text node, so text from neighboring elements never runs together ("?" + "No clear favorite")
     const nodes = [];
     const tw = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
     for (let n = tw.nextNode(); n; n = tw.nextNode()) if (n.nodeValue.trim()) nodes.push(n.nodeValue.trim());
@@ -242,343 +215,449 @@ async function scanText(page) {
 
 const BANNED = [
   [/—/g, 'em dash'], [/–/g, 'en dash'], [/−/g, 'minus sign'], [/×/g, 'times sign'],
-  [/[←-⇿⟰-⟿⤀-⥿]/g, 'arrow'], [/·/g, 'middle dot'], [/~\s?\d/g, 'tilde as about'],
+  [/[←-⇿⟰-⟿⤀-⥿]/g, 'arrow'], [/·/g, 'middle dot'], [/~/g, 'tilde'],
   [/[⌀-⏿☀-➿⬀-⯿]/g, 'pictograph'], [/[\u{1F000}-\u{1FAFF}]/gu, 'emoji'], [/️/g, 'variation selector'],
   [/guess[ _-]?rate/gi, 'old term "guess rate"'], [/\bhonest(ly)?\b/gi, 'honest'], [/\bnot only\b/gi, 'not only'],
-  [/\bmeasurabl[ey]\b/gi, 'measurably'], [/\bcosts? nothing\b/gi, 'costs nothing'], [/\bdive into\b/gi, 'dive into'],
+  [/\bcosts? nothing\b/gi, 'costs nothing'], [/\bdive into\b/gi, 'dive into'],
   [/\bunlock/gi, 'unlock'], [/[?][ \t]*(Yes|No)\b/g, '"X? Yes/No"'], [/\b(favourite|colour|analys(e|ed|es|ing)|behaviour|centre)\b/gi, 'British spelling'],
 ];
-const PLACEHOLDER = [[/\bNaN\b/g, 'NaN'], [/\bundefined\b/g, 'undefined'], [/\bn\/a\b/g, 'n/a'], [/\[object /g, '[object'], [/\bnull\b/g, 'null']];
-function hits(text, list) {
+// index.html only (spec voice rules): "league" is "typical pro" there, no he/she, no buzzwords
+const INDEX_BANNED = [
+  [/\bleague\b/gi, '"league" (say "typical pro")'],
+  [/\b(he|she|him|her|his|hers|himself|herself)\b/gi, 'he/she pronoun'],
+  [/\b(insights?|patterns?|under the hood|dive)\b/gi, 'banned voice word'],
+];
+const PLACEHOLDER = [[/\bNaN\b/g, 'NaN'], [/\bundefined\b/g, 'undefined'], [/\bn\/a\b/g, 'n/a'], [/\[object /g, '[object'], [/\bnull\b/g, 'null'], [/\bInfinity\b/g, 'Infinity']];
+function hits(txt, list) {
   const out = [];
   for (const [re, label] of list) {
-    const m = text.match(re);
+    const m = txt.match(re);
     if (m) {
-      const i = text.search(re);
-      out.push({ label, count: m.length, context: text.slice(Math.max(0, i - 50), i + 50).replace(/\s+/g, ' ') });
+      const i = txt.search(re);
+      out.push({ label, count: m.length, context: txt.slice(Math.max(0, i - 50), i + 50).replace(/\s+/g, ' ') });
     }
   }
   return out;
 }
 
-async function newPage(browser, opts) {
-  const ctx = await browser.newContext({
-    viewport: { width: opts.w, height: opts.h || 900 }, colorScheme: opts.scheme || 'light',
-    isMobile: opts.w < 768, hasTouch: opts.w < 768, reducedMotion: opts.reduce ? 'reduce' : 'no-preference',
-  });
-  await ctx.addInitScript(INIT_SCRIPT);
-  if (opts.block) await ctx.route(opts.block, (r) => r.abort());
-  const page = await ctx.newPage();
-  const log = attachCollectors(page);
-  return { ctx, page, log };
+async function overflow(page) {
+  return page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    innerWidth: window.innerWidth,
+    wideEls: [...document.querySelectorAll('body *')].filter((e) => {
+      const r = e.getBoundingClientRect();
+      if (r.width === 0 || getComputedStyle(e).position === 'fixed') return false;
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (getComputedStyle(p).overflowX !== 'visible') return false; // clipped or scrolls inside its own box
+      }
+      return r.right > window.innerWidth + 1 || r.left < -1;
+    }).slice(0, 5).map((e) => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${typeof e.className === 'string' && e.className ? '.' + e.className.split(' ')[0] : ''} right=${Math.round(e.getBoundingClientRect().right)}`),
+  }));
 }
 
-const radio = (page, host, value) => page.locator(`${host} button[role="radio"][data-value="${value}"]`);
-async function pickRadio(page, host, value) {
-  const b = radio(page, host, value);
-  await b.scrollIntoViewIfNeeded();
-  await b.click();
-  await page.waitForTimeout(650);
-  return (await b.getAttribute('aria-checked')) === 'true';
-}
+const shareLabels = (page) => page.evaluate(() => [...document.querySelectorAll('#court .arrow')].map((a) => {
+  const s = a.querySelector('.a-share');
+  return `${a.getAttribute('data-side')}/${a.getAttribute('data-dir')}=${s ? s.textContent.trim() : ''}`;
+}));
+const pressed = (page) => page.evaluate(() => [...document.querySelectorAll('#serve-switch button[aria-pressed]')].map((b) => b.getAttribute('aria-pressed')));
+const nameNow = (page) => page.evaluate(() => (document.getElementById('player-name')?.textContent || '').replace(/\s+/g, ' ').trim());
 
-// keyboard selection in a combobox: type, ArrowDown to the matching option, Enter
-async function comboPick(page, inputSel, name) {
-  const inp = page.locator(inputSel);
+// load a player the way a person does it: select the search text, type the name (input events fire per key)
+async function typePlayer(page, name) {
+  const inp = page.locator('#player-input');
   await inp.scrollIntoViewIfNeeded();
   await inp.click();
-  await inp.fill('');
-  await inp.pressSequentially(name, { delay: 15 });
-  await page.waitForTimeout(250);
-  const info = await page.evaluate(([sel, nm]) => {
-    const i = document.querySelector(sel);
-    const list = document.getElementById(i.getAttribute('aria-controls'));
-    const opts = [...list.querySelectorAll('[role="option"]')];
-    return { role: i.getAttribute('role'), expanded: i.getAttribute('aria-expanded'), n: opts.length,
-      idx: opts.findIndex((o) => o.textContent.includes(nm)), thumbs: list.querySelectorAll('img, .avatar').length };
-  }, [inputSel, name]);
-  if (info.idx < 0) return { ok: false, ...info };
-  for (let k = 0; k <= info.idx; k++) await inp.press('ArrowDown');
-  const active = await page.evaluate((sel) => {
-    const i = document.querySelector(sel);
-    const id = i.getAttribute('aria-activedescendant');
-    return id && document.getElementById(id) ? document.getElementById(id).textContent : null;
-  }, inputSel);
-  await inp.press('Enter');
+  await inp.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await inp.press('Backspace');
+  await inp.pressSequentially(name, { delay: 8 });
   await page.waitForTimeout(700);
-  const after = await page.evaluate((sel) => document.querySelector(sel).getAttribute('aria-expanded'), inputSel);
-  return { ok: !!active && active.includes(name) && after === 'false', ...info, active, expandedAfter: after };
+  return nameNow(page);
 }
-const text = (page, sel) => page.locator(sel).first().textContent().then((t) => (t || '').replace(/\s+/g, ' ')).catch(() => '');
+
+// the six arrows: focusable, labelled, tooltip on focus inside the viewport
+async function arrowChecks(page, tag) {
+  const arrows = await page.evaluate(() => [...document.querySelectorAll('#court .arrow[data-side][data-dir]')].map((a) => ({
+    side: a.getAttribute('data-side'), dir: a.getAttribute('data-dir'), tab: a.getAttribute('tabindex'),
+    label: a.getAttribute('aria-label') || '',
+  })));
+  const panels = await page.locator('#court svg').count();
+  check(`${tag}: #court has 2 svg panels and 6 arrows with data-side / data-dir`, panels === 2 && arrows.length === 6 &&
+    new Set(arrows.map((a) => a.side + a.dir)).size === 6, { panels, arrows: arrows.length });
+  check(`${tag}: every arrow is focusable (tabindex 0) with an aria-label`, arrows.length === 6 && arrows.every((a) => a.tab === '0' && a.label.length > 10),
+    arrows.map((a) => `${a.side}/${a.dir} tab=${a.tab} label=${a.label.length}`));
+  // Tab order: in each panel the arrows come in the DOM left to right as drawn, whatever the shares are
+  const order = await page.evaluate(() => [...document.querySelectorAll('#court svg')].map((svg) =>
+    [...svg.querySelectorAll('.arrow')].map((a) => { const r = a.querySelector('.a-head').getBoundingClientRect(); return { dir: a.getAttribute('data-dir'), x: Math.round((r.left + r.right) / 2) }; })));
+  check(`${tag}: the arrows of each panel are in left-to-right order (Tab order)`, order.length === 2 && order.every((p) => p.every((a, i) => i === 0 || a.x > p[i - 1].x)),
+    order.map((p) => p.map((a) => a.dir + '@' + a.x).join(' ')));
+  // every share label sits over its own arrowhead (no label slid over a neighbor) and no two labels overlap
+  const labels = await page.evaluate(() => [...document.querySelectorAll('#court svg')].map((svg) => [...svg.querySelectorAll('.arrow')].map((a) => {
+    const s = a.querySelector('.a-share').getBoundingClientRect(), w = a.querySelector('.a-word').getBoundingClientRect(), h = a.querySelector('.a-head').getBoundingClientRect();
+    return { id: a.getAttribute('data-side') + '/' + a.getAttribute('data-dir'), off: Math.round(Math.abs((s.left + s.right) / 2 - (h.left + h.right) / 2)),
+      box: [Math.min(s.left, w.left), Math.min(s.top, w.top), Math.max(s.right, w.right), Math.max(s.bottom, w.bottom)] };
+  })));
+  const flat = labels.flat();
+  const overlap = (a, b) => a.box[0] < b.box[2] && b.box[0] < a.box[2] && a.box[1] < b.box[3] && b.box[1] < a.box[3];
+  const clashes = labels.flatMap((p) => p.flatMap((a, i) => p.slice(i + 1).filter((b) => overlap(a, b)).map((b) => a.id + ' x ' + b.id)));
+  // 10px on the phone (review finding); 12px on desktop, where a steep wide arrow's head box sits a little
+  // off its tip and the label is straight above the tip
+  const maxOff = /390/.test(tag) ? 10 : 12;
+  check(`${tag}: every share label is within ${maxOff}px of its own arrowhead and no labels overlap`, flat.length === 6 && flat.every((a) => a.off <= maxOff) && clashes.length === 0,
+    { offsets: flat.map((a) => a.id + '=' + a.off), clashes });
+  const tips = [];
+  for (let i = 0; i < arrows.length; i++) {
+    await page.locator('#court .arrow').nth(i).focus();
+    await page.waitForTimeout(120);
+    tips.push(await page.evaluate(() => {
+      const t = document.getElementById('court-tip');
+      if (!t) return { exists: false };
+      const r = t.getBoundingClientRect();
+      return { exists: true, hidden: t.hidden || getComputedStyle(t).display === 'none', text: t.textContent.trim(),
+        left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom),
+        vw: window.innerWidth, vh: window.innerHeight };
+    }));
+  }
+  const tipOk = (t) => t.exists && !t.hidden && t.text.length > 10 && t.left >= 0 && t.right <= t.vw && t.top >= 0 && t.bottom <= t.vh;
+  check(`${tag}: focusing each arrow shows #court-tip with text, inside the viewport`, tips.length === 6 && tips.every(tipOk),
+    tips.filter((t) => !tipOk(t)).slice(0, 3));
+  check(`${tag}: tooltips name the direction ("Out wide", "At the body", "Down the T")`,
+    tips.length === 6 && tips.every((t) => /^(Out wide|At the body|Down the T)\b/.test(t.text || '')), tips.map((t) => (t.text || '').slice(0, 40)));
+  await page.locator('#court .arrow').first().focus();
+  await page.keyboard.press('Tab');
+  await page.waitForTimeout(150);
+  const next = await page.evaluate(() => { const e = document.activeElement; return e && e.classList.contains('arrow') ? e.getAttribute('data-side') + '/' + e.getAttribute('data-dir') : (e ? e.tagName : null); });
+  check(`${tag}: Tab moves from one arrow to the next`, /\//.test(next || ''), next);
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
+  await page.waitForTimeout(100);
+  return tips;
+}
 
 // ---------- main ----------
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}/`;
 const { browser, browserName } = await launchBrowser();
 const runs = [];
-const bg = {};
 
 try {
-  // ---------- warm-up: one throwaway load of each page so the first measured run is not a cold start ----------
-  for (const which of ['index', 'method']) {
-    const { ctx, page } = await newPage(browser, { w: 1440, h: 900, scheme: 'light' });
-    await page.goto(base + (which === 'index' ? '' : 'method.html'), { waitUntil: 'load', timeout: 30000 }).catch(() => {});
-    await waitForBoot(page, which);
+  // warm-up: one throwaway load so the first measured run is not a cold start
+  {
+    const { ctx, page } = await newPage(browser, { w: 1440, h: 900 });
+    await page.goto(base, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+    await waitForIndex(page);
     await ctx.close();
   }
 
-  // ---------- static runs: both pages, two widths, two schemes ----------
-  for (const which of ['index', 'method']) {
-    for (const w of [1440, 375]) {
-      for (const scheme of ['light', 'dark']) {
-        const tag = `${which}-${w}-${scheme}`;
-        tagNow = tag;
-        const { ctx, page, log } = await newPage(browser, { w, h: w < 768 ? 812 : 900, scheme });
-        let gotoErr = null;
-        await page.goto(base + (which === 'index' ? '' : 'method.html'), { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
-        await waitForBoot(page, which);
-        await scrollThrough(page);
-        await freezeTransitions(page);
-        const m = await page.evaluate(() => ({
-          scrollWidth: document.documentElement.scrollWidth,
-          innerWidth: window.innerWidth,
-          ready: document.documentElement.classList.contains('data-ready'),
-          bg: getComputedStyle(document.body).backgroundColor,
-          title: document.title,
-          hidden: [...document.querySelectorAll('[data-reveal]')].filter((e) => e.getClientRects().length && Number(getComputedStyle(e).opacity) < 0.99)
-            .map((e) => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}.${String(e.className).split(' ')[0]} opacity=${getComputedStyle(e).opacity} in=${e.classList.contains('is-in')}`),
-          katex: document.querySelectorAll('.fx .katex').length,
-          fx: document.querySelectorAll('.fx').length,
-          katexErrors: document.querySelectorAll('.katex-error, .tex-raw').length,
-          credits: document.querySelectorAll('#credits-list .credit').length,
-          wideEls: [...document.querySelectorAll('body *')].filter((e) => {
-            const r = e.getBoundingClientRect();
-            if (r.width === 0 || getComputedStyle(e).position === 'fixed') return false;
-            for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
-              const ox = getComputedStyle(p).overflowX;
-              if (ox !== 'visible') return false; // clipped or scrolls inside its own box
-            }
-            return r.right > window.innerWidth + 1 || r.left < -1;
-          }).slice(0, 5).map((e) => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${typeof e.className === 'string' && e.className ? '.' + e.className.split(' ')[0] : ''} right=${Math.round(e.getBoundingClientRect().right)}`),
-        }));
-        const img = await imageState(page);
-        if (which === 'method') m.creditImgs = await creditImagesLoaded(page);
-        const scan = await scanText(page);
-        const visible = await page.evaluate(() => document.body.innerText + '\n' + [...document.querySelectorAll('svg text')].map((t) => t.textContent).join(' '));
-        const shot = path.join(outDir, `${tag}.png`);
-        await page.evaluate(() => window.scrollTo(0, 0));
-        await page.waitForTimeout(250);
-        await page.screenshot({ path: shot, fullPage: true });
-        bg[`${which}-${w}`] = bg[`${which}-${w}`] || {};
-        bg[`${which}-${w}`][scheme] = m.bg;
+  // ---------- index.html at both widths ----------
+  for (const w of [1440, 390]) {
+    const L = LIMITS[w];
+    const tag = `index-${w}`;
+    tagNow = tag;
+    const { ctx, page, log } = await newPage(browser, { w: L.w, h: L.h });
+    let gotoErr = null;
+    await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
+    await waitForIndex(page);
+    const ready = await page.evaluate(() => document.documentElement.classList.contains('data-ready'));
+    const name = await nameNow(page);
+    const pr = await pressed(page);
+    check(`${tag}: page boots and binds the data`, !gotoErr && ready, gotoErr || { ready });
+    check(`${tag}: default player is ${DEFAULT} on 1st serve`, name === DEFAULT && pr.length === 2 && pr[0] === 'true' && pr[1] === 'false', { name, pressed: pr });
+    const photo = await page.evaluate(() => { const i = document.getElementById('player-photo'); return i ? { hidden: i.hidden, ok: i.complete && i.naturalWidth > 0, w: Math.round(i.getBoundingClientRect().width) } : null; });
+    check(`${tag}: ${DEFAULT}'s photo loads, about 72 to 88px`, photo && !photo.hidden && photo.ok && photo.w >= 64 && photo.w <= 96, photo);
 
-        check(`${tag}: page loaded and data bound`, !gotoErr && m.ready, gotoErr || { ready: m.ready });
-        check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
-        check(`${tag}: no failed requests`, log.failedRequests.length === 0, log.failedRequests);
-        check(`${tag}: no horizontal page scroll`, m.scrollWidth <= Math.min(m.innerWidth, w) && m.wideEls.length === 0,
-          { scrollWidth: m.scrollWidth, innerWidth: m.innerWidth, deviceWidth: w, overflowing: m.wideEls });
-        check(`${tag}: no banned characters or terms`, hits(scan, BANNED).length === 0, hits(scan, BANNED));
-        check(`${tag}: no placeholder text (n/a, NaN, undefined, null)`, hits(visible, PLACEHOLDER).length === 0, hits(visible, PLACEHOLDER));
-        check(`${tag}: every reveal target visible after scrolling`, m.hidden.length === 0, { hidden: m.hidden });
-        check(`${tag}: no broken or unloaded images`, img.broken.length + img.unloaded.length + img.errors.length === 0 && img.loaded > 0,
-          { loaded: img.loaded, total: img.total, broken: img.broken, unloaded: img.unloaded, errors: img.errors });
-        if (which === 'method') {
-          check(`${tag}: KaTeX renders every formula block`, m.fx >= 14 && m.katex === m.fx && m.katexErrors === 0, { fx: m.fx, katex: m.katex, errors: m.katexErrors });
-          check(`${tag}: credits list count equals images.json entries (${N_CREDITS})`, m.credits === N_CREDITS, { credits: m.credits });
-          check(`${tag}: every credit photo loaded`, m.creditImgs === N_CREDITS, { loaded: m.creditImgs, want: N_CREDITS });
-        } else {
-          const chips = await page.evaluate(() => [...document.querySelectorAll('#pl-chips img')].map((i) => i.complete && i.naturalWidth > 0));
-          check(`${tag}: featured player chips show loaded photos`, chips.length >= 6 && chips.every(Boolean), { chips: chips.length, loaded: chips.filter(Boolean).length });
-          if (w < 768) {
-            const tg = page.locator('[data-nav-toggle]');
-            await tg.click();
-            await page.waitForTimeout(350);
-            const open = await page.evaluate(() => {
-              const a = document.querySelector('#nav-links a[href="#players"]');
-              return { expanded: document.querySelector('[data-nav-toggle]').getAttribute('aria-expanded'), linkVisible: !!(a && a.getClientRects().length && a.getBoundingClientRect().height > 0) };
-            });
-            await page.keyboard.press('Escape');
-            await page.waitForTimeout(250);
-            const closed = await page.evaluate(() => document.querySelector('[data-nav-toggle]').getAttribute('aria-expanded'));
-            check(`${tag}: mobile menu opens and closes`, open.expanded === 'true' && open.linkVisible && closed === 'false', { open, closed });
-          }
-        }
-        runs.push({ tag, screenshot: shot, title: m.title, bg: m.bg, scrollWidth: m.scrollWidth, images: img.loaded });
-        await ctx.close();
-      }
-      const b = bg[`${which}-${w}`];
-      check(`${which}-${w}: dark scheme changes body background`, b.light !== b.dark, b);
+    // first screen
+    await page.screenshot({ path: path.join(outDir, `v4-${tag}-first.png`), fullPage: false });
+    const first = await page.evaluate(() => {
+      const b = (sel) => { const e = document.querySelector(sel); if (!e) return null; const r = e.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom) }; };
+      const svgs = [...document.querySelectorAll('#court svg')].map((s) => s.getBoundingClientRect().bottom);
+      return { input: b('#player-input'), sw: b('#serve-switch'), courtBottom: svgs.length ? Math.round(Math.max(...svgs)) : null, sentence: b('#sentences p'), vh: window.innerHeight };
+    });
+    if (w === 390) {
+      const ok = first.input && first.sw && first.sentence && first.courtBottom !== null &&
+        first.input.bottom <= 844 && first.sw.bottom <= 844 && first.courtBottom <= 844 && first.sentence.top < 844;
+      check(`${tag}: first screen shows the search, the switch, the whole court and the start of the first sentence (within 844px)`, ok, first);
     }
+
+    // arrows and tooltips
+    await arrowChecks(page, tag);
+
+    // whole-page checks
+    const ov = await overflow(page);
+    check(`${tag}: no horizontal page scroll`, ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0, ov);
+    const scan = await scanText(page);
+    check(`${tag}: no banned characters or terms`, hits(scan, BANNED).length === 0, hits(scan, BANNED));
+    check(`${tag}: no "league", he/she or banned voice words in the rendered page`, hits(scan, INDEX_BANNED).length === 0, hits(scan, INDEX_BANNED));
+    const visible = await page.evaluate(() => document.body.innerText + '\n' + [...document.querySelectorAll('svg text')].map((t) => t.textContent).join(' '));
+    check(`${tag}: no placeholder text (NaN, undefined, n/a, null)`, hits(visible, PLACEHOLDER).length === 0, hits(visible, PLACEHOLDER));
+
+    // heights: the default and every quick pick (details closed)
+    const heights = { [DEFAULT]: await page.evaluate(() => document.documentElement.scrollHeight) };
+    const picks = await page.evaluate(() => [...document.querySelectorAll('#quick-picks a')].map((a) => a.getAttribute('data-name') || a.textContent.trim()));
+    for (let i = 0; i < picks.length; i++) {
+      await page.locator('#quick-picks a').nth(i).click();
+      await page.waitForTimeout(600);
+      heights[await nameNow(page)] = await page.evaluate(() => document.documentElement.scrollHeight);
+    }
+    const maxH = Math.max(...Object.values(heights));
+    check(`${tag}: page height at most ${L.maxHeight.toLocaleString('en-US')}px (default and quick picks)`, maxH <= L.maxHeight, heights);
+    // back to the default for the full screenshot
+    await typePlayer(page, DEFAULT);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
+
+    check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
+    check(`${tag}: no failed requests`, log.failedRequests.length === 0, log.failedRequests);
+    runs.push({ tag, heights, firstScreen: first });
+    await ctx.close();
   }
 
-  // ---------- index interaction ----------
+  // ---------- index interaction (1440) ----------
   tagNow = 'interaction';
   {
     const { ctx, page, log } = await newPage(browser, { w: 1440, h: 900 });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
-    await waitForBoot(page, 'index');
-    const steps = {};
-    steps.men = await pickRadio(page, '#pl-tour', 'm');
-    steps.combo = await comboPick(page, '#pl-q', 'Rafael Nadal');
-    check('interact: combobox keyboard selection (type, ArrowDown, Enter) picks Rafael Nadal', steps.combo.ok && steps.combo.role === 'combobox', steps.combo);
-    check('interact: combobox options show photo thumbnails', steps.combo.thumbs > 0, { thumbs: steps.combo.thumbs });
-    const name = await text(page, '#pl-name');
-    check('interact: player card shows Rafael Nadal', /Rafael Nadal/.test(name), name);
-    steps.serve1 = await pickRadio(page, '#pl-serve', '1');
-    steps.bp = await pickRadio(page, '#pl-sit', 'bp');
-    const zone = page.locator('#pl-court .zone[data-side="deuce"][data-dir="wide"]');
-    await zone.scrollIntoViewIfNeeded();
-    await zone.click();
-    await page.waitForTimeout(900);
-    const detail = await text(page, '#pl-detail');
-    check('interact: controls found and set (Men, 1st serve, Break points)', steps.men && steps.serve1 && steps.bp, steps);
-    check('interact: Nadal deuce wide on break points shows 45.0%', /45\.0%/.test(detail), detail.slice(0, 300));
-    check('interact: Nadal deuce wide on other points shows 30.0%', /30\.0%/.test(detail), detail.slice(0, 300));
-    check('interact: break-point mode labels the league reference "League, all points"', /League, all points/.test(detail));
-    const want = DATA.headline.nadal_deuce_wide_s1;
-    check('interact: Nadal figures match serveiq.json headline', detail.includes((100 * want.bp).toFixed(1) + '%') && detail.includes((100 * want.other).toFixed(1) + '%'));
-    await page.screenshot({ path: path.join(outDir, 'interact-nadal-bp.png'), fullPage: false });
-    const hash = await page.evaluate(() => location.hash);
-    check('interact: URL hash records the selection', /p=m\|Rafael%20Nadal\|1\|bp/.test(hash), hash);
+    await waitForIndex(page);
 
-    // compare mode
-    steps.cmp = await pickRadio(page, '#pl-cmp', 'player');
-    const boxVisible = await page.locator('#pl-cmp-box').isVisible();
-    steps.cmpCombo = await comboPick(page, '#pl-cq', 'Jannik Sinner');
-    await page.waitForTimeout(500);
-    const vs = await page.evaluate(() => { const v = document.getElementById('pl-vs'); return v && !v.hidden ? v.innerText : ''; });
-    const detail2 = await text(page, '#pl-detail');
-    check('interact: compare mode picks a second player (Jannik Sinner)', steps.cmp && boxVisible && steps.cmpCombo.ok && /Sinner/.test(vs) && /Jannik Sinner/.test(detail2),
-      { box: boxVisible, combo: steps.cmpCombo, vs: vs.slice(0, 120) });
-    steps.league = await pickRadio(page, '#pl-cmp', 'league');
-    const vsGone = await page.evaluate(() => document.getElementById('pl-vs').hidden);
-    check('interact: back to League hides the comparison', steps.league && vsGone);
-    check('interact: no errors during player steps', errorsOf(log).length === 0, errorsOf(log));
+    // search
+    const opts = await page.evaluate(() => {
+      const i = document.getElementById('player-input');
+      const l = document.getElementById('players');
+      return { list: i && i.getAttribute('list'), tag: l && l.tagName, n: l ? l.querySelectorAll('option').length : 0,
+        values: l ? [...l.querySelectorAll('option')].map((o) => o.value) : [] };
+    });
+    check(`interact: #players datalist has ${N_PLAYERS} options and #player-input uses it`, opts.list === 'players' && opts.tag === 'DATALIST' && opts.n === N_PLAYERS &&
+      SERVERS.every((s) => opts.values.some((v) => sameName(v, s))), { list: opts.list, tag: opts.tag, n: opts.n });
+    const typed = SERVERS.includes('Iga Swiatek') ? 'Iga Swiatek' : SERVERS[1];
+    const gotTyped = await typePlayer(page, typed);
+    check(`interact: typing "${typed}" into the search loads that player`, sameName(gotTyped, typed), gotTyped);
 
-    // hash restores state in a new page
+    // a name that matches nobody keeps the typed text, says so, and leaves the loaded player alone
     {
-      const p2 = await ctx.newPage();
-      const l2 = attachCollectors(p2);
-      await p2.goto(base + '#p=m|Rafael%20Nadal|1|bp|&at=players', { waitUntil: 'domcontentloaded' });
-      await waitForBoot(p2, 'index');
-      const n2 = await text(p2, '#pl-name');
-      const bpOn = await p2.locator('#pl-sit button[data-value="bp"]').getAttribute('aria-checked');
-      check('interact: a shared #p= link restores the player and break-point mode', /Rafael Nadal/.test(n2) && bpOn === 'true', { name: n2, bp: bpOn });
-      check('interact: no errors on the shared-link page', errorsOf(l2).length === 0, errorsOf(l2));
-      await p2.close();
+      const inp = page.locator('#player-input');
+      await inp.click();
+      await inp.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+      await inp.press('Backspace');
+      await inp.pressSequentially('Zzqx', { delay: 8 });
+      await inp.press('Enter');
+      await page.waitForTimeout(200);
+      const miss = await page.evaluate(() => ({ value: document.getElementById('player-input').value,
+        msg: (document.getElementById('search-msg') || {}).textContent || '', name: document.getElementById('player-name').textContent.trim() }));
+      await inp.press('Escape');
+      await page.waitForTimeout(100);
+      const back = await page.evaluate(() => ({ value: document.getElementById('player-input').value, msg: (document.getElementById('search-msg') || {}).textContent || '' }));
+      check('interact: a name that matches nobody keeps the text, shows a "No charted player matches" line and keeps the player; Esc restores',
+        miss.value === 'Zzqx' && /^No charted player matches "Zzqx"\.$/.test(miss.msg) && sameName(miss.name, typed) && sameName(back.value, typed) && back.msg === '',
+        { miss, back });
     }
 
-    // keyboard: court zones
-    const zones = await page.evaluate(() => [...document.querySelectorAll('#pl-court .zone')].map((z) => ({ tab: z.getAttribute('tabindex'), label: z.getAttribute('aria-label') || '' })));
-    check('keyboard: 6 focusable court zones with labels', zones.length === 6 && zones.every((z) => z.tab === '0' && z.label.length > 10), zones.length);
-    await page.locator('#pl-court .zone').first().focus();
-    await page.keyboard.press('Tab');
-    await page.waitForTimeout(400);
-    const focused = await page.evaluate(() => { const e = document.activeElement; return e && e.classList.contains('zone') ? e.getAttribute('data-side') + ' ' + e.getAttribute('data-dir') : null; });
-    const detail3 = await text(page, '#pl-detail');
-    check('keyboard: Tab moves to the next zone and the detail follows', !!focused && detail3.toLowerCase().includes(focused.split(' ')[1].toLowerCase()), { focused });
+    // quick picks
+    const picks = await page.evaluate(() => [...document.querySelectorAll('#quick-picks a')].map((a) => ({ text: a.textContent.trim(), name: a.getAttribute('data-name') })));
+    const pickResults = [];
+    for (let i = 0; i < picks.length; i++) {
+      await page.locator('#quick-picks a').nth(i).click();
+      await page.waitForTimeout(500);
+      const n = await nameNow(page);
+      pickResults.push({ link: picks[i].text, loaded: n, ok: n.endsWith(picks[i].text) || sameName(n, picks[i].name) });
+    }
+    check('interact: #quick-picks has 5 links and each loads the player it names', picks.length === 5 && pickResults.every((r) => r.ok), pickResults);
 
-    // women
-    steps.women = await pickRadio(page, '#pl-tour', 'w');
-    await page.waitForTimeout(500);
-    const wName = (await text(page, '#pl-name')).trim();
-    const women = new Set(DATA.players.rows.filter((r) => r[0] === 'w').map((r) => r[1]));
-    check('interact: Women switch selects a woman', steps.women && women.has(wName), wName);
-    steps.gauff = await comboPick(page, '#pl-q', 'Coco Gauff');
-    const gName = (await text(page, '#pl-name')).trim();
-    const wZones = await page.locator('#pl-court .zone').count();
-    const badges = await page.locator('#pl-badges .badge').count();
-    check('interact: a woman picked by search (Coco Gauff) draws the court and badges', gName === 'Coco Gauff' && wZones === 6 && badges > 0, { name: gName, zones: wZones, badges });
-    const winMarks = await page.locator('#pl-win svg circle, #pl-win svg path, #pl-win svg rect').count();
-    const bpMarks = await page.locator('#pl-bp svg circle, #pl-bp svg path, #pl-bp svg rect, #pl-bp svg line').count();
-    check('interact: win-by-direction and break-point mini charts drawn', winMarks > 0 && bpMarks > 0, { winMarks, bpMarks });
-    await page.screenshot({ path: path.join(outDir, 'interact-women.png'), fullPage: false });
+    // serve switch
+    await typePlayer(page, DEFAULT);
+    const before = await shareLabels(page);
+    const p0 = await pressed(page);
+    await page.locator('#serve-switch button').nth(1).click();
+    await page.waitForTimeout(800);
+    const after = await shareLabels(page);
+    const p1 = await pressed(page);
+    check('interact: #serve-switch has 2 buttons and 2nd serve flips aria-pressed', p0.join() === 'true,false' && p1.join() === 'false,true', { before: p0, after: p1 });
+    check('interact: switching to 2nd serve changes the arrow share labels', before.length === 6 && after.length === 6 && before.join() !== after.join() &&
+      after.every((s) => /=\d+%$/.test(s) || /=$/.test(s)), { before, after });
+    await page.locator('#serve-switch button').nth(0).click();
+    await page.waitForTimeout(800);
+    const back = await shareLabels(page);
+    check('interact: switching back to 1st serve restores the labels', back.join() === before.join(), { before, back });
 
-    // league controls
-    const cards = ['a', 'b', 'c', 'd'];
-    const snap = () => page.evaluate((ids) => ids.map((id) => {
-      const c = document.getElementById('lg-' + id);
-      return { title: c.querySelector('[data-lg-slot="title"]').textContent.trim(), stats: c.querySelector('[data-lg-slot="stats"]').textContent.trim(),
-        caption: c.querySelector('[data-lg-slot="caption"]').textContent.trim(),
-        chart: c.querySelector('[data-lg-slot="chart"]').innerHTML.length + ':' + c.querySelector('[data-lg-slot="chart"]').textContent + c.querySelector('[data-lg-slot="table"]').textContent, marks: c.querySelectorAll('svg circle, svg rect, svg path').length };
-    }), cards);
-    const before = await snap();
-    check('league: 4 cards with title, caption and chart marks', before.every((c) => c.title && c.caption && c.marks > 0), before.map((c) => c.title));
-    check('league: titles at most 9 words, captions at most 20 words', before.every((c) => c.title.split(/\s+/).length <= 9 && c.caption.split(/\s+/).length <= 20),
-      before.map((c) => [c.title.split(/\s+/).length, c.caption.split(/\s+/).length]));
-    steps.lgWomen = await pickRadio(page, '[data-lg-tour]', 'w');
-    const afterW = await snap();
-    steps.lg2 = await pickRadio(page, '[data-lg-serve]', '2');
-    const after2 = await snap();
-    steps.lgRvL = await pickRadio(page, '[data-lg-matchup]', 'RvL');
-    const afterM = await snap();
-    const changed = (a, b) => a.some((c, i) => c.stats !== b[i].stats || c.title !== b[i].title || c.caption !== b[i].caption || c.chart !== b[i].chart);
-    check('league: Tour, Serve and Hands controls each change the cards', steps.lgWomen && steps.lg2 && steps.lgRvL && changed(before, afterW) && changed(afterW, after2) && changed(after2, afterM),
-      { women: changed(before, afterW), serve2: changed(afterW, after2), matchup: changed(after2, afterM) });
-    check('league: cards still have chart marks after control changes', afterM.every((c) => c.marks > 0));
-    const tb = page.locator('#lg-a [data-lg-table-btn]');
-    await tb.scrollIntoViewIfNeeded();
-    await tb.click();
+    // details#sure
+    const sure0 = await page.evaluate(() => { const d = document.querySelector('details#sure'); return d ? d.open : null; });
+    await page.locator('details#sure > summary').scrollIntoViewIfNeeded();
+    await page.locator('details#sure > summary').click();
     await page.waitForTimeout(300);
-    const tbl = await page.evaluate(() => { const t = document.getElementById('lg-a-table'); return { hidden: t.hidden, rows: t.querySelectorAll('tbody tr').length }; });
-    check('league: Show table opens a data table', !tbl.hidden && tbl.rows > 0, tbl);
-    // popover
-    const info = page.locator('#lg-b button.info').first();
-    await info.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(400);
-    await info.click();
-    await page.waitForTimeout(250);
-    const popOpen = await info.getAttribute('aria-expanded');
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(200);
-    const popClosed = await info.getAttribute('aria-expanded');
-    check('league: "?" popover opens on click and closes on Escape', popOpen === 'true' && popClosed !== 'true', { popOpen, popClosed });
-    await page.screenshot({ path: path.join(outDir, 'interact-league.png'), fullPage: false });
+    const sure = await page.evaluate(() => {
+      const d = document.querySelector('details#sure');
+      const t = [...d.querySelectorAll('table')];
+      return { open: d.open, tables: t.length, rows: t.map((x) => x.querySelectorAll('tbody tr').length), text: d.innerText };
+    });
+    check('interact: details#sure is closed by default, opens, and has at least 2 tables with rows', sure0 === false && sure.open && sure.tables >= 2 && sure.rows.every((r) => r > 0),
+      { closedByDefault: sure0 === false, open: sure.open, tables: sure.tables, rows: sure.rows });
+    check('interact: "How sure are we?" text has no "league", placeholder or banned text',
+      hits(sure.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]).length === 0, hits(sure.text, [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER]));
+    await page.screenshot({ path: path.join(outDir, 'v4-interact-sure.png'), fullPage: false });
+    await page.locator('details#sure > summary').click();
+
+    // waffle
+    const waffle = await page.evaluate(() => {
+      const dots = [...document.querySelectorAll('.waffle .waffle-dot')];
+      const hitEls = [...document.querySelectorAll('.waffle .waffle-dot.is-hit')];
+      return { dots: dots.length, hits: hitEls.length, buttons: hitEls.filter((b) => b.tagName === 'BUTTON').length,
+        labels: hitEls.map((b) => b.getAttribute('aria-label') || ''), names: hitEls.map((b) => b.getAttribute('data-name') || (b.getAttribute('aria-label') || '').replace(/, tap to show$/, '')),
+        exists: !!document.getElementById('findings') };
+    });
+    check(`findings: #findings exists with ${N_PLAYERS} waffle dots`, waffle.exists && waffle.dots === N_PLAYERS, { exists: waffle.exists, dots: waffle.dots });
+    check(`findings: ${N_HITS} blue dots (headline.costly_players_s1), all buttons labelled "<name>, tap to show"`,
+      waffle.hits === N_HITS && waffle.buttons === N_HITS && waffle.labels.every((l) => /^.+, tap to show$/.test(l)) && waffle.names.every((n) => SERVERS.includes(n)),
+      { hits: waffle.hits, buttons: waffle.buttons, badLabels: waffle.labels.filter((l) => !/^.+, tap to show$/.test(l)).slice(0, 3) });
+    const target = waffle.names.find((n) => n !== DEFAULT) || waffle.names[0];
+    let clicked = null;
+    if (target) {
+      // start from 2nd serve, so the click must also switch back to 1st
+      await page.locator('#serve-switch button').nth(1).click();
+      await page.waitForTimeout(400);
+      const btn = page.locator('.waffle .waffle-dot.is-hit').nth(waffle.names.indexOf(target));
+      await btn.scrollIntoViewIfNeeded();
+      await btn.hover();
+      await page.waitForTimeout(150);
+      const tipText = await page.evaluate(() => [...document.querySelectorAll('#findings *')].filter((e) => e.children.length === 0 && !e.hidden &&
+        e.getClientRects().length && !e.closest('.waffle-dot') && /\S/.test(e.textContent) && !e.closest('p')).map((e) => e.textContent.trim()));
+      await btn.click();
+      await page.waitForTimeout(800);
+      clicked = await page.evaluate(() => {
+        const r = document.getElementById('tool').getBoundingClientRect();
+        return { name: (document.getElementById('player-name').textContent || '').trim(), toolTop: Math.round(r.top), toolBottom: Math.round(r.bottom), vh: window.innerHeight,
+          pressed: [...document.querySelectorAll('#serve-switch button')].map((b) => b.getAttribute('aria-pressed')).join() };
+      });
+      clicked.hoverTip = tipText;
+      check(`findings: hovering a blue dot shows the player's name`, tipText.some((t) => t.includes(target)), { target, shown: tipText.slice(0, 5) });
+      check(`findings: clicking a blue dot (${target}) loads that player on 1st serve and scrolls to #tool`,
+        sameName(clicked.name, target) && clicked.pressed === 'true,false' && clicked.toolTop < clicked.vh && clicked.toolBottom > 0, clicked);
+    } else {
+      check('findings: clicking a blue dot loads that player and scrolls to #tool', false, 'no blue dots');
+    }
+
+    // sentences for every quick pick and every waffle player, both serves (set through the search input)
+    const names = [...new Set([DEFAULT, ...picks.map((p) => p.name).filter(Boolean), ...waffle.names])];
+    const sent = await page.evaluate(async ([list]) => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const input = document.getElementById('player-input');
+      const out = [];
+      for (const n of list) {
+        for (const sv of [1, 2]) {
+          input.value = n;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          await sleep(30);
+          document.querySelectorAll('#serve-switch button')[sv - 1].click();
+          await sleep(30);
+          const ps = [...document.querySelectorAll('#sentences p')].map((p) => p.textContent.replace(/\s+/g, ' ').trim());
+          const tips = [...document.querySelectorAll('#court .arrow')].map((a) => a.getAttribute('aria-label') || '');
+          out.push({ name: n, serve: sv, loaded: document.getElementById('player-name').textContent.trim(), ps, tips, sure: document.getElementById('sure').innerText });
+        }
+      }
+      input.blur();
+      return out;
+    }, [names]);
+    const BAD_S = [...BANNED, ...INDEX_BANNED, ...PLACEHOLDER];
+    const badCount = sent.filter((s) => s.ps.length < 1 || s.ps.length > 4 || !sameName(s.loaded, s.name));
+    check(`sentences: 1 to 4 <p> in #sentences for ${names.length} players on both serves`, sent.length === 2 * names.length && badCount.length === 0,
+      badCount.slice(0, 5).map((s) => ({ name: s.name, serve: s.serve, loaded: s.loaded, n: s.ps.length })));
+    const badText = sent.map((s) => ({ name: s.name, serve: s.serve, hits: hits(s.ps.join('\n'), BAD_S) })).filter((s) => s.hits.length);
+    check('sentences: no "league", banned characters, he/she or placeholder text in any sentence', badText.length === 0, badText.slice(0, 5));
+    const badTips = sent.map((s) => ({ name: s.name, serve: s.serve, hits: hits(s.tips.join('\n') + '\n' + s.sure, BAD_S) })).filter((s) => s.hits.length);
+    check('sentences: no "league", banned characters, he/she or placeholder text in any arrow label or "How sure are we?"', badTips.length === 0, badTips.slice(0, 5));
+    const surnameUse = sent.filter((s) => s.ps.length && !s.ps.some((p) => nameKey(p).includes(nameKey(s.name.split(' ').slice(-1)[0]))));
+    check('sentences: the sentences name the player by surname', surnameUse.length === 0, surnameUse.slice(0, 3).map((s) => [s.name, s.ps[0]]));
+    const nadal2 = sent.find((s) => s.name === DEFAULT && s.serve === 2);
+    check('sentences: on 2nd serves Nadal has no clear winning direction', nadal2 && nadal2.ps.some((p) => /No direction wins clearly more points/.test(p)), nadal2 && nadal2.ps);
+
+    // a player with no photo hides the image
+    const noPhoto = SERVERS.find((s) => !(IMAGES.players || {})[s]);
+    if (noPhoto) {
+      await typePlayer(page, noPhoto);
+      const ph = await page.evaluate(() => { const i = document.getElementById('player-photo'); return { hidden: !i || i.hidden || getComputedStyle(i).display === 'none', name: document.getElementById('player-name').textContent.trim() }; });
+      check(`interact: a player with no photo (${noPhoto}) hides #player-photo`, sameName(ph.name, noPhoto) && ph.hidden, ph);
+    }
+
     check('interact: no console errors, page errors or module warnings', errorsOf(log).length === 0, errorsOf(log));
     check('interact: no failed requests', log.failedRequests.length === 0, log.failedRequests);
-    runs.push({ tag: 'interaction', steps });
+    runs.push({ tag: 'interaction', typed, picks: pickResults, sure: { tables: sure.tables, rows: sure.rows }, waffle: { dots: waffle.dots, hits: waffle.hits }, clicked, sentenceRuns: sent.length });
+    await ctx.close();
+  }
+
+  // ---------- the data file fails (spec: #status shows an error line) ----------
+  for (const w of [1440, 390]) {
+    const L = LIMITS[w];
+    const tag = `no-data-${w}`;
+    tagNow = tag;
+    const { ctx, page } = await newPage(browser, { w: L.w, h: L.h });
+    await page.route('**/data/serveiq.json', (r) => r.abort());
+    await page.goto(base, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('no-data'), null, { timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(200);
+    const st = await page.evaluate(() => {
+      const shown = (sel) => { const e = document.querySelector(sel); return !!e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0; };
+      const s = document.getElementById('status');
+      return { noData: document.documentElement.classList.contains('no-data'), status: shown('#status'), text: s ? s.textContent.trim() : '',
+        link: !!(s && s.querySelector('a[href^="https://serve-iq.streamlit.app"]')),
+        tool: shown('#tool'), findings: shown('#findings'), src: shown('.intro-src'), h1: shown('#intro-h') };
+    });
+    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
+    check(`${tag}: when data/serveiq.json fails, #status explains it with a link to the backup app and the parts that need the data are hidden`,
+      st.noData && st.status && st.text.length > 20 && st.link && !st.tool && !st.findings && !st.src && st.h1, st);
+    await ctx.close();
+  }
+
+  // ---------- method.html at both widths ----------
+  for (const w of [1440, 390]) {
+    const L = LIMITS[w];
+    const tag = `method-${w}`;
+    tagNow = tag;
+    const { ctx, page, log } = await newPage(browser, { w: L.w, h: L.h });
+    let gotoErr = null;
+    await page.goto(base + 'method.html', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => { gotoErr = e.message; });
+    await waitForMethod(page);
+    const m = await page.evaluate(() => ({
+      ready: document.documentElement.classList.contains('data-ready'),
+      fx: document.querySelectorAll('.fx').length,
+      katex: document.querySelectorAll('.fx .katex').length,
+      katexErrors: document.querySelectorAll('.katex-error, .tex-raw').length,
+      cards: document.querySelectorAll('[id^="f"].fcard, details.fcard').length,
+      credits: document.querySelectorAll('#credits-list tbody tr, #credits-list li').length,
+      height: document.documentElement.scrollHeight,
+    }));
+    const ov = await overflow(page);
+    const scan = await scanText(page);
+    await page.screenshot({ path: path.join(outDir, `v4-${tag}.png`), fullPage: true });
+    check(`${tag}: page boots and binds the data`, !gotoErr && m.ready, gotoErr || { ready: m.ready });
+    check(`${tag}: KaTeX renders all 13 formulas and the hypothesis line with no errors`, m.cards === 13 && m.fx >= 14 && m.katex === m.fx && m.katexErrors === 0,
+      { cards: m.cards, fx: m.fx, katex: m.katex, errors: m.katexErrors });
+    check(`${tag}: photo credits list one row per images.json player (${N_CREDITS})`, m.credits === N_CREDITS, { credits: m.credits });
+    check(`${tag}: no horizontal page scroll`, ov.scrollWidth <= Math.min(ov.innerWidth, w) && ov.wideEls.length === 0, ov);
+    check(`${tag}: no banned characters or terms`, hits(scan, BANNED).length === 0, hits(scan, BANNED));
+    check(`${tag}: no console errors, page errors or module warnings`, errorsOf(log).length === 0, errorsOf(log));
+    check(`${tag}: no failed requests`, log.failedRequests.length === 0, log.failedRequests);
+    runs.push({ tag, height: m.height });
     await ctx.close();
   }
 
   // ---------- reduced motion ----------
-  for (const which of ['index', 'method']) {
-    for (const w of [1440, 375]) {
-      tagNow = `reduced-${which}-${w}`;
-      const { ctx, page, log } = await newPage(browser, { w, h: w < 768 ? 812 : 900, reduce: true });
-      await page.goto(base + (which === 'index' ? '' : 'method.html'), { waitUntil: 'domcontentloaded' });
-      await waitForBoot(page, which);
-      await page.waitForTimeout(200);
-      // no scrolling: everything must already be visible and final
-      const r = await page.evaluate(() => {
-        const rv = [...document.querySelectorAll('[data-reveal]')].filter((e) => e.getClientRects().length);
-        const cu = [...document.querySelectorAll('[data-countup]')].filter((e) => e.getClientRects().length);
-        return {
-          reveal: rv.length, hidden: rv.filter((e) => getComputedStyle(e).opacity !== '1').length,
-          countups: cu.length, notFinal: cu.filter((e) => !e.textContent.trim()).map((e) => e.outerHTML.slice(0, 80)),
-          texts: cu.map((e) => e.textContent.trim()),
-          marksHidden: [...document.querySelectorAll('.grow-y, .grow-x, .pop-in, .fade-in')].filter((e) => getComputedStyle(e).opacity === '0').length,
-        };
-      });
-      const wantTexts = which === 'index' ? [fmtInt(DATA.headline.players), fmtInt(DATA.headline.serves_analysed), Math.round(100 * DATA.headline.mix_differs_share_s1) + '%', String(DATA.headline.costly_players_s1)] : [fmtInt(DATA.headline.serves_analysed)];
-      check(`reduced-motion ${which}-${w}: every reveal target visible without scrolling`, r.reveal > 0 && r.hidden === 0, { reveal: r.reveal, hidden: r.hidden });
-      check(`reduced-motion ${which}-${w}: count-ups show final values at once`, r.notFinal.length === 0 && wantTexts.every((t) => r.texts.includes(t)), { texts: r.texts, want: wantTexts });
-      check(`reduced-motion ${which}-${w}: chart marks not left at opacity 0`, r.marksHidden === 0, { marksHidden: r.marksHidden });
-      check(`reduced-motion ${which}-${w}: no errors`, errorsOf(log).length === 0, errorsOf(log));
-      await ctx.close();
-    }
-  }
-
-  // ---------- reveal fallback: js/main.js never runs ----------
-  tagNow = 'fallback';
-  {
-    const { ctx, page } = await newPage(browser, { w: 1440, h: 900, block: '**/js/main.js' });
+  for (const w of [1440, 390]) {
+    const L = LIMITS[w];
+    const tag = `reduced-${w}`;
+    tagNow = tag;
+    const { ctx, page, log } = await newPage(browser, { w: L.w, h: L.h, reduce: true });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(3600);
-    const r = await page.evaluate(() => {
-      const rv = [...document.querySelectorAll('[data-reveal]')].filter((e) => e.getClientRects().length);
-      return { reveal: rv.length, hidden: rv.filter((e) => getComputedStyle(e).opacity !== '1').length, cls: document.documentElement.className };
-    });
-    check('fallback: with js/main.js blocked, reveal targets become visible after the head timer', r.reveal > 0 && r.hidden === 0, r);
+    await waitForIndex(page);
+    const name = await nameNow(page);
+    const before = await shareLabels(page);
+    await page.locator('#serve-switch button').nth(1).click();
+    await sleep(60);
+    const soon = await shareLabels(page);
+    await page.waitForTimeout(900);
+    const settled = await shareLabels(page);
+    const pr = await pressed(page);
+    check(`${tag}: page boots with ${DEFAULT} under prefers-reduced-motion`, name === DEFAULT && before.length === 6, { name, arrows: before.length });
+    check(`${tag}: the serve switch works and the arrow labels are final at once (no tween)`, pr.join() === 'false,true' && soon.join() !== before.join() && soon.join() === settled.join(),
+      { before, soon, settled });
+    check(`${tag}: no errors`, errorsOf(log).length === 0, errorsOf(log));
     await ctx.close();
   }
 } finally {

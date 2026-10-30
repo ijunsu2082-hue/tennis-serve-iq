@@ -4,9 +4,9 @@
 
 Serve IQ uses 2.56 million charted professional serves from the Match Charting Project. After the exclusions
 listed under Limits, 2,473,821 serves are analyzed. Pick any of 447 players
-(249 men, 198 women) to see where they serve on each side of the court, how that compares with the league,
-how it changes on break points, and whether any direction wins more points than the others. Shares and win
-rates come with 95% confidence intervals.
+(249 men, 198 women) to see where they serve on each side of the court, how that compares with a typical
+pro facing the same opponents, how it changes on break points, and whether any direction wins more points
+than the others. Shares and win rates come with 95% confidence intervals.
 
 Live site: https://serve-iq.netlify.app (backup: https://serve-iq.streamlit.app)
 
@@ -23,7 +23,7 @@ Live site: https://serve-iq.netlify.app (backup: https://serve-iq.streamlit.app)
 | Servers switch more than a random order would. | Men's 1st serves repeat their previous direction 1.60 percentage points less often than a random order would; women's 4.89 less. |
 
 Most pros have a recognizable serve habit. Only a few of them have a court side where win rates differ by
-direction. The dashboard shows who those players are and has a scouting report for every listed player.
+direction. The site shows who those players are and draws every listed player's serve directions on a court.
 
 The charts only record where each serve went (wide, body or T). They do not record the returner. The
 favorite-target share is the share of serves to a server's most-used target: if a returner always leaned
@@ -31,7 +31,24 @@ toward that target, they would be right this often, and a server who split evenl
 give one in three. We call a server predictable on a side when the mix is lopsided and differs from the league average
 for the same opponents (mix test, q < 0.05).
 
-## What's in the dashboard
+## What's on the site
+
+The site is one interactive court screen plus one finding, with the method on a second page.
+
+- The court screen: pick a player and switch between 1st and 2nd serve. Two panels, deuce side and ad
+  side, draw one arrow per direction (wide, body, T), as wide as the share of serves that go there. Tap or
+  focus an arrow for the share, a typical pro's share against the same mix of right- and left-handed
+  returners, and the points won. The site says "typical pro" where the data and this README say "league
+  average". A few short sentences under the court give the habit, whether any direction wins clearly
+  more points, and any break-point shift; "How sure are we?" opens the tables with confidence intervals.
+  The arrows show the direction of the serve, not where the ball landed.
+- One finding: a dot for every listed player, with the players whose 1st-serve win rates differ by
+  direction in blue. Tap one to load that player into the court.
+- Method page: how the serves were counted, every formula, the limits and the photo credits.
+
+The only photos are small player headshots from Wikimedia Commons.
+
+The Streamlit backup app keeps the fuller dashboard, in three tabs:
 
 - Scout a server: a schematic court showing where the serve goes on the deuce and ad side, compared with the
   league average for the same mix of right- and left-handed returners; a scouting report with the favorite
@@ -61,8 +78,9 @@ Streamlit tier puts the backup app to sleep when nobody has used it for a while;
 button, click it and wait about a minute.
 
 Static site: serve the `site/` folder with any static server, for example
-`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`. The main page is the dashboard; `method.html`
-holds the full method, every formula, the limits and the photo credits.
+`python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py`. The
+main page is the court screen and the finding; `method.html` holds the full method, every formula, the limits
+and the photo credits.
 
 Deploy the Streamlit app: on [share.streamlit.io](https://share.streamlit.io), create an app from this
 repository with main file `app/streamlit_app.py` and Python 3.12 under Advanced settings (the pinned numpy
@@ -245,7 +263,7 @@ src/reconcile.py       checks the rebuild against the project's own totals
 src/baseline.py        league-wide baseline, clustered CIs, within-server effects
 src/app_data.py        per-player tables, tests and stability checks for the app
 src/export_site.py     data files for the static site
-scripts/fetch_images.py  downloads the freely licensed photos and writes site/data/images.json
+scripts/fetch_images.py  downloads the freely licensed player photos and writes site/data/images.json
 ```
 
 ## Data and license
@@ -257,6 +275,6 @@ are shared under the same license. Non-commercial use only.
 
 Code in this repository (`app/`, `src/`) is released under the MIT License; see `LICENSE`.
 
-Photos in `site/img/` come from Wikimedia Commons under their own free licenses (CC BY, CC BY-SA or public
-domain). Each author and license is listed on the site's Method page under Photo credits and in
-`site/data/images.json`.
+The player photos in `site/img/players/` come from Wikimedia Commons under their own free licenses (CC BY,
+CC BY-SA or public domain). Each author and license is listed on the site's Method page under Photo credits
+and in `site/data/images.json`.

@@ -588,35 +588,5 @@
    "source": "https://commons.wikimedia.org/wiki/File:Yevgeny_Kafelnikov_in_2023_-_01_(cropped).jpg",
    "src": "img/players/yevgeny-kafelnikov.webp"
   }
- },
- "scenes": {
-  "ball": {
-   "author": "Santeri Viinamäki",
-   "license": "CC BY-SA 4.0",
-   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
-   "source": "https://commons.wikimedia.org/wiki/File:Tennis_ball_on_tennis_court_20170619.jpg",
-   "src": "img/scenes/ball.webp"
-  },
-  "court": {
-   "author": "dronepicr",
-   "license": "CC BY 2.0",
-   "license_url": "https://creativecommons.org/licenses/by/2.0",
-   "source": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_tennis_courts_in_Cologne,_Germany_(50390585946).jpg",
-   "src": "img/scenes/court.webp"
-  },
-  "hero": {
-   "author": "Christopher Johnson from Tokyo, Japan",
-   "license": "CC BY-SA 2.0",
-   "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
-   "source": "https://commons.wikimedia.org/wiki/File:Rafael_Nadal_saque_-_9775_Japan_Open_Tennis_Tokio_2010.jpg",
-   "src": "img/scenes/hero.webp"
-  },
-  "stadium": {
-   "author": "Chris Czermak",
-   "license": "CC BY 2.0",
-   "license_url": "https://creativecommons.org/licenses/by/2.0",
-   "source": "https://commons.wikimedia.org/wiki/File:O2_Arena_during_the_Nitto_ATP_Tour_Finals_2019_in_London_(49052218447).jpg",
-   "src": "img/scenes/stadium.webp"
-  }
  }
 }

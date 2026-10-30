@@ -1,7 +1,6 @@
 """Fetch freely licensed photos for the Serve IQ site from Wikimedia Commons.
 
-Run (Python 3.9):  .venv/bin/python scripts/fetch_images.py [--force] [--only-players] [--only-scenes]
-                   .venv/bin/python scripts/fetch_images.py --scene-candidates hero
+Run (Python 3.9):  .venv/bin/python scripts/fetch_images.py [--force]
 
 What it does
   Players: takes the 48 men and 36 women with the most charted serves from site/data/serveiq.json,
@@ -11,10 +10,9 @@ What it does
   The photo is cropped to a square (biased toward the top of portrait images, where faces sit),
   resized to 320x320 and saved as site/img/players/<slug>.webp.
 
-  Scenes: four pinned Commons files (hero, court, ball, stadium) under the same license rule,
-  saved as site/img/scenes/<name>.webp.
-
-  Credits for every saved photo go to site/data/images.json.
+  Credits for every saved photo go to site/data/images.json, which has a "players" key only.
+  The site shows player headshots only (v4). There are no scene photos, and this script never
+  writes a "scenes" key or a site/img/scenes folder.
 
 Re-runnable: API answers and downloaded originals are cached in output/image_cache (gitignored).
 --force ignores the cache. Players listed in EXCLUDE are skipped (reviewed by hand, reason given).
@@ -39,7 +37,6 @@ SITE = os.path.join(ROOT, "site")
 DATA_JSON = os.path.join(SITE, "data", "serveiq.json")
 IMAGES_JSON = os.path.join(SITE, "data", "images.json")
 PLAYER_DIR = os.path.join(SITE, "img", "players")
-SCENE_DIR = os.path.join(SITE, "img", "scenes")
 CACHE_DIR = os.path.join(ROOT, "output", "image_cache")
 
 UA = "ServeIQ/1.0 (https://github.com/ijunsu2082-hue/tennis-serve-iq)"
@@ -90,25 +87,6 @@ CROP_OVERRIDE = {
 AUTHOR_OVERRIDE = {
     "Steffi Graf": "Mark Henckel from Hamburg-Altona, Deutschland (original), César (derivative work)",
     "Justine Henin": "AndonicO at English Wikipedia (original), Vinkje83 (derivative work)",
-}
-
-# Pinned scene files (chosen by hand from --scene-candidates output).
-SCENES = {
-    "hero": "File:Rafael Nadal saque - 9775 Japan Open Tennis Tokio 2010.jpg",
-    "court": "File:Aerial view of tennis courts in Cologne, Germany (50390585946).jpg",
-    "ball": "File:Tennis ball on tennis court 20170619.jpg",
-    "stadium": "File:O2 Arena during the Nitto ATP Tour Finals 2019 in London (49052218447).jpg",
-}
-# Optional crop box per scene as fractions (left, top, right, bottom) of the source image.
-SCENE_CROP = {
-    "court": (0.24, 0.38, 0.84, 0.98),  # the courts, without the road and buildings above
-}
-SCENE_WIDTH = {"hero": 1920, "court": 1200, "ball": 1200, "stadium": 1200}
-SCENE_QUERIES = {
-    "hero": ["tennis serve", "tennis player serving", "tennis serve toss"],
-    "court": ["tennis court aerial", "tennis court from above", "tennis court baseline view"],
-    "ball": ["tennis ball close-up", "tennis ball racket", "tennis ball on court"],
-    "stadium": ["tennis stadium crowd", "centre court tennis crowd", "tennis arena match"],
 }
 
 FREE_LICENSE = re.compile(r"^(CC0( 1\.0)?|Public domain|PD.*|CC BY(-SA)? \d(\.\d)?.*)$", re.I)
@@ -340,83 +318,15 @@ def _remove(s):
         os.remove(p)
 
 
-def fetch_scenes(out, log):
-    os.makedirs(SCENE_DIR, exist_ok=True)
-    for name, title in SCENES.items():
-        if not title:
-            log.append(("scene " + name, "no file pinned"))
-            continue
-        width = SCENE_WIDTH[name]
-        box = SCENE_CROP.get(name)
-        fetch_w = int(width / (box[2] - box[0])) if box else width
-        info, why = commons_info(title, fetch_w)
-        if info is None:
-            log.append(("scene " + name, "rejected (%s): %s" % (why, title)))
-            continue
-        im = to_rgb(Image.open(io.BytesIO(download(info["thumb"]))))
-        if box:
-            im = im.crop((int(box[0] * im.width), int(box[1] * im.height),
-                          int(box[2] * im.width), int(box[3] * im.height)))
-        if im.width > width:
-            im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
-        rel = "img/scenes/%s.webp" % name
-        path = os.path.join(SITE, rel)
-        q = 74
-        im.save(path, "WEBP", quality=q, method=6)
-        while name == "hero" and os.path.getsize(path) > 250 * 1024 and q > 40:
-            q -= 6
-            im.save(path, "WEBP", quality=q, method=6)
-        out["scenes"][name] = credit(info, rel)
-        print("- scene %s: %s (%dx%d, %d KB)" % (name, info["title"], im.width, im.height,
-                                                 os.path.getsize(path) // 1024))
-
-
-def scene_candidates(name, extra=None):
-    """Print free-licensed landscape candidates for one scene, for hand picking."""
-    seen = set()
-    for q in ([extra] if extra else SCENE_QUERIES[name]):
-        d = api(COMMONS_API, {"action": "query", "generator": "search",
-                              "gsrsearch": q + " filetype:bitmap", "gsrnamespace": 6,
-                              "gsrlimit": 40, "prop": "imageinfo",
-                              "iiprop": "size|extmetadata", "iiextmetadatafilter": "LicenseShortName"})
-        for p in d.get("query", {}).get("pages", []):
-            t = p["title"]
-            if t in seen or "imageinfo" not in p:
-                continue
-            seen.add(t)
-            ii = p["imageinfo"][0]
-            lic = clean_text(ii.get("extmetadata", {}).get("LicenseShortName", {}).get("value", ""))
-            w, h = ii.get("width") or 0, ii.get("height") or 0
-            if not FREE_LICENSE.match(lic) or w < 1600 or w <= h:
-                continue
-            print("%s\t%dx%d\t%s" % (t, w, h, lic))
-
-
 def main():
     global FORCE
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--only-players", action="store_true")
-    ap.add_argument("--only-scenes", action="store_true")
-    ap.add_argument("--scene-candidates", help="hero, court, ball or stadium")
-    ap.add_argument("--query", help="custom search text for --scene-candidates")
     a = ap.parse_args()
     FORCE = a.force
-    if a.scene_candidates:
-        scene_candidates(a.scene_candidates, a.query)
-        return
-    out = {"players": {}, "scenes": {}}
-    if os.path.exists(IMAGES_JSON):
-        with open(IMAGES_JSON, "r", encoding="utf-8") as f:
-            prev = json.load(f)
-        out["players"] = prev.get("players", {}) if a.only_scenes else {}
-        out["scenes"] = prev.get("scenes", {}) if a.only_players else {}
+    out = {"players": {}}
     log = []
-    found = {"m": 0, "w": 0}
-    if not a.only_scenes:
-        found = fetch_players(out, log)
-    if not a.only_players:
-        fetch_scenes(out, log)
+    found = fetch_players(out, log)
     # Remove player files that are no longer credited
     keep = {os.path.basename(v["src"]) for v in out["players"].values()}
     if os.path.isdir(PLAYER_DIR):
@@ -427,14 +337,11 @@ def main():
         json.dump(out, f, indent=1, ensure_ascii=False, sort_keys=True)
         f.write("\n")
     total = 0
-    for d in (PLAYER_DIR, SCENE_DIR):
-        if os.path.isdir(d):
-            total += sum(os.path.getsize(os.path.join(d, x)) for x in os.listdir(d))
+    if os.path.isdir(PLAYER_DIR):
+        total += sum(os.path.getsize(os.path.join(PLAYER_DIR, x)) for x in os.listdir(PLAYER_DIR))
     print("\nSummary")
-    if not a.only_scenes:
-        print("  men with photos:   %d of %d" % (found["m"], N_MEN))
-        print("  women with photos: %d of %d" % (found["w"], N_WOMEN))
-    print("  scenes: %s" % ", ".join(sorted(out["scenes"])) or "none")
+    print("  men with photos:   %d of %d" % (found["m"], N_MEN))
+    print("  women with photos: %d of %d" % (found["w"], N_WOMEN))
     print("  site/img total: %.2f MB" % (total / 1024 / 1024))
     if log:
         print("  skipped (%d):" % len(log))

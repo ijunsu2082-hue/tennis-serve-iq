@@ -1,0 +1,320 @@
+/* Serve IQ site styles. One light theme, system fonts. The court is the only color on the page. */
+
+:root {
+  --bg: #fff;
+  --ink: #111;
+  --muted: #5f6368;
+  --rule: #e6e6e6;
+  --field: #c9cdd2;
+  --blue: #3b6fb6;
+  --blue-dk: #2f5f9e;
+  --green: #5f8f55;
+  --green-dk: #4f7d47;
+  --blue-edge: #24508a;
+  --dot: #c4c8cd;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --gutter: 24px;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-weight: 700; letter-spacing: normal; margin: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+a { color: var(--blue); text-underline-offset: 2px; }
+a:hover { color: var(--blue-dk); }
+b, strong { font-weight: 700; }
+b, td, .t-meta, .intro-src { font-variant-numeric: tabular-nums; }
+img { max-width: 100%; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip { position: absolute; left: 8px; top: -60px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 6px; z-index: 10; }
+.skip:focus { top: 8px; color: #fff; }
+
+/* ------------------------------------------------------------ top bar */
+
+.topbar { border-bottom: 1px solid var(--rule); }
+.topbar-in { display: flex; align-items: center; justify-content: space-between; height: 52px; }
+.brand { color: var(--ink); font-weight: 700; font-size: 17px; text-decoration: none; }
+.brand:hover { color: var(--ink); }
+.topbar nav { display: flex; gap: 22px; font-size: 15px; }
+.topbar nav a { color: var(--ink); text-decoration: none; }
+.topbar nav a:hover { color: var(--blue); text-decoration: underline; }
+
+.status { margin-top: 16px; font-weight: 600; }
+/* the data file failed (js/main.js adds html.no-data): hide what needs the data, keep #status */
+.no-data #tool, .no-data #findings, .no-data .intro-src, .no-data .intro-sub { display: none; }
+
+/* ------------------------------------------------------------ intro */
+
+.intro { padding-top: 26px; padding-bottom: 22px; }
+.intro h1 { font-size: 38px; line-height: 1.16; max-width: 23em; }
+.intro-sub { margin-top: 12px; font-size: 18px; }
+.intro-src { margin-top: 4px; font-size: 14px; color: var(--muted); }
+
+/* ------------------------------------------------------------ the tool */
+
+/* The court column is at most 622px, the width court.js draws at most (two 300px panels and a 22px gap),
+   so the court's right edge lines up with the top bar, the waffle and the footer. */
+.tool {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 622px);
+  grid-template-areas:
+    "search court"
+    "msg    court"
+    "picks  court"
+    "switch court"
+    "player court"
+    "sent   court"
+    "sure   court";
+  grid-template-rows: auto auto auto auto auto auto 1fr;
+  column-gap: 48px;
+  padding-bottom: 48px;
+}
+.t-search { grid-area: search; }
+.t-msg { grid-area: msg; }
+.t-picks { grid-area: picks; }
+.t-switch { grid-area: switch; }
+.t-player { grid-area: player; }
+.t-court { grid-area: court; }
+.t-sentences { grid-area: sent; }
+.t-sure { grid-area: sure; }
+
+.t-search label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.t-search input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 17px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--field);
+  border-radius: 6px;
+}
+.t-search input:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: var(--blue); }
+.t-msg { font-size: 14px; color: var(--muted); }
+.t-msg:not(:empty) { margin-top: 6px; }
+
+.t-picks { margin-top: 8px; font-size: 14px; color: var(--muted); }
+.t-picks a[aria-current="true"] { color: var(--ink); font-weight: 700; text-decoration: none; }
+
+.t-switch { display: inline-flex; margin-top: 18px; justify-self: start; }
+.t-switch button {
+  height: 40px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--field);
+  cursor: pointer;
+}
+.t-switch button:first-child { border-radius: 6px 0 0 6px; }
+.t-switch button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+.t-switch button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+.t-switch button:focus-visible { position: relative; z-index: 1; }
+
+.t-player { display: flex; align-items: center; gap: 14px; margin-top: 24px; }
+.t-player img { width: 80px; height: 80px; border-radius: 6px; object-fit: cover; flex: none; background: var(--rule); }
+.t-name { font-size: 21px; font-weight: 700; line-height: 1.25; }
+.t-meta { font-size: 14px; color: var(--muted); }
+
+.t-sentences { margin-top: 18px; }
+.t-sentences p { font-size: 17px; line-height: 1.55; max-width: 36em; }
+.t-sentences p + p { margin-top: 10px; }
+
+/* ------------------------------------------------------------ How sure are we? */
+
+.t-sure { margin-top: 20px; font-size: 14px; }
+.t-sure summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--blue); width: max-content; }
+.t-sure summary:hover { color: var(--blue-dk); }
+.sure-defs { margin: 10px 0 0; color: var(--muted); max-width: 40em; }
+.sure-defs p + p { margin-top: 4px; }
+.sure-scroll { overflow-x: auto; margin-top: 14px; }
+.sure-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.sure-table caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+.sure-table th, .sure-table td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; white-space: nowrap; }
+.sure-table th:first-child { text-align: left; padding-left: 0; }
+.sure-table thead th { font-weight: 600; color: var(--muted); vertical-align: bottom; white-space: normal; line-height: 1.25; }
+.sure-table small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
+.sure-table tbody th { font-weight: 600; }
+.sure-table .sure-side th { text-align: left; padding-top: 12px; font-weight: 700; white-space: normal; }
+.sure-table .sure-side span { font-weight: 400; color: var(--muted); }
+.sure-q { margin-top: 6px; font-size: 13px; color: var(--muted); }
+
+/* ------------------------------------------------------------ court */
+
+.court { position: relative; }
+.court-panels { display: flex; justify-content: flex-start; }
+.court-panel { margin: 0; flex: none; }
+.court-panel figcaption { margin-bottom: 8px; line-height: 1.3; }
+.cp-title { display: block; font-size: 16px; font-weight: 700; }
+.cp-sub { display: block; font-size: 13px; color: var(--muted); }
+.court-panel svg { display: block; }
+.court-note { margin-top: 10px; font-size: 13px; color: var(--muted); text-align: left; text-wrap: balance; }
+
+.c-surround { fill: var(--green); }
+.c-play { fill: var(--blue); }
+.c-lines line { stroke: #fff; shape-rendering: crispEdges; }
+.c-net { stroke: #eef1f4; }
+.c-net-shadow { stroke: rgba(10, 25, 45, 0.28); }
+
+.arrow { cursor: pointer; outline: none; transition: opacity 0.15s ease; }
+.a-hit { fill: none; stroke: transparent; stroke-linecap: round; pointer-events: stroke; }
+.a-leader { fill: none; stroke: #fff; stroke-width: 1px; stroke-dasharray: 2 2; pointer-events: none; }
+.a-casing { fill: none; stroke: var(--blue-edge); stroke-linecap: round; }
+.a-shaft { fill: none; stroke: #fff; stroke-linecap: round; }
+.a-head { fill: #fff; stroke: var(--blue-edge); stroke-width: 1px; stroke-linejoin: round; paint-order: stroke; }
+.a-share, .a-word {
+  fill: #fff;
+  stroke: var(--blue-edge);
+  stroke-linejoin: round;
+  paint-order: stroke;
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+}
+.a-share { font-weight: 700; stroke-width: 3px; }
+.a-word { font-weight: 600; stroke-width: 3px; }
+.arrow.is-empty .a-shaft, .arrow.is-empty .a-head { opacity: 0.55; }
+.court.has-active .arrow:not(.is-active) { opacity: 0.38; }
+.arrow:focus-visible .a-casing, .arrow:focus-visible .a-head { stroke: var(--ink); }
+.arrow:focus-visible .a-casing { stroke-opacity: 1; }
+.server-dot { fill: var(--ink); stroke: #fff; stroke-width: 2px; }
+
+.court-tip {
+  position: absolute;
+  z-index: 5;
+  padding: 8px 10px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.4;
+  border-radius: 6px;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.court-tip[hidden] { display: none; }
+
+/* ------------------------------------------------------------ findings */
+
+.findings { border-top: 1px solid var(--rule); padding-top: 40px; padding-bottom: 48px; }
+.findings h2 { font-size: 26px; line-height: 1.25; }
+.findings-lede { margin-top: 10px; font-size: 17px; max-width: 40em; }
+.waffle { margin-top: 18px; position: relative; }
+.waffle-group + .waffle-group { margin-top: 12px; }
+.waffle-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.waffle-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.waffle-dot { display: block; width: 11px; height: 11px; border-radius: 50%; background: var(--dot); flex: none; }
+button.waffle-dot { padding: 0; border: 0; margin: 0; cursor: pointer; font: inherit; }
+.waffle-dot.is-hit { background: var(--blue); }
+.waffle-dot.is-hit:hover { background: var(--blue-dk); }
+.waffle-dot.is-current { outline: 2px solid var(--ink); outline-offset: 1px; }
+.findings-note { margin-top: 12px; font-size: 14px; color: var(--muted); }
+
+/* ------------------------------------------------------------ footer */
+
+.site-footer { border-top: 1px solid var(--rule); padding: 22px 0 36px; font-size: 13px; color: var(--muted); }
+.site-footer a { color: var(--muted); }
+.site-footer a:hover { color: var(--ink); }
+.footer-links { margin-top: 6px; display: flex; gap: 18px; }
+
+/* ------------------------------------------------------------ narrow screens: search and switch, quick picks, court, sentences, player */
+
+@media (max-width: 899px) {
+  .tool {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "search switch"
+      "msg    msg"
+      "picks  picks"
+      "court  court"
+      "sent   sent"
+      "player player"
+      "sure   sure";
+    grid-template-rows: none;
+    column-gap: 10px;
+  }
+  .t-switch { margin-top: 0; align-self: end; }
+  .t-court { margin-top: 12px; }
+  .t-sentences { margin-top: 14px; }
+  .t-player { margin-top: 18px; }
+  .t-picks { margin-top: 6px; }
+}
+
+@media (max-width: 600px) {
+  :root { --gutter: 16px; }
+  .topbar-in { height: 44px; }
+  .intro { padding-top: 12px; padding-bottom: 12px; }
+  .intro h1 { font-size: 26px; line-height: 1.12; }
+  .intro-sub { margin-top: 6px; font-size: 16px; }
+  .intro-src { font-size: 13px; line-height: 1.4; }
+  .t-search label { font-size: 13px; margin-bottom: 2px; }
+  .t-search input { height: 42px; font-size: 16px; }
+  .t-switch button { height: 42px; padding: 0 11px; font-size: 14px; }
+  .t-court { margin-top: 12px; }
+  .court-panel figcaption { margin-bottom: 6px; }
+  .cp-title { font-size: 15px; }
+  .cp-sub { font-size: 12px; }
+  .court-note { margin-top: 8px; font-size: 12.5px; }
+  .t-sentences p { font-size: 16px; line-height: 1.5; }
+  .t-player img { width: 72px; height: 72px; }
+  .sure-table { font-size: 12.5px; }
+  .sure-table th, .sure-table td { padding: 4px 5px; }
+  .sure-table small { font-size: 11px; }
+  .t-name { font-size: 19px; }
+  .findings { padding-top: 32px; }
+  .findings h2 { font-size: 22px; }
+  .findings-lede { font-size: 16px; }
+}
+
+/* very narrow phones: the switch goes under the search box, so the box shows a whole name */
+@media (max-width: 379px) {
+  .tool {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "search" "msg" "switch" "picks" "court" "sent" "player" "sure";
+  }
+  .t-switch { margin-top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow { transition: none; }
+}
+
+/* ------------------------------------------------------------ findings waffle (js/findings.js)
+   The dot sizes and colors are in the findings block above. This adds the bigger tap area of the blue dots,
+   their focus ring, the name tip and the landing focus on #tool. No animation. */
+
+button.waffle-dot { position: relative; -webkit-tap-highlight-color: transparent; }
+button.waffle-dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
+button.waffle-dot:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.waffle-tip {
+  position: absolute;
+  z-index: 5;
+  padding: 4px 8px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: nowrap;
+  border-radius: 6px;
+  pointer-events: none;
+}
+.waffle-tip[hidden] { display: none; }
+#tool:focus { outline: none; }

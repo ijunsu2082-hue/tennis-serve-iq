@@ -7,11 +7,6 @@
 
 export const DIRS = ["wide", "body", "T"];
 export const SIDES = ["deuce", "ad"];
-export const SIDE_LABEL = { deuce: "Deuce side", ad: "Ad side" };
-export const TOUR_LABEL = { m: "Men", w: "Women" };
-export const TOUR_PLURAL = { m: "men", w: "women" };
-export const MATCHUP = { RvR: "Righty vs righty", RvL: "Righty vs lefty", LvR: "Lefty vs righty", LvL: "Lefty vs lefty" };
-export const SERVE_LABEL = { 1: "1st", 2: "2nd" };
 // confidence level, even three-way split, "no clear favorite" margin
 export const CI_LEVEL = 0.95;
 export const EVEN_SPLIT = 1 / 3;
@@ -64,18 +59,6 @@ export function fP(p) {
   if (p < 0.0001) return "< 0.0001";
   return p.toPrecision(2);
 }
-export function pEq(name, p) {
-  const s = fP(p);
-  return s.charAt(0) === "<" ? name + " " + s : name + " = " + s;
-}
-// short aliases named in the spec
-export const pct = (x, d) => fPct(x, d);          // share (0..1) to "68%" / "68.4%"
-export const int = (x) => fInt(x);                // 12345 to "12,345"
-export const num = (x, d) => fNum(x, d);          // fixed decimals, "-0.0" cleaned to "0.0"
-export const signed = (x, d) => fSigned(x, d);    // "+1.2" / "-1.2" / "0.0"
-export const pp = (x, d) => fSigned(x, d == null ? 1 : d);                 // value already in percentage points
-export const ppShare = (x, d) => (isNum(x) ? fSigned(100 * x, d == null ? 1 : d) : "n/a"); // share difference to points
-export const q = (p) => fP(p);                    // p or q value: "0.0031" / "< 0.0001"
 
 /* fmt(value, code): the data-f codes used by [data-h] bindings.
    int | pct0 | pct1 | r2 | abs1 | s1 | s2 | signed1 | signed2 ; anything else: String(value). */
@@ -96,48 +79,54 @@ export function fmt(v, f) {
 export function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }
-export function ciText(lo, hi, d) { return fPct(lo, d) + " to " + fPct(hi, d); }
 
 // ------------------------------------------------------------ names
 
 export function norm(s) { return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim(); }
-/* slug(name): lowercase, NFKD strip accents, non-alphanumerics to "-", trim "-".  "Gaël Monfils" to "gael-monfils" */
-export function slug(name) {
-  return String(name).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+/* nameKey(s): the search key. Accents and case are dropped, an apostrophe is removed and any other
+   non-letter becomes a space, so "O'Connell" matches "Oconnell" and "Jo-Wilfried" matches "Jo Wilfried". */
+export function nameKey(s) {
+  return norm(s).replace(/['\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 }
-/* Players whose given name is two words. Every other name is read as one given name plus a surname
-   that may have several words ("Roberto Bautista Agut", "Alejandro Davidovich Fokina"). */
+
+/* The data files spell some names without their capitals, hyphens or apostrophes. displayName() fixes
+   them for display only; every lookup (data keys, photos, data-name) keeps the data file's spelling. */
+const DISPLAY = {
+  "John Mcenroe": "John McEnroe",
+  "Mackenzie Mcdonald": "Mackenzie McDonald",
+  "Caty Mcnally": "Caty McNally",
+  "Mccartney Kessler": "McCartney Kessler",
+  "Christopher Oconnell": "Christopher O'Connell",
+  "Jo Wilfried Tsonga": "Jo-Wilfried Tsonga",
+  "Pierre Hugues Herbert": "Pierre-Hugues Herbert",
+  "Jan Lennard Struff": "Jan-Lennard Struff",
+  "Anna Lena Friedsam": "Anna-Lena Friedsam",
+  "Felix Auger Aliassime": "Felix Auger-Aliassime",
+  "Alison Riske Amritraj": "Alison Riske-Amritraj",
+  "Botic Van De Zandschulp": "Botic van de Zandschulp",
+  "Tim Van Rijthoven": "Tim van Rijthoven",
+  "Alex De Minaur": "Alex de Minaur",
+  "Jesper De Jong": "Jesper de Jong",
+  "Juan Martin Del Potro": "Juan Martin del Potro",
+};
+export function displayName(name) { return DISPLAY[name] || String(name); }
+/* Players whose given name is two words (keyed by display name). Every other name is read as one given
+   name plus a surname that may have several words ("Roberto Bautista Agut", "Alejandro Davidovich Fokina"). */
 const TWO_WORD_GIVEN = new Set([
-  "Anna Karolina Schmiedlova", "Anna Lena Friedsam", "Daniel Elahi Galan", "Elena Gabriela Ruse",
-  "Irina Camelia Begu", "Jan Lennard Struff", "Jo Wilfried Tsonga", "Juan Carlos Ferrero",
-  "Juan Martin Del Potro", "Karim Mohamed Maamoun", "Pierre Hugues Herbert", "Su Wei Hsieh",
+  "Anna Karolina Schmiedlova", "Daniel Elahi Galan", "Elena Gabriela Ruse", "Irina Camelia Begu",
+  "Juan Carlos Ferrero", "Juan Martin del Potro", "Karim Mohamed Maamoun", "Su Wei Hsieh",
   "Tomas Martin Etcheverry", "Xin Yu Wang",
 ]);
-/* nameParts("Juan Martin Del Potro") -> { given: ["Juan", "Martin"], surname: "Del Potro" } */
-export function nameParts(name) {
-  const s = String(name).trim();
-  const parts = s.split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return { given: parts, surname: "" };
-  const g = TWO_WORD_GIVEN.has(s) && parts.length > 2 ? 2 : 1;
-  return { given: parts.slice(0, g), surname: parts.slice(g).join(" ") };
-}
-/* surname("Roberto Bautista Agut") -> "Bautista Agut"; one-word names unchanged */
+/* surname("Rafael Nadal") -> "Nadal", surname("Botic Van De Zandschulp") -> "Van de Zandschulp".
+   Takes a data-file name or a display name, returns the display surname with a capital first letter,
+   because in the sentences it often starts a sentence. One-word names are unchanged. */
 export function surname(name) {
-  const p = nameParts(name);
-  return p.surname || String(name);
-}
-/* "Roger Federer" to "RF", "Roberto Bautista Agut" to "RB", "Juan Martin Del Potro" to "JD" */
-export function initials(name) {
-  const p = nameParts(name);
-  if (!p.given.length) return "?";
-  return (p.given[0].charAt(0) + (p.surname ? p.surname.charAt(0) : "")).toUpperCase();
-}
-/* "Roger Federer" to "R. Federer", "Juan Martin Del Potro" to "J.M. Del Potro"; one-word names unchanged */
-export function shortName(name) {
-  const p = nameParts(name);
-  if (!p.surname) return String(name);
-  return p.given.map((w) => w.charAt(0) + ".").join("") + " " + p.surname;
+  const s = displayName(String(name).trim());
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return s;
+  const g = TWO_WORD_GIVEN.has(s) && parts.length > 2 ? 2 : 1;
+  const sur = parts.slice(g).join(" ");
+  return sur.charAt(0).toUpperCase() + sur.slice(1);
 }
 
 // ------------------------------------------------------------ loading
@@ -173,17 +162,10 @@ function build(raw, imagesRaw) {
   const TESTF = fieldIndex(raw.tests);
   col(raw.mix, "share");
   col(raw.tests, "top_share");
-  const LDIR = objects(raw.league.directions);
-  const WITHIN = objects(raw.league.within);
-  const SERIAL = objects(raw.league.serial);
-  const STAB = objects(raw.league.stability);
-  const images = {
-    players: (imagesRaw && imagesRaw.players) || {},
-    scenes: (imagesRaw && imagesRaw.scenes) || {},
-  };
+  const images = { players: (imagesRaw && imagesRaw.players) || {} };
 
   const D = {
-    raw, H, meta, players, LDIR, WITHIN, SERIAL, STAB, images,
+    raw, H, meta, players, images,
     MIXF, TESTF,
     thresholds: meta.thresholds,
   };
@@ -197,21 +179,33 @@ function build(raw, imagesRaw) {
     for (let i = 0; i < players.length; i++) if (players[i].server === name) return players[i];
     return null;
   };
+  /* exact(text): the player whose name (data-file or display spelling) matches text, or null */
+  D.exact = (text) => {
+    const f = nameKey(text || "");
+    if (!f) return null;
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      if (nameKey(p.server) === f || nameKey(displayName(p.server)) === f) return p;
+    }
+    return null;
+  };
+  /* search(g, text): players whose name contains text, best first: the surname starts with it, then any
+     word of the name starts with it, then anywhere in the name; ties go to the player with more charted
+     serves, so "ser" finds Serena Williams before Sergi Bruguera. */
   D.search = (g, text) => {
-    const f = norm(text || "");
+    const f = nameKey(text || "");
     const list = g ? D.playerList(g) : players;
-    return f ? list.filter((p) => norm(p.server).indexOf(f) >= 0) : list;
+    if (!f) return list;
+    const rank = (p) => {
+      const full = nameKey(displayName(p.server)) + " " + nameKey(p.server);
+      if (full.indexOf(f) < 0) return -1;
+      if (nameKey(surname(p.server)).indexOf(f) === 0) return 0;
+      return (" " + full).indexOf(" " + f) >= 0 ? 1 : 2;
+    };
+    return list.map((p) => [p, rank(p)]).filter((x) => x[1] >= 0)
+      .sort((a, b) => a[1] - b[1] || (b[0].serves || 0) - (a[0].serves || 0)).map((x) => x[0]);
   };
   D.photo = (name) => images.players[name] || null;
-  D.scene = (key) => images.scenes[key] || null;
-  D.featured = (g, limit) => {
-    const list = (g ? D.playerList(g) : players).filter((p) => !!images.players[p.server]);
-    return limit ? list.slice(0, limit) : list;
-  };
-  D.yearRange = () => [
-    Math.min.apply(null, players.map((p) => p.first)),
-    Math.max.apply(null, players.map((p) => p.last)),
-  ];
   // a cell with fewer serves than the per-direction minimum gets a rough interval
   D.fewServes = (c) => !!c && isNum(c.n) && c.n < meta.thresholds.min_dir_n;
 
@@ -232,14 +226,8 @@ function build(raw, imagesRaw) {
     });
     return out;
   };
-  // the deuce side's favorite target, the zone a fresh court selects first
-  D.favoriteZone = (M) => {
-    const t = M.deuce.test;
-    return { side: "deuce", dir: t.top_dir && DIRS.indexOf(t.top_dir) >= 0 ? t.top_dir : "wide" };
-  };
-
-  /* sideInsights(M, side): the v2 "scouting notes" rules as data, for badges.
-     favorite / noClearFavorite always use all points (v2 adds "(all points)" when the view is break points). */
+  /* sideInsights(M, side): the rules behind the tool's sentences, as data (js/tool.js).
+     favorite / noClearFavorite always use all points. */
   D.sideInsights = (M, sideName) => {
     const side = M[sideName];
     const t = side.test;
@@ -270,26 +258,6 @@ function build(raw, imagesRaw) {
     };
   };
 
-  // league tables
-  D.leagueRows = (g, matchup, s) => LDIR.filter((r) => r.gender === g && r.matchup === matchup && r.serve_num === s);
-  D.leagueCell = (rows, side, bp, d) => {
-    for (let i = 0; i < rows.length; i++) if (rows[i].side === side && rows[i].is_break_point === bp && rows[i].direction === d) return rows[i];
-    return null;
-  };
-  D.within = (g, s, question, fe) => {
-    for (let i = 0; i < WITHIN.length; i++) {
-      const r = WITHIN[i];
-      if (r.gender === g && r.serve_num === s && r.question === question && r.fixed_effect === fe) return r;
-    }
-    return null;
-  };
-  D.serial = (g, sn) => {
-    let r = null;
-    SERIAL.forEach((x) => { if (x.gender === g && x.serve_num === sn) r = x; });
-    return r;
-  };
-  D.stability = (g) => STAB.filter((r) => r.gender === g);
-
   /* headline value by dotted key, e.g. "players", "body_win_m1.coef" */
   D.h = (key) => {
     let v = H;
@@ -309,18 +277,15 @@ function build(raw, imagesRaw) {
     tests_mix: () => fInt(meta.tests.mix),
     tests_win: () => fInt(meta.tests.win),
     tests_bp: () => fInt(meta.tests.bp),
-    year_first: () => String(D.yearRange()[0]),
-    year_last: () => String(D.yearRange()[1]),
     per100: () => "100",
     serves_total: () => fInt(meta.serves_total),
     tiebreak_share: () => fPct(meta.tiebreak_share, 0),
     nodir_share: () => fPct(meta.nodir_share, 1),
-    box_dims: () => COURT.BOX_W.toFixed(3) + " m wide by " + COURT.BOX_D.toFixed(2) + " m deep",
   };
   D.b = (key) => (BB[key] ? BB[key]() : "n/a");
 
   /* bind(root): fills every [data-h] (headline key, format in data-f) and [data-b] (derived key) under root.
-     Each [data-h] element also gets data-value (the raw number) so anim.js can count up to it. */
+     Each [data-h] element also gets data-value (the raw number). */
   D.bind = (root) => {
     const r = root || document;
     r.querySelectorAll("[data-h]").forEach((el) => {
@@ -330,8 +295,5 @@ function build(raw, imagesRaw) {
     });
     r.querySelectorAll("[data-b]").forEach((el) => { el.textContent = D.b(el.getAttribute("data-b")); });
   };
-
-  // formatters on the object too, for modules that only hold ctx
-  D.fmt = { fmt, fInt, fPct, fNum, fSigned, fP, pEq, pct, int, num, signed, pp, ppShare, q, esc, ciText, slug, initials, shortName, surname, isNum };
   return D;
 }
