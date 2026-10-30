@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serve IQ</title>
+<meta name="description" content="Where pro tennis players serve (wide, body or T), how predictable each server is, and whether any direction wins more points. Built from the Match Charting Project.">
+<meta name="theme-color" content="#f5f4ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121314" media="(prefers-color-scheme: dark)">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("serveiq-theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) { /* storage blocked: follow the system setting */ }
+  })();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%23111214%22/%3E%3Crect x=%226%22 y=%228%22 width=%2220%22 height=%2216%22 fill=%22none%22 stroke=%22%23f5f4ef%22 stroke-width=%222%22/%3E%3Cpath d=%22M16 8v16%22 stroke=%22%23f5f4ef%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Inter+Tight:wght@600..800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<link rel="stylesheet" href="styles.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="#top" translate="no">Serve <span>IQ</span></a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#findings">Findings</a>
+      <a href="#scout">Scout a server</a>
+      <a href="#league">League</a>
+      <a href="#method">Method</a>
+      <a href="#license">Data</a>
+    </nav>
+    <button type="button" class="theme-btn" id="theme-btn" aria-label="Switch color theme">Dark</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="hero" id="top" aria-labelledby="h1">
+      <p class="kicker"><span class="idx">Analysis</span> Serve direction in pro tennis</p>
+      <h1 id="h1">Where pro tennis players serve, and whether any direction wins more points</h1>
+      <p class="dek">Most pros have a serving habit of their own. Only a few have a court side where win rates differ by direction. Volunteers have charted the direction of serves in thousands of pro matches as wide, body or T. This page compares each server's mix with the league against the same opponents and tests whether any direction wins more points.</p>
+      <ul class="dataline" aria-label="About the data">
+        <li class="needs-data"><span class="big" data-h="serves_analysed" data-f="int"></span><span class="lab">charted serves analyzed, all players; used for the league figures</span></li>
+        <li class="needs-data"><span class="big" data-h="players" data-f="int"></span><span class="lab">listed players: <span data-h="men" data-f="int"></span> men and <span data-h="women" data-f="int"></span> women with enough charted serves</span></li>
+        <li class="needs-data"><span class="big"><span data-b="year_first"></span> to <span data-b="year_last"></span></span><span class="lab">years of the charted matches</span></li>
+        <li><span class="big src"><a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a></span><span class="lab">source, by Jeff Sackmann and contributors</span></li>
+      </ul>
+      <p class="status" id="status" role="status" aria-live="polite">Loading data…</p>
+    </section>
+
+    <!-- ===================================================== findings -->
+    <section id="findings" aria-labelledby="findings-h">
+      <div class="sec-head">
+        <p class="kicker"><span class="idx">01</span> Findings</p>
+        <div>
+          <h2 id="findings-h">Three results from the charts</h2>
+        </div>
+      </div>
+
+      <article class="finding" aria-labelledby="f1-h">
+        <div class="fig">
+          <span class="idx">Habits</span>
+          <span class="value" data-h="mix_differs_share_s1" data-f="pct0"></span>
+          <span class="unit">of 1st-serve player-sides differ from the league</span>
+        </div>
+        <div>
+          <h3 id="f1-h">Most servers have a mix that is their own</h3>
+          <p class="statement"><span data-h="mix_differs_n_s1" data-f="int"></span> of <span data-h="mix_total_s1" data-f="int"></span> player-sides (each player's deuce side and ad side) have a 1st-serve direction mix that differs from the league average for the same opponents. On 2nd serves the share is <span data-h="mix_differs_share_s2" data-f="pct1"></span>.</p>
+          <p class="statement">The habit repeats. A player's favorite-target share in one random half of their matches correlates with the other half at r = <span data-h="fav_r_min" data-f="r2"></span> to <span data-h="fav_r_max" data-f="r2"></span>.</p>
+        </div>
+        <p class="note">Mix test against the league expectation for the same mix of right- and left-handed returners, at a <span data-b="fdr"></span> false discovery rate (Benjamini-Hochberg). Split-half r is one random split, 1st serves, by tour and side.</p>
+      </article>
+
+      <article class="finding" aria-labelledby="f2-h">
+        <div class="fig">
+          <span class="idx">Win rates</span>
+          <span class="value"><span data-h="costly_players_s1" data-f="int"></span><span class="of"> of <span data-h="players" data-f="int"></span></span></span>
+          <span class="unit">players have a side where 1st-serve win rates differ by direction</span>
+        </div>
+        <div>
+          <h3 id="f2-h">Few players win more with one direction</h3>
+          <p class="statement"><span data-h="costly_players_s1" data-f="int"></span> of <span data-h="players" data-f="int"></span> players (<span data-h="costly_sides_s1" data-f="int"></span> player-sides) have a court side where 1st-serve win rates differ by direction. On 2nd serves the count is <span data-h="costly_s2" data-f="int"></span>.</p>
+          <p class="statement">The T-minus-wide win gap does not replicate across halves of a player's matches (r = <span data-h="edge_r_min" data-f="r2"></span> to <span data-h="edge_r_max" data-f="r2"></span>). For most players there is little evidence of a cost.</p>
+        </div>
+        <p class="note">Cochran-Mantel-Haenszel test within matches, directions with at least <span data-b="min_dir_n"></span> serves, false discovery rate <span data-b="fdr"></span> across <span data-b="tests_win"></span> win tests.</p>
+      </article>
+
+      <article class="finding" aria-labelledby="f3-h">
+        <div class="fig">
+          <span class="idx">Body serves</span>
+          <span class="value" data-h="body_win_m1.coef" data-f="abs1"></span>
+          <span class="unit">fewer points won per <span data-b="per100"></span> body serves than wide serves, same server, men</span>
+        </div>
+        <div>
+          <h3 id="f3-h">Body serves go in more often but win fewer points</h3>
+          <p class="statement">Compared with the same server's wide 1st serves, body serves land in <span data-h="body_in_m1.coef" data-f="abs1"></span> percentage points more often but win <span data-h="body_win_m1.coef" data-f="abs1"></span> fewer points per <span data-b="per100"></span> (men). For women: <span data-h="body_in_w1.coef" data-f="abs1"></span> points more often in, <span data-h="body_win_w1.coef" data-f="abs1"></span> fewer won.</p>
+          <p class="statement">On 2nd serves the gap is small: body minus wide is <span data-h="body_win_m2.coef" data-f="s2"></span> points won (men) and <span data-h="body_win_w2.coef" data-f="s2"></span> (women).</p>
+        </div>
+        <p class="note">Within-server comparison with fixed effects for server by side by matchup by break point. Men, points won, body minus wide: <span data-h="body_win_m1.coef" data-f="s2"></span> (<span data-b="ci"></span> CI <span data-h="body_win_m1.lo" data-f="s2"></span> to <span data-h="body_win_m1.hi" data-f="s2"></span>).</p>
+      </article>
+
+      <aside class="callout" aria-labelledby="see-h">
+        <h3 id="see-h">What we can and cannot see</h3>
+        <div class="cols">
+          <div>
+            <p class="label">Recorded in the charts</p>
+            <ul>
+              <li>Where each serve went: wide, body or T.</li>
+              <li>Who won the point, and whether the serve went in.</li>
+              <li>The score, so break points can be picked out.</li>
+            </ul>
+          </div>
+          <div>
+            <p class="label">Not recorded</p>
+            <ul>
+              <li>Where the returner stood or which way they leaned.</li>
+              <li>What the returner expected.</li>
+              <li>The exact spot where the ball landed.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot">
+          <p>The charts only record where the serve went. Favorite-target share is the share of serves to the server's most-used target: if a returner always leaned toward that target, they would be right this often, and a server who split evenly across three targets would give <span data-b="even"></span>. A server is called predictable on a side when the direction mix is lopsided and differs from the league average for the same opponents (mix test, q &lt; <span data-b="q"></span>).</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ===================================================== scout -->
+    <section id="scout" aria-labelledby="scout-h">
+      <div class="sec-head">
+        <p class="kicker"><span class="idx">02</span> Player view</p>
+        <div>
+          <h2 id="scout-h">Scout a server</h2>
+          <p class="intro">Pick a server to see where the serve goes on each side, how that compares with the league against the same mix of right- and left-handed returners, and whether any direction wins more points.</p>
+        </div>
+      </div>
+
+      <form class="controls" id="scout-controls" aria-label="Scout controls" onsubmit="return false">
+        <fieldset class="control">
+          <legend>Tour</legend>
+          <div class="seg">
+            <label><input type="radio" name="s-tour" id="s-tour-m" value="m" checked><span>Men</span></label>
+            <label><input type="radio" name="s-tour" id="s-tour-w" value="w"><span>Women</span></label>
+          </div>
+        </fieldset>
+        <div class="control grow">
+          <label for="s-player">Server, most charted serves first</label>
+          <div class="picker">
+            <input type="search" id="s-find" class="find" placeholder="Type a name to filter the list" aria-label="Filter the server list by name" aria-controls="s-player" aria-describedby="s-find-status" autocomplete="off" spellcheck="false">
+            <select id="s-player" name="s-player" autocomplete="off"></select>
+          </div>
+          <p class="visually-hidden" id="s-find-status" aria-live="polite"></p>
+        </div>
+        <fieldset class="control">
+          <legend>Serve</legend>
+          <div class="seg">
+            <label><input type="radio" name="s-serve" id="s-serve-1" value="1" checked><span>1st</span></label>
+            <label><input type="radio" name="s-serve" id="s-serve-2" value="2"><span>2nd</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="control">
+          <legend>Points</legend>
+          <div class="seg">
+            <label><input type="radio" name="s-sit" id="s-sit-all" value="all" checked><span>All points</span></label>
+            <label><input type="radio" name="s-sit" id="s-sit-bp" value="bp"><span>Break points</span></label>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="player-head">
+        <h3 id="p-name" aria-live="polite"></h3>
+        <ul class="facts" id="p-facts"></ul>
+      </div>
+
+      <div class="scout-grid">
+        <figure class="court-fig" aria-labelledby="court-title">
+          <p class="fig-title" id="court-title">Where the serve goes</p>
+          <p class="fig-sub" id="court-sub"></p>
+          <div id="bp-warn"></div>
+          <div class="key" id="court-key"></div>
+          <div class="chart court" id="court"></div>
+          <figcaption>Schematic, seen from behind the server: the receiver's deuce box is on the left and the ad box on the right, drawn to scale (service box <span data-b="box_dims"></span>) with the backcourt cut short. The charts code each serve as wide, body or T, not where it landed, so each box is split into three equal zones that stand for direction codes, not landing spots. The color key above the court runs from small to large shares. Select a zone for its <span data-b="ci"></span> confidence interval.</figcaption>
+          <details>
+            <summary>Court data as a table</summary>
+            <div class="table-wrap" id="court-table"></div>
+          </details>
+        </figure>
+
+        <div id="detail-home">
+          <div class="detail" id="detail" aria-live="polite"></div>
+          <p class="fig-title">Scouting notes</p>
+          <p class="fig-sub" id="notes-sub">All points, this serve. Tests compare serves within the same match.</p>
+          <div class="notes" id="notes"></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="fig-title" id="win-title">Points won after each direction</p>
+        <p class="fig-sub">All points. Dot: this player, with <span data-b="ci"></span> confidence interval. Open diamond: league, same opponents.</p>
+        <div class="key" id="win-key"></div>
+        <figure aria-labelledby="win-title">
+          <div class="chart" id="win-chart"></div>
+          <figcaption id="win-caption"></figcaption>
+        </figure>
+      </div>
+
+      <div class="block">
+        <p class="fig-title" id="bp-title">Break points and other points</p>
+        <p class="fig-sub">Share of serves to each direction. The change is break points minus other points. Flagged changes are still clear after allowing for the many players tested.</p>
+        <div class="table-wrap" id="bp-table"></div>
+        <details>
+          <summary>Full data for this server</summary>
+          <div class="table-wrap" id="full-table"></div>
+          <p class="caption">On break-point rows the league columns are league, all points values: the league expectation is not split by break point.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================== league -->
+    <section id="league" aria-labelledby="league-h">
+      <div class="sec-head">
+        <p class="kicker"><span class="idx">03</span> League view</p>
+        <div>
+          <h2 id="league-h">League findings</h2>
+          <p class="intro">The same questions for the whole tour, using every charted serve, with standard errors that allow for repeated servers, returners and pairings.</p>
+        </div>
+      </div>
+
+      <form class="controls" id="league-controls" aria-label="League controls" onsubmit="return false">
+        <fieldset class="control">
+          <legend>Tour</legend>
+          <div class="seg">
+            <label><input type="radio" name="l-tour" id="l-tour-m" value="m" checked><span>Men</span></label>
+            <label><input type="radio" name="l-tour" id="l-tour-w" value="w"><span>Women</span></label>
+          </div>
+        </fieldset>
+        <div class="control grow">
+          <label for="l-matchup">Server hand vs returner hand</label>
+          <select id="l-matchup" name="l-matchup" autocomplete="off">
+            <option value="RvR">Righty vs righty</option>
+            <option value="RvL">Righty vs lefty</option>
+            <option value="LvR">Lefty vs righty</option>
+            <option value="LvL">Lefty vs lefty</option>
+          </select>
+        </div>
+        <fieldset class="control">
+          <legend>Serve</legend>
+          <div class="seg">
+            <label><input type="radio" name="l-serve" id="l-serve-1" value="1" checked><span>1st</span></label>
+            <label><input type="radio" name="l-serve" id="l-serve-2" value="2"><span>2nd</span></label>
+          </div>
+        </fieldset>
+        <p class="control-note">The matchup applies to the first two charts. The same-server comparisons in their captions, the split-half check and the serial check pool all matchups, and the split-half check uses 1st serves only.</p>
+      </form>
+
+      <div class="league-grid">
+        <figure class="lfig wide" aria-labelledby="la-h">
+          <span class="idx">A</span>
+          <h3 class="sub" id="la-h">Points won by direction</h3>
+          <p class="fig-sub">Share of points the server won after serving each direction, non-break points only.</p>
+          <div class="chart" id="la-chart"></div>
+          <figcaption id="la-caption"></figcaption>
+        </figure>
+
+        <figure class="lfig wide" aria-labelledby="lb-h">
+          <span class="idx">B</span>
+          <h3 class="sub" id="lb-h">Direction on break points and other points</h3>
+          <p class="fig-sub">Share of serves to each direction.</p>
+          <div class="key" id="lb-key"></div>
+          <div class="chart" id="lb-chart"></div>
+          <figcaption id="lb-caption"></figcaption>
+        </figure>
+
+        <figure class="lfig" aria-labelledby="lc-h">
+          <span class="idx">C</span>
+          <h3 class="sub" id="lc-h">Which numbers repeat across halves</h3>
+          <p class="fig-sub">Each player's matches are split at random into two halves. A stable trait shows up in both halves (r near 1); noise does not (r near 0).</p>
+          <div class="key" id="lc-key"></div>
+          <div class="chart" id="lc-chart"></div>
+          <figcaption id="lc-caption"></figcaption>
+        </figure>
+
+        <figure class="lfig" aria-labelledby="ld-h">
+          <span class="idx">D</span>
+          <h3 class="sub" id="ld-h">Repeating the last direction</h3>
+          <p class="fig-sub">How often a serve repeats the previous direction on the same side, compared with a random order of the same serves.</p>
+          <div class="key" id="ld-key"></div>
+          <div class="chart" id="ld-chart"></div>
+          <figcaption id="ld-caption"></figcaption>
+        </figure>
+      </div>
+
+      <details>
+        <summary>League data for this selection</summary>
+        <div class="table-wrap" id="league-table"></div>
+      </details>
+    </section>
+
+    <!-- ===================================================== method -->
+    <section id="method" aria-labelledby="method-h">
+      <div class="sec-head">
+        <p class="kicker"><span class="idx">04</span> Method</p>
+        <div>
+          <h2 id="method-h">How the numbers are made</h2>
+          <p class="intro">The league figures use <span data-h="serves_analysed" data-f="int"></span> charted serves from all charted players. That is what is left of <span data-b="serves_total"></span> charted serves after tiebreak points (<span data-b="tiebreak_share"></span>), serves with no recorded direction (<span data-b="nodir_share"></span>) and no-ad deciding points are left out. The <span data-h="players" data-f="int"></span> listed players, each with at least <span data-b="min_serves_side"></span> charted 1st serves on each side and at least <span data-b="min_matches"></span> charted matches, account for <span data-h="serves_listed" data-f="int"></span> of them; the player view and the per-player tests use those. Every share and win rate has a <span data-b="ci"></span> confidence interval that allows for serves in the same match being alike. The formulas below are the ones the code runs.</p>
+        </div>
+      </div>
+
+      <div class="hypo">
+        <div class="tex" data-display><code>w_{\text{wide}} = w_{\text{body}} = w_{T}</code></div>
+        <p>The hypothesis being tested. If a server mixed optimally (minimax play, Walker and Wooders 2001), every direction would win the same share of points, so a returner would have nothing to exploit. A 1st serve's "win" counts the whole point, including points where the 1st serve missed.</p>
+      </div>
+
+      <div class="fgroup">
+        <h3>Estimates</h3>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\begin{aligned}&amp;\hat p=\frac{\sum_g y_g}{N},\quad N=\sum_g m_g \\ &amp;\widehat{SE}=\max\Big(\sqrt{\tfrac{G}{G-1}\sum_g\big(\tfrac{y_g-\hat p\,m_g}{N}\big)^2},\ \sqrt{\hat p(1-\hat p)/N}\Big) \\ &amp;\text{CI}=\big[\max(0,\hat p-t_{.975,G-1}\widehat{SE}),\ \min(1,\hat p+t_{.975,G-1}\widehat{SE})\big]\end{aligned}</code></div>
+          <div>
+            <h4 data-n="1">Player share and win rate</h4>
+            <p>A player's matches are pooled, and the standard error treats each match as a cluster but is never smaller than the plain binomial one. For a share, y counts serves to direction d and m counts serves in the situation; for a win rate, y counts points won after serving d and m counts serves to d.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>ratio</code>, <code>summarise</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>f=\max_d \hat s_d,\qquad \text{pct}_i=\frac{\#\{j\neq i: f_j&lt;f_i\}}{n_{\text{group}}-1}</code></div>
+          <div>
+            <h4 data-n="2">Favorite-target share and its percentile</h4>
+            <p>The favorite-target share f is the share of serves to the most-used direction on all points, and the percentile is the share of the other listed players in the same tour by serve by side group whose f is lower.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a>; percentile in <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/export_site.py"><code>load</code> in src/export_site.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\bar s_d=\sum_k\pi_k\,s^{L}_{k,d},\qquad \bar w_d=\sum_k\pi_k\,w^{L}_{k,d}</code></div>
+          <div>
+            <h4 data-n="3">League expectation for the same opponents</h4>
+            <p>League shares and win rates for each handedness matchup k are weighted by the player's own share of serves in that matchup; the league values pool break points and other points and include the player.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\Delta_d=\frac{n^{BP}_d}{N^{BP}}-\frac{n^{\neg BP}_d}{N^{\neg BP}}</code></div>
+          <div>
+            <h4 data-n="4">Break-point shift</h4>
+            <p>The share of serves to direction d on break points minus the share on all other points. For example, Rafael Nadal's deuce-side 1st serves went wide on <span data-h="nadal_deuce_wide_s1.other" data-f="pct1"></span> of other points and <span data-h="nadal_deuce_wide_s1.bp" data-f="pct1"></span> of break points.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\text{gain}=100\,(\hat w_{d^*}-\hat w_{\text{all}}),\qquad d^*=\arg\max_{d:\,n_d\ge30}\hat w_d</code></div>
+          <div>
+            <h4 data-n="5">Upper-bound gain</h4>
+            <p>Points per <span data-b="per100"></span> serves the server would gain by sending every serve to the direction that won most for them. It is shown only when the win test has q &lt; <span data-b="q"></span>, and it is an upper bound: it ignores that returners adapt and it picks the best of several noisy rates.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <h3>Tests and corrections</h3>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\begin{aligned}&amp;u_g=\tfrac1N\begin{pmatrix}n_{g,\text{wide}}-m_g\hat s_{\text{wide}}\\ n_{g,T}-m_g\hat s_T\end{pmatrix},\quad \hat V=\tfrac{G}{G-1}\sum_g u_gu_g^\top,\quad \delta=\begin{pmatrix}\hat s_{\text{wide}}-\bar s_{\text{wide}}\\ \hat s_T-\bar s_T\end{pmatrix} \\ &amp;W=\delta^\top\hat V^{-1}\delta,\qquad p=\Pr\big(F_{2,\,G-1}&gt;W/2\big)\end{aligned}</code></div>
+          <div>
+            <h4 data-n="6">Mix compared with the league</h4>
+            <p>A Wald test of whether the wide and T shares (body is the remainder) differ from the league expectation, with a match-clustered covariance; the league values are treated as fixed and there is no binomial floor.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>summarise</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\begin{aligned}&amp;D_i=\sum_h\Big(y_{hi}-n_{hi}\tfrac{S_h}{T_h}\Big) \\ &amp;V_{ij}=\sum_h\frac{S_h(T_h-S_h)}{T_h-1}\Big(\frac{n_{hi}}{T_h}\delta_{ij}-\frac{n_{hi}n_{hj}}{T_h^2}\Big),\ i,j\le k-1 \\ &amp;Q=D^\top V^{-1}D\ \sim\ \chi^2_{k-1}\end{aligned}</code></div>
+          <div>
+            <h4 data-n="7">Generalized Cochran-Mantel-Haenszel test</h4>
+            <p>The strata h are matches with more than one serve, so differences between matches cancel. In the win test the groups are directions with at least <span data-b="min_dir_n"></span> serves and success is winning the point; in the break-point test the groups are break points and other points and success is serving to d. The p-value is the asymptotic chi-square one.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>cmh</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>q_{(i)}=\min_{j\ge i}\ \min\Big(1,\frac{m\,p_{(j)}}{j}\Big)</code></div>
+          <div>
+            <h4 data-n="8">Benjamini-Hochberg false discovery rate</h4>
+            <p>Each family is pooled across tours, serves and sides: m = <span data-b="tests_mix"></span> mix tests, <span data-b="tests_win"></span> win tests and <span data-b="tests_bp"></span> break-point tests. A flag means q &lt; <span data-b="q"></span>. There are <span data-h="bp_sig_tests" data-f="int"></span> flagged break-point tests on <span data-h="bp_sig_patterns" data-f="int"></span> player by side by serve patterns.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>bh</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <h3>League-wide estimates</h3>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>M_c=\frac{G_c}{G_c-1}\sum_{g\in c}\Big(\sum_{i\in g}u_i\Big)\Big(\sum_{i\in g}u_i\Big)^{\top},\qquad M=M_{\text{srv}}+M_{\text{ret}}-M_{\text{srv}\times\text{ret}}</code></div>
+          <div>
+            <h4 data-n="9">Two-way clustered variance</h4>
+            <p>League standard errors allow for correlation within the same server, the same returner and the same server-returner pair. If the combined matrix is not positive semidefinite, the one-way matrix with the larger trace is used; degrees of freedom are the smaller of the server and returner cluster counts minus one.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>twoway_meat</code> in src/baseline.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>u_i=\frac{y_i-\hat p\,n_i}{N},\qquad \hat p\pm t_{.975,\min(G_s,G_r)-1}\sqrt{M_{11}}\ \text{ clipped to } [0,1]</code></div>
+          <div>
+            <h4 data-n="10">League direction intervals</h4>
+            <p>League shares and win rates use the two-way clustered variance above, with no binomial floor.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>ratio_ci</code> in src/baseline.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>\begin{aligned}&amp;\tilde y_i=y_i-\bar y_{f(i)},\quad \tilde x_i=x_i-\bar x_{f(i)},\quad \hat\beta=(\tilde X^\top\tilde X)^{-1}\tilde X^\top\tilde y \\ &amp;u_i=\tilde x_i\,(\tilde y_i-\tilde x_i^\top\hat\beta),\qquad \hat V=\frac{N-1}{N-K}(\tilde X^\top\tilde X)^{-1}M(\tilde X^\top\tilde X)^{-1}\end{aligned}</code></div>
+          <div>
+            <h4 data-n="11">Within-server comparisons</h4>
+            <p>Each serve is compared only with serves in the same fixed-effect group: server by side by matchup by break point for points won and serve in, and match by server by side for the break-point shift. The regressors are body and T indicators with wide as the baseline, or break-point and game-point indicators with the outcome "served to d"; K counts only these regressors.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>within_server</code> in src/baseline.py</a></p>
+          </div>
+        </div>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>R_h=\#\{t:d_{h,t}=d_{h,t-1}\},\qquad E_h=\frac{\sum_k n_{hk}(n_{hk}-1)}{n_h},\qquad \text{diff}=\frac{\sum_h(R_h-E_h)}{\sum_h(n_h-1)}</code></div>
+          <div>
+            <h4 data-n="12">Serial repeats</h4>
+            <p>Within each match by server by side group (one tour and serve number, in point order, at least two serves), the number of serves that repeat the previous direction is compared with the number expected if the same serves came in random order. Consecutive 2nd serves are not consecutive points.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/baseline.py"><code>serial_test</code> in src/baseline.py</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <h3>Replication</h3>
+
+        <div class="formula">
+          <div class="fx tex" data-display><code>f^{A}_i=\max_d\hat s^{A}_{i,d},\quad e^{A}_i=\hat w^{A}_{i,T}-\hat w^{A}_{i,\text{wide}},\qquad r=\operatorname{corr}_i(f^A_i,f^B_i)</code></div>
+          <div>
+            <h4 data-n="13">Split-half stability</h4>
+            <p>Each player's matches are shuffled once (seed 0) and the first half goes to half A. The favorite-target share f and the T-minus-wide win edge e are computed in each half from plain proportions on 1st serves, and correlated across players within tour and side. This is one split, with no confidence interval and no Spearman-Brown correction.</p>
+            <p class="code">Code: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq/blob/main/src/app_data.py"><code>stability</code> in src/app_data.py</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h3>Limits</h3>
+          <ul class="limits">
+            <li>Volunteers choose which matches to chart. Most are big matches of well-known players, not a random sample.</li>
+            <li>The data are observational. A server may pick a direction because of the returner's position or the score.</li>
+            <li>Returners adapt, so any gain figure is an upper bound.</li>
+            <li>A test that finds no difference does not show that there is none; a small edge may be too small to detect with this much data.</li>
+            <li>Tiebreak points, serves with no recorded direction and no-ad deciding points are left out.</li>
+            <li>Each rebuilt serve row was checked against the project's own serve-direction totals; the README reports the match rate.</li>
+          </ul>
+        </div>
+        <div id="license">
+          <h3>Data and license</h3>
+          <p>Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a> by Jeff Sackmann and contributors, licensed <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>. The derived tables on this site (<a href="data/serveiq.json">data/serveiq.json</a>) carry the same license and are for non-commercial use only.</p>
+          <p>Code: MIT license. Source and analysis: <a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">github.com/ijunsu2082-hue/tennis-serve-iq</a>. A backup version of this tool runs at <a href="https://serve-iq.streamlit.app">serve-iq.streamlit.app</a>.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><a href="https://github.com/ijunsu2082-hue/tennis-serve-iq">Serve IQ on GitHub</a></span>
+    <span>Data: <a href="https://github.com/JeffSackmann/tennis_MatchChartingProject">Match Charting Project</a>, Jeff Sackmann and contributors, CC BY-NC-SA</span>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+</body>
+</html>

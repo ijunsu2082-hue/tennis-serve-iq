@@ -8,7 +8,7 @@ Per player x serve number x side:
     the player's own mix of opponents' handedness (a lefty's wide serve is not a righty's)
   - tests, Benjamini-Hochberg corrected across every player-side-serve:
       * mix differs from the league               (is this player's pattern unusual?)
-      * win rates differ across directions        (minimax: if equal, the mix costs nothing)
+      * win rates differ across directions        (minimax: if equal, no direction wins more)
       * break-point shift per direction           (does the pattern change under pressure?)
 
 CIs are clustered by match (serves within a match are not independent), with t(G-1) critical
@@ -82,7 +82,8 @@ def ratio(y, n):
 def cmh(n, y):
     """Generalized Cochran-Mantel-Haenszel test that a success rate is equal across k groups,
     stratified by match. n, y: (matches, k) arrays of trials and successes. Returns the p-value
-    (chi-square, k-1 df). Exact under the null that labels are exchangeable within a match."""
+    (chi-square, k-1 df). The variance is the exact conditional (hypergeometric) variance given each
+    match's margins; the p-value is the asymptotic chi-square one, not an exact test."""
     k = n.shape[1]
     T = n.sum(1)
     S = y.sum(1)
@@ -165,8 +166,8 @@ def summarise(g, league):
                 league_win=sum(exp_share[d] * exp_win[d] for d in DIRS))
 
     # (c) break-point shift per direction: share on BP minus share otherwise. The test compares
-    # BP and non-BP serves within the same match (a few BP serves per match make a clustered SE
-    # too small; checked by shuffling BP labels within matches).
+    # BP and non-BP serves within the same match (with only a few BP serves per match, a clustered
+    # SE would be unreliable, so the test is stratified by match instead).
     tb, tn = n[:, 1, :].sum(1), n[:, 0, :].sum(1)
     Nb, Nn = tb.sum(), tn.sum()
     for j, d in enumerate(DIRS):
@@ -183,8 +184,8 @@ def summarise(g, league):
 def stability(s, seed=0):
     """Split each player's matches at random into two halves. A trait that is real shows up in
     both halves; noise does not. Correlation across players between halves, 1st serves, per
-    gender x side, for: guess rate (share of the most-used direction) and the win-rate edge of
-    T over wide (a contrast with no best-of-three selection in it)."""
+    gender x side, for: favorite-target share (share of the most-used direction; key "guess")
+    and the win-rate edge of T over wide (a contrast with no best-of-three selection in it)."""
     rng = np.random.default_rng(seed)
     f = s[s.serve_num == 1]
     rows = []
