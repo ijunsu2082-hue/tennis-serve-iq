@@ -1,0 +1,8 @@
+# Static site: no build step. Netlify publishes the site/ folder as is.
+[build]
+  publish = "site"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
