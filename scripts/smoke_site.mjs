@@ -7,7 +7,7 @@
 // Playwright is NOT installed in this repo. The script loads it from, in order:
 //   1. normal module resolution,
 //   2. $PLAYWRIGHT_DIR (a folder with node_modules/playwright),
-//   4. /private/tmp/serveiq-harness  (npm i playwright@1.49.1 there).
+//   3. /private/tmp/serveiq-harness  (npm i playwright@1.49.1 there).
 // Browser: system Google Chrome (channel "chrome") first, else Playwright's bundled Chromium, else
 // $CHROME_PATH, else the Chrome app path on macOS. The script serves <siteDir> itself on 127.0.0.1
 // (port 0 = any free port), so it never needs another server.

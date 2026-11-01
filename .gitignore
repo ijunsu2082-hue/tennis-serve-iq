@@ -16,3 +16,12 @@ match_model/out/*/cache/
 match_model/out/*/report.html
 match_model/out/*/match_auto.json
 match_model/inbox/
+
+# submission material stays on this computer
+docs/SUBMISSION.md
+docs/DEVPOST.md
+docs/screenshot.png
+docs/devpost-gallery/
+docs/devpost-images/
+docs/*.pptx
+docs/*.pdf

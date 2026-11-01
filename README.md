@@ -11,7 +11,6 @@ Shares and win rates come with 95% confidence intervals. For players nobody char
 
 Live site: https://serve-iq.netlify.app (backup: https://serve-iq.streamlit.app)
 
-![Serve IQ site](docs/screenshot.png)
 
 ## Main findings
 
