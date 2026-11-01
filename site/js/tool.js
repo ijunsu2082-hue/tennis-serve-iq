@@ -1,7 +1,7 @@
 /* Serve IQ "Call the serve" (#tool and the picker bar). ES module.
    One player, one side, one serve number at a time. The court (js/court.js) hides that side's serve paths
    and asks the visitor to tap the lane they expect; the tap reveals the paths and a result block, and the
-   scouting card fills in. A situation switch (all points / break points) re-weights the paths.
+   player card fills in. A situation switch (all points / break points) re-weights the paths.
 
    Every number is a share already in serveiq.json (mix cells) or a rule over them. Nothing is sampled,
    so a call always scores the same: the share of serves that went to the lane picked.
@@ -11,7 +11,7 @@
                        returners serves). When the top two are within NO_CLEAR_FAVORITE they are both
                        the typical-pro lane ("splits"), and the baseline is the player's average share
                        over the two.
-     scouting edge     favorite share minus that baseline, shown only when edgeShown() passes: a clear
+     edge              favorite share minus that baseline, shown only when edgeShown() passes: a clear
                        favorite, a mix that differs from the typical pro (q_mix below the threshold) and
                        the favorite's 95% range above the range of every other typical-pro lane; "same
                        lane" when the favorite is the only typical-pro lane. The explorer fills a dot on
@@ -63,7 +63,7 @@ export function edge(cells, fav) {
     others.every((d) => isNum(cells[d].share_hi) && f.share_lo > cells[d].share_hi);
   return { typ, base, same, clear, value: f && isNum(base) ? f.share - base : null };
 }
-/* edgeShown(ins, e): the scouting-edge gate, shared with the explorer so the card and the dots agree */
+/* edgeShown(ins, e): the edge gate, shared with the explorer so the card and the dots agree */
 export function edgeShown(ins, e) {
   return !!ins.favorite && ins.mix.differs && e.clear && e.value > 0;
 }
@@ -136,8 +136,8 @@ function resultHtml(v) {
   if (S.sit === "all" && v.ins[s].noClearFavorite) h += "<p class='line'>No clear favorite on this side: the top two lanes are close.</p>";
   else if (best && best !== S.pick) h += "<p class='line'>Best call: " + lane(best) + ", " + per100(cur[best].share) + " in 100.</p>";
   if (S.sit === "all") {
-    if (e.same) h += "<p class='line'>Same lane as the typical pro: scouting adds nothing on this side.</p>";
-    else if (edgeShown(v.ins[s], e)) h += "<p class='line good'>Scouting edge: " + per100(e.value) + " more in 100 than guessing like the typical pro.</p>";
+    if (e.same) h += "<p class='line'>Same lane as the typical pro: knowing the habit adds nothing on this side.</p>";
+    else if (edgeShown(v.ins[s], e)) h += "<p class='line good'>Edge: " + per100(e.value) + " more in 100 than guessing like the typical pro.</p>";
     else h += "<p class='line'>Too close to call against the typical pro.</p>";
   } else {
     h += "<p class='line" + (v.ins[s].bp.shifts.length ? " chip" : "") + "'>" + bpLine(v, s) + "</p>";
@@ -156,11 +156,11 @@ function cardHtml(v) {
     "<div><h2>" + esc(displayName(p.server)) + "</h2><p class='tnum'>" + fInt(p.matches) + " charted matches, " +
     (S.serve === 1 ? "1st" : "2nd") + " serves</p></div></div>";
   if (S.phase === "call") {
-    return h + "<p class='wait'>Make your call on the court to open the scouting card for the " + S.side + " side.</p>";
+    return h + "<p class='wait'>Make your call on the court to open the player card for the " + S.side + " side.</p>";
   }
   const s = S.side, ins = v.ins[s], all = v.M[s].all;
   const nd = need(all, ins);
-  h += "<div class='scout'><h3>Scouting card, " + s + " side</h3><dl>";
+  h += "<div class='scout'><h3>Player card, " + s + " side</h3><dl>";
   if (ins.favorite) {
     h += "<dt>Leans</dt><dd><b>" + LANE[ins.favorite.dir] + "</b>, " + per100(ins.favorite.share) + " in 100</dd>" +
       (isNum(ins.favorite.lo) ? "<dt>Likely range</dt><dd class='tnum'>" + per100(ins.favorite.lo) + " to " + per100(ins.favorite.hi) + " in 100</dd>" : "");

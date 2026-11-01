@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Serve IQ static-site smoke test (headless browser), v6: "Call the serve" on the court, a scouting card,
+// Serve IQ static-site smoke test (headless browser), v6: "Call the serve" on the court, a player card,
 // and the match model section.
 //
 // Usage:  node scripts/smoke_site.mjs <siteDir> <outDir> [port]
@@ -13,7 +13,7 @@
 // (port 0 = any free port), so it never needs another server.
 //
 // Expected numbers are computed here from data/serveiq.json and data/match.json with the same rules as
-// js/tool.js (typical-pro lane by league_share, a split when the top two are within 0.03, the scouting-edge
+// js/tool.js (typical-pro lane by league_share, a split when the top two are within 0.03, the edge
 // gate on 95% ranges, serves needed = z^2 (p1 + p2 - d^2) / d^2), never read from the page.
 //
 // What it checks (each line of the JSON summary is one check):
@@ -27,7 +27,7 @@
 //       "repeats", "pattern", "insight" or "you were right" in the rendered text; height under the cap
 //   index.html interaction (1440):
 //     - Kyrgios ad, call "Down the middle": the big number, "Your call", "Typical pro's lane" and "Random
-//       guess" equal the data (whole numbers in 100); the scouting-edge line shows the computed edge; the ad
+//       guess" equal the data (whole numbers in 100); the edge line shows the computed edge; the ad
 //       paths draw in (stroke-dashoffset 0); the card opens with the favorite, the range and serves needed
 //     - "Now make it a break point": #seg-sit flips, the big number is the break-point share, and the
 //       break-point line lists exactly the lanes whose change passes its test
@@ -35,9 +35,9 @@
 //     - Nadal by search, deuce side: each lane call shows that lane's share; "Best call" appears only off the
 //       favorite; "Same lane as the typical pro" appears (Nadal's deuce favorite is the typical-pro lane)
 //     - Henin quick pick (ad): the typical-pro split note and the averaged bar
-//     - every quick pick passes the scouting-edge gate (computed here)
+//     - every quick pick passes the edge gate (computed here)
 //     - clicking a lane on the court itself (not a button) makes the call
-//     - Medvedev deuce (no clear favorite): no scouting-edge line; 2nd serve shows the 2nd-serve share
+//     - Medvedev deuce (no clear favorite): no edge line; 2nd serve shows the 2nd-serve share
 //     - a sweep of every player, serve, side and situation: no placeholder or banned text in the result or card
 //     - #explore: one dot per 1st-serve player-side; the filled, ringed and same-lane counts equal the ones
 //       computed here (the same gate as the card); the chart is one tab stop and the arrow keys move along the
@@ -138,7 +138,7 @@ function need(name, side) {
   const n = (Z * Z * (p1 + p2 - d * d)) / (d * d);
   return { serves: n, matches: (n * t.matches) / t.n };
 }
-// the scouting-edge gate of js/tool.js edgeShown(): a clear favorite, q_mix below the threshold, the range rule
+// the edge gate of js/tool.js edgeShown(): a clear favorite, q_mix below the threshold, the range rule
 const gate = (name, side) => { const e = edge(name, side); return favorite(name, side) !== null && test(name, side).q_mix < Q && e.clear && e.value > 0; };
 const bpShifts = (name, side) => { const t = test(name, side); return DIRS.filter((d) => typeof t['bp_' + d + '_q'] === 'number' && t['bp_' + d + '_q'] < Q); };
 
@@ -431,11 +431,11 @@ try {
     check(`${tag}: Kyrgios ad, down the middle: big number and bars equal the data (${JSON.stringify(want)})`,
       st.resultShown && st.big === want.big && st.bars['Your call'] === want.you && st.bars["Typical pro's lane"] === want.typ && st.bars['Random guess'] === 33,
       { got: { big: st.big, bars: st.bars }, want });
-    check(`${tag}: Kyrgios ad: the scouting-edge line shows ${r100(ke.value)} (gate passes: ${ke.clear})`,
-      ke.clear && st.lines.some((l) => l === `Scouting edge: ${r100(ke.value)} more in 100 than guessing like the typical pro.`), st.lines);
+    check(`${tag}: Kyrgios ad: the edge line shows ${r100(ke.value)} (gate passes: ${ke.clear})`,
+      ke.clear && st.lines.some((l) => l === `Edge: ${r100(ke.value)} more in 100 than guessing like the typical pro.`), st.lines);
     check(`${tag}: the ad paths draw in (stroke-dashoffset 0) and the labels show shares`, drawn && st.labels.slice(3).every((x) => /^\d+%$/.test(x)), st.labels);
     check(`${tag}: the card opens with the favorite, the range and serves needed (about ${fInt(kn.serves)})`,
-      /Scouting card, ad side/.test(st.card) && /Leans Down the middle, \d+ in 100/.test(st.card) &&
+      /Player card, ad side/.test(st.card) && /Leans Down the middle, \d+ in 100/.test(st.card) &&
       st.card.includes(`Likely range ${r100(kc.T.share_lo)} to ${r100(kc.T.share_hi)} in 100`) && st.card.includes(`About ${fInt(kn.serves)} charted serves from this side, about ${fInt(kn.matches)} matches`), st.card);
 
     // break points
@@ -478,17 +478,17 @@ try {
 
     // every quick pick passes the gate
     const gates = PICKS.map(([n, s]) => ({ n, s, ...edge(n, s) }));
-    check(`${tag}: every quick pick passes the scouting-edge gate`, PICKS.every(([n, s]) => gate(n, s)), gates.map((g) => [g.n, g.s, g.clear, r100(g.value)]));
+    check(`${tag}: every quick pick passes the edge gate`, PICKS.every(([n, s]) => gate(n, s)), gates.map((g) => [g.n, g.s, g.clear, r100(g.value)]));
 
-    // Medvedev deuce: no clear favorite (top two within 0.03), so no scouting-edge line even though the range rule passes
+    // Medvedev deuce: no clear favorite (top two within 0.03), so no edge line even though the range rule passes
     const MD = 'Daniil Medvedev', mde = edge(MD, 'deuce');
     await findPlayer(page, MD);
     await page.locator('#seg-side button[data-side="deuce"]').click();
     await callLane(page, 'wide');
     st = await state(page);
-    check(`${tag}: Medvedev deuce: no clear favorite, so "Too close to call" and no scouting-edge line (range rule alone: ${mde.clear})`,
+    check(`${tag}: Medvedev deuce: no clear favorite, so "Too close to call" and no edge line (range rule alone: ${mde.clear})`,
       favorite(MD, 'deuce') === null && !gate(MD, 'deuce') && st.lines.some((l) => /^No clear favorite/.test(l)) &&
-      st.lines.some((l) => /^Too close to call/.test(l)) && !st.lines.some((l) => /^Scouting edge/.test(l)), st.lines);
+      st.lines.some((l) => /^Too close to call/.test(l)) && !st.lines.some((l) => /^Edge/.test(l)), st.lines);
 
     // 2nd serve: the big number is the 2nd-serve share (Kyrgios ad, out wide)
     await page.locator('#picks .pick[data-name="Nick Kyrgios"]').click();
@@ -549,7 +549,7 @@ try {
       filled: [...document.querySelectorAll('#scatter circle.dot')].filter((c) => c.getAttribute('fill') === '#0a62d6').length,
       live: document.querySelectorAll('#scatter circle.dot.live[tabindex="0"]').length, cap: document.getElementById('scatter-cap')?.textContent || '' }));
     check(`${tag}: explorer has ${allSides.length} dots, ${wantFilled} filled, ${wantRing} ringed, ${wantSame} same lane (computed here); one tab stop`,
-      ex.dots === allSides.length && ex.filled === wantFilled && ex.live === 1 && ex.cap.includes(`${fInt(wantFilled)} sides with a clear scouting edge`) &&
+      ex.dots === allSides.length && ex.filled === wantFilled && ex.live === 1 && ex.cap.includes(`${fInt(wantFilled)} sides with a clear edge`) &&
       ex.cap.includes(`${fInt(wantRing)} with a clear break-point change`) && ex.cap.includes(`${fInt(wantSame)} of ${fInt(allSides.length)} sides lean`), ex);
     // the arrow keys move the tab stop along the live dots
     await page.locator('#scatter circle.dot.live[tabindex="0"]').focus();

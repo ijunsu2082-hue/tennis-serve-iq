@@ -1,6 +1,6 @@
 # Tennis Match Analytics
 
-Drop in a match video and get back a point-by-point chart, scouting stats and plain-English insights for both players.
+Drop in a match video and get back a point-by-point chart, player stats and plain-English insights for both players.
 
 ## Quick start
 

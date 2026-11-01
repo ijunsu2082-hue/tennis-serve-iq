@@ -1,6 +1,6 @@
 # Serve IQ
 
-**Where will the serve go, and does it change on break points? A serve scouting tool for returners, plus a model that charts serves from match video.**
+**Where will the serve go, and does it change on break points? A tool for returners that shows where pros tend to serve, plus a model that charts serves from match video.**
 
 Serve IQ uses 2.56 million charted professional serves from the Match Charting Project. After the exclusions
 listed under Limits, 2,473,821 serves are analyzed. Pick any of 447 players
@@ -44,18 +44,18 @@ The site is one page with three parts, plus a method page.
   mix of right- and left-handed returners) and a random guess. Nothing is sampled: a call always scores the
   share of serves that went there. "Now make it a break point" switches to break points and the paths
   re-weight.
-- The scouting card, which opens after a call: the favorite lane with its 95% range, how lopsided the habit
+- The player card, which opens after a call: the favorite lane with its 95% range, how lopsided the habit
   is compared with other pros on that side, whether the mix differs from the typical pro, any break-point
   change that passes its test (with a note when there are fewer than 100 break points), and about how many
-  charted serves and matches it takes to spot the lean. The scouting edge (how many more calls in 100 than
+  charted serves and matches it takes to spot the lean. The edge (how many more calls in 100 than
   guessing like the typical pro) is shown only when the side has a clear favorite, its mix differs from the
   typical pro's, and the favorite's range sits above the typical pro's lane.
   When the typical pro's top two lanes are within three points, both count and the comparison uses their
   average.
-- Find the sides worth scouting: one dot per player and side, by scouting edge and by the biggest
+- Find the habits worth knowing: one dot per player and side, by edge and by the biggest
   break-point change. Dots are filled only when the edge passes its gate and ringed only when a break-point
   change passes its test with at least 100 break points; those dots load the side into the court.
-- Scout it from video: the match model's pipeline, its chart of a short demo clip next to a chart made by
+- Chart serves from video: the match model's pipeline, its chart of a short demo clip next to a chart made by
   eye, and how much video a habit needs (see Match model below).
 - Method page: how the serves were counted, every formula (folded, one click to open), how a call is
   scored, how the match model charts serves, the limits and the photo credits.
@@ -64,8 +64,8 @@ The only photos are small player headshots from Wikimedia Commons.
 
 The Streamlit backup app keeps the fuller dashboard, in three tabs:
 
-- Scout a server: a schematic court showing where the serve goes on the deuce and ad side, compared with the
-  league average for the same mix of right- and left-handed returners; a scouting report with the favorite
+- Player view: a schematic court showing where the serve goes on the deuce and ad side, compared with the
+  league average for the same mix of right- and left-handed returners; a report for the returner with the favorite
   target, any break-point habit and whether any direction wins significantly more; points won by direction
   with confidence intervals. The court drawing is a schematic: the data code each serve as wide, body or T,
   not where it landed.
@@ -90,10 +90,10 @@ What has been checked: on its 10-point demo clip (Sinner and Alcaraz), the model
 rebuilds it. The clip is the one the rules were tuned on, so this is not a blind test, and it has no break
 points.
 
-What it means for scouting: one match gives a side about 37 first serves. Across the listed pros, the
+What it means in practice: one match gives a side about 37 first serves. Across the listed pros, the
 median side needs about 375 first serves (middle half 112 to 1,533) before its favorite lane leads by more
 than its 95% range, which is about 10 matches of video (middle half 3 to 40). So the model is the first
-step toward scouting a player nobody charts, not a finished scouting tool.
+step toward charting a player nobody charts, not a finished tool.
 
 Limits of the model: it needs a Mac (the score bug is read with Apple Vision) and a broadcast score bug;
 videos without one run in a beta mode. Its lanes come from a strict thirds rule, while volunteers chart the
@@ -116,7 +116,7 @@ button, click it and wait about a minute.
 
 Static site: serve the `site/` folder with any static server, for example
 `python3 -m http.server --directory site`. Its data files are rebuilt with `python src/export_site.py` and
-`python src/export_match.py`. The main page is the call-the-serve court, the scouting card, the explorer and
+`python src/export_match.py`. The main page is the call-the-serve court, the player card, the explorer and
 the match model section; `method.html` holds the full method, every formula, the limits and the photo
 credits.
 

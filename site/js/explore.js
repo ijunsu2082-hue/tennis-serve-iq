@@ -1,6 +1,6 @@
-/* Serve IQ "Find the sides worth scouting" (#explore). ES module.
+/* Serve IQ "Find the habits worth knowing" (#explore). ES module.
    One dot per 1st-serve player-side (every listed player, both sides):
-     x  the scouting edge: favorite share minus the share in the typical pro's lane (js/tool.js edge()),
+     x  the edge: favorite share minus the share in the typical pro's lane (js/tool.js edge()),
         in points per 100; 0 when the favorite is the typical pro's lane
      y  the largest break-point change of any lane (|bp_<dir>|), in points per 100
    A dot is filled only when the edge passes the card's gate (js/tool.js edgeShown(): a clear favorite, q_mix
@@ -74,7 +74,7 @@ function draw() {
     el("text", { x: PAD.l - 8, y: Y(v) + 4, "text-anchor": "end" }, ax).textContent = String(Math.round(100 * v));
   }
   el("text", { x: (PAD.l + W - PAD.r) / 2, y: H - 6, "text-anchor": "middle", "font-weight": 700, fill: "#0e1726" }, ax).textContent =
-    "Scouting edge: more in 100 than guessing like the typical pro";
+    "Edge: more in 100 than guessing like the typical pro";
   el("text", { x: 14, y: (PAD.t + H - PAD.b) / 2, "text-anchor": "middle", "font-weight": 700, fill: "#0e1726", transform: "rotate(-90 14 " + (PAD.t + H - PAD.b) / 2 + ")" }, ax).textContent =
     "Biggest break-point change, in 100";
   // dots: hollow first, then filled and ringed on top
@@ -121,7 +121,7 @@ function draw() {
   });
   // caption, all counts from the dots shown
   const same = list.filter((d) => d.same).length, filled = list.filter((d) => d.filled).length, ring = list.filter((d) => d.ring).length;
-  $("#scatter-cap").innerHTML = "<span class='k k-fill'></span>" + fInt(filled) + " sides with a clear scouting edge, " +
+  $("#scatter-cap").innerHTML = "<span class='k k-fill'></span>" + fInt(filled) + " sides with a clear edge, " +
     "<span class='k k-ring'></span>" + fInt(ring) + " with a clear break-point change, " +
     "<span class='k k-hollow'></span>the rest neither. " + fInt(same) + " of " + fInt(list.length) + " sides lean where the typical pro does. " +
     "Win rates clearly differ by direction for " + fInt(D.h("costly_players_s1")) + " of " + fInt(D.h("players")) + " players.";

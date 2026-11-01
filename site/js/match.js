@@ -1,8 +1,8 @@
-/* Serve IQ "Scout it from video" (#match). ES module.
+/* Serve IQ "Chart serves from video" (#match). ES module.
    Shows the match model (match_model/ in the repository) as the charting step: a pipeline line, its chart of
    the 10-point development clip next to the chart made by eye, and the sample-size numbers that say how much
    video a habit needs. Data: data/match.json, written by src/export_match.py and checked by check 9 of
-   scripts/check_site.py. Nothing here is a scouting result: the clip is too short and has no break points. */
+   scripts/check_site.py. Nothing here is a result about a player: the clip is too short and has no break points. */
 
 import { esc, fInt, isNum } from "./data.js";
 import { $ } from "./ui.js";

@@ -224,9 +224,9 @@ with c3, st.container(border=True):
                f"yet the server wins {-body_m.coef_pp:.1f} fewer points per 100. Women: "
                f"{-ws('w', 1, 'win body minus win wide').coef_pp:.1f} fewer.")
 
-tab_player, tab_league, tab_how = st.tabs(["Scout a server", "League findings", "How it works"])
+tab_player, tab_league, tab_how = st.tabs(["Player view", "League findings", "How it works"])
 
-# ---------------------------------------------------------------- player scout
+# ---------------------------------------------------------------- player view
 
 with tab_player:
     f1, f2, f3, f4 = st.columns([1, 2.4, 1, 1.2])
@@ -265,7 +265,7 @@ with tab_player:
                    "code each serve as wide, body or T, not where it landed.")
 
     with right:
-        st.markdown("**Scouting report for the returner**")
+        st.markdown("**Report for the returner**")
         st.caption("Favorite-target share is the share of serves to the server's most-used target. If a "
                    "returner always leaned toward that target, they would be right this often; a server "
                    "who split evenly across three targets would give one in three. The charts only record where "
@@ -433,7 +433,7 @@ with tab_league:
     st.caption(f"Same server, same match, same side (all matchups): on break points the wide share moves "
                f"{bw.coef_pp:+.1f} pts (CI {bw.lo_pp:+.1f} to {bw.hi_pp:+.1f}) and body {bb.coef_pp:+.1f} pts "
                f"(CI {bb.lo_pp:+.1f} to {bb.hi_pp:+.1f}). Most player-sides show no significant break-point "
-               f"shift; the flagged ones are marked in the scout tab.")
+               f"shift; the flagged ones are marked in the player tab.")
 
     st.markdown("##### 3. Favorite-target share repeats across halves; the T-minus-wide win gap does not")
     sb = stab[stab.gender == lg].copy()
