@@ -25,3 +25,7 @@ docs/devpost-gallery/
 docs/devpost-images/
 docs/*.pptx
 docs/*.pdf
+
+# API keys stay on this computer
+.env
+match_model/.overnight/
