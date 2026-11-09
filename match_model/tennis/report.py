@@ -4,10 +4,10 @@ match.json shape (the single file analytics, report and the review UI share)
 -----------------------------------------------------------------------------
 {
   "meta": {
-    "video": str,                 # path to the video, as given to the CLI (relative to the
-                                  # project root/cwd) or absolute
+    "video": str,                 # the video's path inside the project, else its file name
+                                  # (the full path is in <out>/cache/video_path.txt)
     "video_info": {"path","width","height","fps","duration"} | null,   # asdict(VideoInfo)
-    "players": {"A": {"name": str, "hand": "R"|"L"}, "B": {...}},
+    "players": {"A": {"name": str, "hand": "R"|"L", "hand_given": bool}, "B": {...}},
     "format": asdict(MatchFormat),  # best_of, no_ad, games_per_set, tb_at, tb_points, final_set
     "pipeline_version": str,
     "generated_at": ISO-8601 str,
@@ -18,9 +18,9 @@ match.json shape (the single file analytics, report and the review UI share)
   "segments": [asdict(Segment), ...],
   "points": [asdict(PointRecord), ...],        # ordered by time; id unique (int)
   "stats": compute_stats(...) output,           # recomputed by render()
-  "insights": [ {text, player, n, k, effect, comparison_pct, pct, ci, confidence,
-                 mean_conf, small_sample, low_confidence, kind, key,
-                 evidence_point_ids, score}, ... ],
+  "insights": [ {text, player, n, k, effect, comparison_pct, comparison_n, pct, ci,
+                 confidence, chance_p, mean_conf, small_sample, low_confidence, kind,
+                 key, evidence_point_ids, score, checked}, ... ],
   "recommendations": [ {for, against, text, basis, n, confidence}, ... ]
 }
 PointRecord.score_before carries {"sets","games","points","in_tb"} plus an
@@ -38,6 +38,7 @@ import html
 import json
 import math
 import os
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -45,6 +46,10 @@ from .contracts import other
 
 PLAYERS = ("A", "B")
 LOW_CONF = 0.6
+ACTION_MAX_P = 0.2              # the player cards leave out gaps chance gives 1 time in 5 or more
+CARD_ITEMS = 3                  # most strengths, and most weaknesses, on a player card
+PLAN_ITEMS = 4                  # most lines in a game plan
+SMALL_MAP = 10                  # serves on one side before its top lane may be shaded as the main one
 SERVE_DIGIT = {"wide": "4", "body": "5", "T": "6"}
 FAULT_LETTER = {"net": "n", "wide": "w", "long": "d", "long_wide": "x"}
 RESULT_ERR = {"net": "n", "out_wide": "w", "out_long": "d", "out_long_wide": "x"}
@@ -274,9 +279,63 @@ def svg_serve_court(zones: dict, bounces: list, label: str) -> str:
             out.append(f'<circle class="bin" cx="{px:.1f}" cy="{py:.1f}" r="2.2"/>')
     for side, sg in (("deuce", -1.0), ("ad", 1.0)):
         n = (zones.get(side) or {}).get("n", 0)
-        out.append(f'<text class="side" x="{X(sg * BOX_W / 2):.1f}" y="{Y(0) + 15:.1f}">{side} · {n} in</text>')
+        out.append(f'<text class="side" x="{X(sg * BOX_W / 2):.1f}" y="{Y(0) + 15:.1f}">{side} · {n} known</text>')
     out.append("</svg>")
     return "".join(out)
+
+
+def svg_serve_map(zones: dict, label: str) -> str:
+    """The coach's serve picture: both service boxes as the server sees them, deuce box
+    on the left, net at the bottom. Each lane shows its share in big type; the side's
+    most used lane is shaded most. A side with fewer than SMALL_MAP known serves never
+    gets that shading, so a handful of serves cannot look like a habit."""
+    LANE, TOP, BOX_H, GAP = 64.0, 2.0, 158.0, 8.0
+    W = 6 * LANE + GAP + 4
+    H = TOP + BOX_H + 26
+    out = [f'<svg class="sm" viewBox="0 0 {W:.0f} {H:.0f}" role="img" aria-label="{_esc(label)}">']
+    for s_i, (side, order) in enumerate((("deuce", ("wide", "body", "T")), ("ad", ("T", "body", "wide")))):
+        x0 = 2.0 + s_i * (3 * LANE + GAP)
+        zd = zones.get(side) or {}
+        n = zd.get("n", 0)
+        counts = {z: (zd.get(z) or {}).get("count") or 0 for z in order}
+        top = max(counts.values()) if n else 0
+        hot = {z for z, c in counts.items() if c == top and top} if n >= SMALL_MAP else set()
+        out.append(f'<rect class="base" x="{x0:.1f}" y="{TOP}" width="{3 * LANE:.1f}" height="{BOX_H}"/>')
+        for i, z in enumerate(order):
+            d = zd.get(z) or {}
+            share = (d.get("share") or {}).get("pct") or 0
+            x, cx = x0 + i * LANE, x0 + (i + 0.5) * LANE
+            is_hot = z in hot
+            op = 0.42 if is_hot else (0.04 + 0.3 * share / 100 if n else 0)
+            out.append(f'<g class="{"hot" if is_hot else ""}">')
+            out.append(f'<rect class="lane" x="{x:.1f}" y="{TOP}" width="{LANE:.1f}" height="{BOX_H}" '
+                       f'style="fill-opacity:{op:.2f}"/>')
+            out.append(f'<text class="z" x="{cx:.1f}" y="{TOP + 19}">{"Body" if z == "body" else z.capitalize() if z == "wide" else "T"}</text>')
+            if n:
+                out.append(f'<text class="p" x="{cx:.1f}" y="{TOP + 84}">{share:.0f}%</text>')
+                out.append(f'<text class="c" x="{cx:.1f}" y="{TOP + 104}">{counts[z]} of {n}</text>')
+                won = d.get("won") or {}
+                if won.get("n"):
+                    out.append(f'<text class="wn" x="{cx:.1f}" y="{TOP + 142}">won {won["k"]}/{won["n"]}'
+                               f'<title>server won {won["k"]} of {won["n"]}</title></text>')
+            out.append("</g>")
+        for i in (1, 2):
+            x = x0 + i * LANE
+            out.append(f'<line class="sep" x1="{x:.1f}" x2="{x:.1f}" y1="{TOP}" y2="{TOP + BOX_H}"/>')
+        out.append(f'<rect class="box" x="{x0:.1f}" y="{TOP}" width="{3 * LANE:.1f}" height="{BOX_H}"/>')
+        out.append(f'<line class="net" x1="{x0:.1f}" x2="{x0 + 3 * LANE:.1f}" y1="{TOP + BOX_H}" y2="{TOP + BOX_H}"/>')
+        few = "" if n >= SMALL_MAP else ", too few"
+        out.append(f'<text class="side{" few" if few else ""}" x="{x0 + 1.5 * LANE:.1f}" y="{H - 5:.1f}">'
+                   f'{side.capitalize()} side, {n} serves{few}</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def serve_maps(stats: dict, names: dict) -> dict:
+    """{player: {"1": svg, "2": svg}} of svg_serve_map."""
+    return {P: {sn: svg_serve_map(stats["players"][P]["serve_zones"][sn],
+                                  f"{names[P]}, {'1st' if sn == '1' else '2nd'} serve: where serves landed")
+                for sn in ("1", "2")} for P in PLAYERS}
 
 
 def _serve_geometry(p: dict, s: dict):
@@ -296,7 +355,11 @@ FAULT_TXT = {"net": "net", "long": "long", "wide": "wide", "long_wide": "long an
 
 
 def serve_courts(match: dict, stats: dict) -> dict:
-    """{player: {"1": {"svg", "faults"}, "2": {...}}}; faults is a short text."""
+    """{player: {"1": {"svg", "faults", "caption", ...}, "2": {...}}}. faults is the short
+    text of the fault kinds; caption gives every serve that went in per side (the court
+    only draws those with a known spot), every fault, and how many faults have a kind
+    and whether those kinds were checked in a review."""
+    from .analytics import field_checked
     out = {}
     pts = match.get("points") or []
     for P in PLAYERS:
@@ -305,14 +368,22 @@ def serve_courts(match: dict, stats: dict) -> dict:
         for sn in ("1", "2"):
             bounces = []
             fcounts = {k: 0 for k in FAULT_TXT}
+            n_fault = n_typed = n_typed_checked = 0
+            went_in = {"deuce": 0, "ad": 0}
             for p in pts:
                 if p.get("server") != P:
                     continue
                 for s in p.get("serves") or []:
                     if str(s.get("n")) != sn:
                         continue
+                    if s.get("result") == "in" and p.get("side") in went_in:
+                        went_in[p["side"]] += 1
+                    if s.get("result") == "fault":
+                        n_fault += 1
                     if s.get("result") == "fault" and s.get("fault") in fcounts:
                         fcounts[s["fault"]] += 1
+                        n_typed += 1
+                        n_typed_checked += field_checked(p, f"serve{sn}_fault")
                     g = _serve_geometry(p, s)
                     if g and s.get("result") == "fault" and 0 <= g[0] <= BOX_W and 0 <= g[1] <= BOX_D:
                         g = None       # called a fault by other evidence: the tracked bounce is wrong
@@ -321,8 +392,40 @@ def serve_courts(match: dict, stats: dict) -> dict:
                         bounces.append((x, g[1], s["result"]))
             label = f"{_name(match, P)}, {'1st' if sn == '1' else '2nd'} serve placement"
             faults = ", ".join(f"{FAULT_TXT[k]} {v}" for k, v in fcounts.items() if v)
-            out[P][sn] = {"svg": svg_serve_court(ps["serve_zones"][sn], bounces, label), "faults": faults}
+            zones = ps["serve_zones"][sn]
+            known = {sd: (zones.get(sd) or {}).get("n", 0) for sd in ("deuce", "ad")}
+            cap = (f"Went in: deuce side {went_in['deuce']} ({known['deuce']} with a known spot), "
+                   f"ad side {went_in['ad']} ({known['ad']} with a known spot). ")
+            if not n_fault:
+                cap += "No faults found."
+            elif not n_typed:
+                cap += f"Faults: {n_fault}; the kind of miss was not found for any of them."
+            else:
+                if n_typed_checked == n_typed:
+                    src = "checked in a review"
+                elif n_typed_checked:
+                    src = f"{n_typed_checked} of them checked in a review"
+                else:
+                    src = "found by the computer alone, not checked"
+                cap += (f"Faults: {n_fault}; the kind of miss is known for {n_typed} "
+                        f"({faults}), {src}.")
+            out[P][sn] = {"svg": svg_serve_court(zones, bounces, label), "faults": faults,
+                          "caption": cap, "n_fault": n_fault, "n_fault_typed": n_typed,
+                          "went_in": went_in}
     return out
+
+
+def chance_words(p) -> str:
+    """A chance test result in words: "about 1 time in 12", "less than 1 time in 1,000"."""
+    try:
+        p = float(p)
+    except (TypeError, ValueError):
+        return "unknown"
+    if p < 0.001:
+        return "less than 1 time in 1,000"
+    if p <= 0.5:
+        return f"about 1 time in {round(1.0 / p):,}"
+    return "more than 1 time in 2"
 
 
 def svg_momentum(match: dict) -> str:
@@ -337,8 +440,7 @@ def svg_momentum(match: dict) -> str:
         elif p.get("winner") == "B":
             d -= 1
         diff.append(d)
-    span = max(3, max(diff), -min(diff))
-    lo, hi = -span, span
+    lo, hi = min(-3, min(diff)), max(3, max(diff))
     n = len(pts)
 
     def X(i):
@@ -361,11 +463,16 @@ def svg_momentum(match: dict) -> str:
                 out.append(f'<line class="setline" x1="{x:.1f}" x2="{x:.1f}" y1="{PADT}" y2="{H - PADB}"/>')
             out.append(f'<text class="lab" x="{x + 4:.1f}" y="{PADT + 10}">set {sn}</text>')
             prev_set = sn
-        if p.get("gap_before"):
+        if p.get("gap_before") and not _filled(p):
             x = X(i)
             out.append(f'<line class="gapline" x1="{x:.1f}" x2="{x:.1f}" y1="{PADT}" y2="{H - PADB}">'
-                       f'<title>points skipped before #{p.get("id")}</title></line>')
+                       f'<title>points may be missing before #{p.get("id")}</title></line>')
     path = " ".join(f"{'M' if i == 0 else 'L'}{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(diff))
+    area = f"{path} L{X(n):.1f},{Y(0):.1f} L{X(0):.1f},{Y(0):.1f} Z"
+    out.append(f'<clipPath id="mA"><rect x="0" y="0" width="{W}" height="{Y(0):.1f}"/></clipPath>'
+               f'<clipPath id="mB"><rect x="0" y="{Y(0):.1f}" width="{W}" height="{H - Y(0):.1f}"/></clipPath>')
+    out.append(f'<path class="marea pa" clip-path="url(#mA)" d="{area}"/>'
+               f'<path class="marea pb" clip-path="url(#mB)" d="{area}"/>')
     out.append(f'<path class="mline" d="{path}"/>')
     for i, p in enumerate(pts):
         fl = p.get("flags") or {}
@@ -406,15 +513,245 @@ def rally_rows(stats: dict) -> list:
 
 
 # ---------------------------------------------------------------------------
+# the coach's page: short actions and compact pictures
+# ---------------------------------------------------------------------------
+_ZW = {"wide": "wide", "body": "to the body", "T": "down the T"}
+_ZL = {"wide": "Wide", "body": "Body", "T": "T"}
+_TXT_ZONE = {"wide": "wide", "into the body": "body", "down the T": "T"}
+_PREF_RE = re.compile(r"serves (wide|into the body|down the T) on the \w+ side \((\d+) of (\d+)\); the next most "
+                      r"common spot was (wide|into the body|down the T), (\d+) of (\d+)")
+_LEVEL = {"high": (3, "Strong"), "medium": (2, "Likely"), "low": (1, "Early sign")}
+_WING_KEYS = ("ret_wing_", "winner_wing", "unforced_error_wing")
+
+
+def _bar(label: str, pct: float, k=None, n=None) -> dict:
+    return {"label": label, "pct": pct, "txt": f"{pct:.0f}%", "of": f"{k} of {n}" if n else ""}
+
+
+def _cmp_bar(label: str, i: dict) -> dict:
+    """The comparison group of a note (its count comes from its percent and size)."""
+    cp, cn = i.get("comparison_pct") or 0.0, i.get("comparison_n")
+    return _bar(label, cp, round(cp * cn / 100.0), cn) if cn else _bar(label, cp)
+
+
+def coach_note(i: dict, names: dict, players: Optional[dict] = None) -> Optional[dict]:
+    """One note in the coach's short form: {"player", "kind" (strength, weakness or tendency),
+    "label", "cap", "bars", "plan", "stat", "dots", "level", "notes"}. "plan" is the short order
+    for whoever plays against this player. None when the note has no short form."""
+    key, X, eff = i.get("key") or "", i.get("player"), i.get("effect") or 0
+    if X not in PLAYERS:
+        return None
+    nx, no = names[X], names[other(X)]
+    k, n, pct = i.get("k"), i.get("n"), i.get("pct") or 0.0
+    label, plan, cap, bars = None, None, None, None
+    kind = i.get("kind") or "tendency"
+    if key.startswith("ret_wing_") and eff > 0:
+        w, ow = ("backhand", "forehand") if key.endswith("bh") else ("forehand", "backhand")
+        label, plan, cap = f"{w.capitalize()} return", f"Serve to {nx}'s {w}", "Returns missed"
+        bars = [_bar(w.capitalize(), pct, k, n), _cmp_bar(ow.capitalize(), i)]
+    elif key.startswith("zone_pref_"):
+        _, _, sn, side = key.split("_")
+        m = _PREF_RE.search(i.get("text") or "")
+        if not m:
+            return None
+        z, z2 = _TXT_ZONE[m.group(1)], _TXT_ZONE[m.group(4)]
+        k2, n2 = int(m.group(5)), int(m.group(6))
+        plan = f"Expect {'1st' if sn == '1' else '2nd'} serves {_ZW[z]} on the {side} side"
+        cap, bars = "Where they landed", [_bar(_ZL[z], pct, k, n), _bar(_ZL[z2], 100.0 * k2 / n2, k2, n2)]
+    elif key.startswith("zone_eff_"):
+        _, _, sn, side, z = key.split("_")
+        word = "1st" if sn == "1" else "2nd"
+        label = f"{word} serve {_ZW[z]}, {side} side"
+        what = f"{word} serves {_ZW[z]} on the {side} side"
+        plan = f"Watch for {what}" if eff > 0 else f"Attack {what}"
+        cap, bars = "Points won", [_bar(_ZL[z], pct, k, n), _cmp_bar("Elsewhere", i)]
+    elif key == "pressure_first_in":
+        label, cap = "First serve on big points", "First serves in"
+        plan = f"Expect {nx}'s first serve on big points" if eff > 0 else f"Make {nx} play the big points"
+        bars = [_bar("Big points", pct, k, n), _cmp_bar("Other points", i)]
+    elif key == "pressure_won" and eff > 0:
+        label, plan, cap = "Big points", f"Expect {nx} to lift on big points", "Points won"
+        bars = [_bar("Big points", pct, k, n), _cmp_bar("Other points", i)]
+    elif key == "second_serve_won" and eff > 0:
+        label, plan, cap = "2nd serve points", f"Expect a strong 2nd serve from {nx}", "2nd serve points won"
+        bars = [_bar(nx, pct, k, n), _cmp_bar(no, i)]
+    elif key == "rally_long" and eff > 0:
+        label, plan, cap = "Long rallies", "Keep the points short", "Points won"
+        bars = [_bar("9+ shots", pct, k, n), _cmp_bar("1 to 4 shots", i)]
+    elif key in ("unforced_error_wing", "winner_wing"):
+        w, ow = ("backhand", "forehand") if "backhand" in (i.get("text") or "") else ("forehand", "backhand")
+        if key == "winner_wing":
+            label, plan, cap = f"{w.capitalize()} winners", f"Keep the ball off {nx}'s {w}", "Winners"
+        else:
+            label, plan, cap = f"{w.capitalize()} errors", f"Rally to {nx}'s {w}", "Unforced errors"
+        bars = [_bar(w.capitalize(), pct, k, n), _bar(ow.capitalize(), 100.0 - pct, n - k, n)]
+    elif key == "net":
+        label, cap = "Net play", "Points won"
+        plan = f"Keep {nx} away from the net" if eff > 0 else f"Draw {nx} to the net"
+        bars = [_bar("At the net", pct, k, n), _cmp_bar("Staying back", i)]
+    if plan is None:
+        return None
+    dots, level = _LEVEL.get(i.get("confidence"), _LEVEL["low"])
+    notes = []
+    if i.get("small_sample"):
+        notes.append("small sample")
+    if (i.get("checked") or {}).get("status") == "none":
+        notes.append("computer only, not checked")
+    if key.startswith(_WING_KEYS) and not ((players or {}).get(X) or {}).get("hand_given"):
+        hand = ((players or {}).get(X) or {}).get("hand") or "R"
+        notes.append(f"assumes {'left' if hand == 'L' else 'right'}-handed")
+    stat = cap + ": " + ", ".join(f"{b['label'].lower() if b['label'] not in names.values() and b['label'] != 'T' else b['label']} "
+                                  f"{b['txt']}" + (f" ({b['of']})" if b["of"] else "") for b in bars)
+    return {"player": X, "kind": kind, "label": label, "plan": plan, "stat": stat, "cap": cap, "bars": bars,
+            "dots": dots, "level": level, "notes": notes, "key": key}
+
+
+def player_cards(insights: list, names: dict, players: Optional[dict] = None) -> dict:
+    """{player: {"strengths", "weaknesses", "plan"}}, up to CARD_ITEMS in each, keeping the
+    order of the notes. A note whose gap chance gives at least ACTION_MAX_P of the time is
+    left out: an order built on a gap that is likely luck would mislead a coach. It stays
+    in "Every note"."""
+    out = {P: {"strengths": [], "weaknesses": [], "plan": []} for P in PLAYERS}
+    for i in insights or []:
+        p = i.get("chance_p")
+        if p is None or p >= ACTION_MAX_P:
+            continue
+        c = coach_note(i, names, players)
+        if not c:
+            continue
+        card = out[c["player"]]
+        group = {"strength": "strengths", "weakness": "weaknesses"}.get(c["kind"])
+        if group and len(card[group]) < CARD_ITEMS:
+            card[group].append(c)
+        card["plan"].append(c)
+    # a weakness is the first thing to go after, so it leads the game plan
+    rank = {"weakness": 0, "strength": 1}
+    for card in out.values():
+        card["plan"] = sorted(card["plan"], key=lambda c: rank.get(c["kind"], 2))[:PLAN_ITEMS]
+    return out
+
+
+def h2h_rows(stats: dict) -> list:
+    """Head to head rows: facing bars, a few numbers a coach reads first."""
+    A, B = stats["players"]["A"], stats["players"]["B"]
+    rows = []
+
+    def pct(label, f, better="high"):
+        a, b = f(A), f(B)
+        pa, pb = a.get("pct"), b.get("pct")
+        lead = ""
+        if pa is not None and pb is not None and pa != pb:
+            lead = "A" if (pa > pb) == (better == "high") else "B"
+        rows.append({"label": label, "a": "-" if pa is None else f"{pa:.0f}%", "b": "-" if pb is None else f"{pb:.0f}%",
+                     "a_of": f"{a['k']} of {a['n']}" if a.get("n") else "",
+                     "b_of": f"{b['k']} of {b['n']}" if b.get("n") else "",
+                     "a_w": pa or 0, "b_w": pb or 0, "lead": lead})
+
+    def count(label, f, better="high"):
+        a, b = f(A), f(B)
+        top = max(a, b, 1)
+        lead = "" if a == b else ("A" if (a > b) == (better == "high") else "B")
+        rows.append({"label": label, "a": str(a), "b": str(b), "a_of": "", "b_of": "",
+                     "a_w": 100.0 * a / top, "b_w": 100.0 * b / top, "lead": lead})
+
+    pct("Points won", lambda s: s["points_won"])
+    pct("1st serve in", lambda s: s["first_serve_in"])
+    pct("1st serve won", lambda s: s["first_serve_won"])
+    pct("2nd serve won", lambda s: s["second_serve_won"])
+    pct("Return in play", lambda s: s["return_in"])
+    pct("Break points won", lambda s: s["break_points"]["converted"])
+    count("Aces", lambda s: s["aces"].get("k") or 0)
+    count("Double faults", lambda s: s["double_faults"].get("k") or 0, better="low")
+    count("Winners", lambda s: s["endings"]["winner"]["total"])
+    count("Unforced errors", lambda s: s["endings"]["unforced_error"]["total"], better="low")
+    return rows
+
+
+BIG_POINT_ROWS = (("all", "All points"), ("game_point", "Game point"), ("break_point", "Break point"))
+
+
+def big_point_rows(serve_patterns: dict) -> dict:
+    """{player: {"rows", "computer_only"}}: where serves landed in a few score situations.
+    Uses one source only (checked values, or computer values when no serve was checked),
+    so the two are never added together."""
+    out = {}
+    small = (serve_patterns or {}).get("small", 10)
+    for P in PLAYERS:
+        srcs = (((serve_patterns or {}).get("players") or {}).get(P) or {}).get("sources") or {}
+
+        def summed(src, sit):
+            g = {"T": 0, "body": 0, "wide": 0}
+            for slot in ("1", "2"):
+                d = ((srcs.get(src) or {}).get("groups", {}).get(sit, {}).get(slot) or {}).get("both") or {}
+                for z in g:
+                    g[z] += d.get(z) or 0
+            return g
+
+        src = max(("checked", "auto"), key=lambda s: sum(summed(s, "all").values()))
+        rows = []
+        for sit, label in BIG_POINT_ROWS:
+            g = summed(src, sit)
+            seen = sum(g.values())
+            rows.append({"label": label, "seen": seen, "too_small": seen < small,
+                         "pct": {z: (100.0 * c / seen if seen else 0.0) for z, c in g.items()}})
+        out[P] = {"rows": rows, "computer_only": src == "auto"}
+    return out
+
+
+# ---------------------------------------------------------------------------
 # tables
 # ---------------------------------------------------------------------------
+def _filled(p: dict) -> bool:
+    from .analytics import score_filled
+    return score_filled(p)
+
+
+# which point fields each row of the statistics table is built from (for its
+# "checked in a review" column)
+STAT_FIELDS = {
+    "Points won": ("winner",), "Service points won": ("winner",), "Return points won": ("winner",),
+    "1st serve in": ("serves",), "1st serve points won": ("serves", "winner"),
+    "2nd serve points won": ("serves", "winner"), "Aces (per point served)": ("ending",),
+    "Double faults (per point served)": ("serves",), "Return in play": ("rally_len", "ending"),
+    "Break points saved": ("winner",), "Break points converted": ("winner",),
+    "Pressure points won": ("winner",), "Net points won": ("net_approaches", "winner"),
+    "Winners": ("ending",), "Unforced errors": ("ending",), "Forced errors": ("ending",),
+    "Distance run per point": ("player_dist_m",),
+}
+
+WINNER_SOURCE_TXT = {"ocr": "read from the score board", "engine": "worked out from the score (the board skipped the point)",
+                     "manual": "set in a review", "vision": "guessed from the video", "unknown": "not known"}
+
+
+# rows that count one kind of ending: their "checked" column looks only at the points
+# with that ending, because an ending checked on a double fault says nothing about
+# whether any ace or winner was checked
+ENDING_ROWS = {"Aces (per point served)": ("ace", "aces"), "Winners": ("winner", "winners"),
+               "Unforced errors": ("unforced_error", "unforced errors"),
+               "Forced errors": ("forced_error", "forced errors")}
+
+
+def _checked_txt(points: list, fields: tuple, noun: str = "points") -> str:
+    from .analytics import checked_status
+    if not fields:
+        return ""
+    c = checked_status(points, fields)
+    if c["status"] == "all":
+        return f"yes, all {noun}"
+    if c["status"] == "none":
+        return "no, computer only"
+    return f"partly, {c['k']} of {c['n']} {noun}"
+
+
 def _r(d: dict) -> str:
     if not d or d.get("pct") is None:
-        return "–"
+        return "-"
     return f"{d['pct']:.0f}% <small>({d['k']}/{d['n']})</small>"
 
 
-def key_stat_rows(stats: dict) -> list:
+def key_stat_rows(stats: dict, points: Optional[list] = None) -> list:
+    """Rows of the statistics table. With the points, each row also says whether the
+    values it is built from were checked in a review ("checked")."""
     A, B = stats["players"]["A"], stats["players"]["B"]
     rows = []
 
@@ -437,8 +774,8 @@ def key_stat_rows(stats: dict) -> list:
     add("1st serve in", lambda s: s["first_serve_in"], None)
     add("1st serve points won", lambda s: s["first_serve_won"], None)
     add("2nd serve points won", lambda s: s["second_serve_won"], None)
-    add("Aces (per service pt)", lambda s: s["aces"], None)
-    add("Double faults (per service pt)", lambda s: s["double_faults"], None, better="low")
+    add("Aces (per point served)", lambda s: s["aces"], None)
+    add("Double faults (per point served)", lambda s: s["double_faults"], None, better="low")
     add("Return in play", lambda s: s["return_in"], None)
     add("Break points saved", lambda s: s["break_points"]["saved"], None)
     add("Break points converted", lambda s: s["break_points"]["converted"], None)
@@ -451,8 +788,16 @@ def key_stat_rows(stats: dict) -> list:
 
     def dist(s):
         d = s["distance"]
-        return f"{d['mean_m']:.0f} m <small>(n={d['n']})</small>" if d["mean_m"] is not None else "–"
+        return f"{d['mean_m']:.0f} m <small>(n={d['n']})</small>" if d["mean_m"] is not None else "-"
     rows.append({"label": "Distance run per point", "a": dist(A), "b": dist(B), "hl": ""})
+    if points is not None:
+        for r in rows:
+            fields = STAT_FIELDS.get(r["label"], ())
+            if r["label"] in ENDING_ROWS:
+                kind, noun = ENDING_ROWS[r["label"]]
+                r["checked"] = _checked_txt([p for p in points if p and p.get("ending") == kind], fields, noun)
+            else:
+                r["checked"] = _checked_txt(points, fields)
     return rows
 
 
@@ -494,9 +839,13 @@ def point_rows(match: dict, video_href: Optional[str]) -> list:
         if ending in ("winner", "unforced_error", "forced_error"):
             wing = p.get("last_shot_wing")
             etxt = f"{_name(match, eb) if eb else '?'} {(wing.upper() + ' ') if wing else ''}{etxt}"
-        t0 = p.get("t_start") if p.get("t_start") is not None else p.get("t_end")
-        tseek = max(0.0, float(t0) - 1.0) if t0 is not None else None
+        from .analytics import point_time
+        t0 = point_time(p)
+        # start the video a few seconds before the serve, so the toss is seen
+        tseek = max(0.0, float(t0) - 3.0) if t0 is not None else None
         rv = p.get("review") or {}
+        filled = _filled(p)
+        prev_filled = bool(rows) and rows[-1]["filled"]
         rows.append({
             "id": p.get("id"), "set_no": p.get("set_no"),
             "games": "-".join(str(g) for g in sb.get("games", [])),
@@ -506,14 +855,23 @@ def point_rows(match: dict, video_href: Optional[str]) -> list:
             "ret": (p.get("return_wing") or "").upper(),
             "rally": p.get("rally_len") if p.get("rally_len") is not None else "",
             "ending": etxt, "winner": p.get("winner") or "?",
-            "winner_src": p.get("winner_source"), "mcp": p.get("mcp") or "",
-            "gap": bool(p.get("gap_before")), "t": tseek, "t_label": _fmt_t(t0),
+            "winner_src": WINNER_SOURCE_TXT.get(p.get("winner_source") or "unknown", p.get("winner_source")),
+            "mcp": p.get("mcp") or "",
+            "gap": bool(p.get("gap_before")) and not filled, "filled": filled,
+            "fill_start": filled and not prev_filled, "fill_run": 0, "t": tseek, "t_label": _fmt_t(t0),
             "href": f"{video_href}#t={tseek:.1f}" if (video_href and tseek is not None) else None,
             "low": {"winner": _is_low(p, "winner"), "serves": _is_low(p, "serves") or _is_low(p, "serve_zone"),
                     "ret": _is_low(p, "return_wing"), "rally": _is_low(p, "rally_len"),
                     "ending": _is_low(p, "ending")},
             "reviewed": rv.get("status") == "reviewed", "edited": bool(rv.get("edited_fields")),
+            "checked": bool(rv.get("checked_fields")), "added": rv.get("status") == "added",
         })
+    for i, r in enumerate(rows):          # length of each run of skipped points, on its first row
+        if r["fill_start"]:
+            j = i
+            while j < len(rows) and rows[j]["filled"]:
+                j += 1
+            r["fill_run"] = j - i
     return rows
 
 
@@ -540,7 +898,7 @@ CSV_COLS = ["id", "t_start", "t_end", "set_no", "sets", "games", "points", "in_t
             "serve2_bounce_y", "serve2_speed_kmh", "serve_number_won_on", "return_wing", "rally_len",
             "ending", "ending_by", "last_shot_wing", "last_shot_stroke", "last_shot_result",
             "net_A", "net_B", "dist_A_m", "dist_B_m", "gap_before", "review_status", "edited_fields",
-            "mcp", "conf_min", "conf_json"]
+            "checked_fields", "mcp", "conf_min", "conf_json"]
 
 
 def flatten_point(p: dict) -> dict:
@@ -571,6 +929,7 @@ def flatten_point(p: dict) -> dict:
     rv = p.get("review") or {}
     row["review_status"] = rv.get("status")
     row["edited_fields"] = ";".join(rv.get("edited_fields") or [])
+    row["checked_fields"] = ";".join(rv.get("checked_fields") or [])
     confs = [v for v in (p.get("conf") or {}).values() if isinstance(v, (int, float))]
     row["conf_min"] = round(min(confs), 3) if confs else None
     row["conf_json"] = json.dumps(p.get("conf") or {}, sort_keys=True)
@@ -589,13 +948,15 @@ def write_csv(points: list, path) -> None:
 # render
 # ---------------------------------------------------------------------------
 def _video_href(match: dict, out_dir: Path) -> Optional[str]:
+    from .pipeline import local_video_path
     v = (match.get("meta") or {}).get("video")
     if not v:
         return None
     vp = Path(v)
     if not vp.is_absolute():
-        cand = [Path.cwd() / vp, out_dir.parent.parent / vp, out_dir / vp]
-        found = next((c for c in cand if c.exists()), None)
+        # the full path analyze saved in cache/ first (match.json only names the file)
+        cand = [local_video_path(out_dir), Path.cwd() / vp, out_dir.parent.parent / vp, out_dir / vp]
+        found = next((c for c in cand if c is not None and c.exists()), None)
         if found is None:
             return "../../" + str(v).replace(os.sep, "/")
         vp = found
@@ -634,16 +995,20 @@ def build_context(match: dict, out_dir: Path) -> dict:
     recs = match.get("recommendations") or []
     winners_src = {}
     for p in match.get("points") or []:
-        k = p.get("winner_source") or "unknown"
+        k = WINNER_SOURCE_TXT.get(p.get("winner_source") or "unknown", p.get("winner_source"))
         winners_src[k] = winners_src.get(k, 0) + 1
     vi = meta.get("video_info") or {}
+    names = {P: _name(match, P) for P in PLAYERS}
     return {
-        "meta": meta, "names": {P: _name(match, P) for P in PLAYERS},
+        "meta": meta, "names": names,
         "hands": {P: (players.get(P) or {}).get("hand") or "" for P in PLAYERS},
+        # outputs made before hand_given existed never had a hand entered either
+        "hands_given": {P: bool((players.get(P) or {}).get("hand_given")) for P in PLAYERS},
+        "chance_words": chance_words,
         "score": _score_line(match), "format_desc": _fmt_desc(meta.get("format") or {}),
         "video_name": os.path.basename(str(meta.get("video") or "")), "video_href": href,
         "duration": _fmt_t(vi.get("duration")) if vi.get("duration") else "",
-        "stats": stats, "key_rows": key_stat_rows(stats),
+        "stats": stats, "key_rows": key_stat_rows(stats, match.get("points") or []),
         "insights": {P: [dict(i, text=_bare_text(i["text"])) for i in ins if i["player"] == P] for P in PLAYERS},
         "recs": {P: [r for r in recs if r["for"] == P] for P in PLAYERS},
         "serve": serve_courts(match, stats), "momentum_svg": svg_momentum(match),
@@ -651,7 +1016,29 @@ def build_context(match: dict, out_dir: Path) -> dict:
         "rows": point_rows(match, href), "quality": quality_rows(stats),
         "winner_sources": winners_src, "low_conf": LOW_CONF,
         "n_points": len(match.get("points") or []),
+        "habits": _habits(match),
+        "cards": player_cards(ins, names, players), "maps": serve_maps(stats, names),
+        "h2h": h2h_rows(stats), "big": big_point_rows(match.get("serve_patterns")
+                                                      or _pattern_data(match)),
     }
+
+
+def _pattern_data(match: dict) -> dict:
+    """match["serve_patterns"], computed from the points when it is missing."""
+    from . import patterns
+    from .analytics import _fmt_from_meta
+    sp = match.get("serve_patterns")
+    if not sp:
+        meta = match.get("meta") or {}
+        sp = patterns.compute(match.get("points") or [], meta.get("players"), _fmt_from_meta(meta))
+    return sp
+
+
+def _habits(match: dict) -> dict:
+    """Serve habits rows for the report (patterns.view of match["serve_patterns"])."""
+    from . import patterns
+    sp = _pattern_data(match)
+    return {"small": sp["small"], "players": patterns.view(sp)}
 
 
 def render(match: dict, out_dir) -> dict:
@@ -664,7 +1051,8 @@ def render(match: dict, out_dir) -> dict:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     m = json.loads(json.dumps(match, default=_json_default))   # plain JSON types, deep copy
-    m.setdefault("meta", {})
+    from .pipeline import public_meta
+    m["meta"] = public_meta(m.get("meta") or {})      # no full paths of this computer
     m.setdefault("segments", [])
     m.setdefault("points", [])
     refresh(m)
