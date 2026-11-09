@@ -5,6 +5,7 @@
     python -m tennis inbox                 # analyze every new video in ./inbox
     python -m tennis rebuild <out_dir>     # re-apply corrections + re-render (seconds)
     python -m tennis review <out_dir>      # open the review/correction UI
+    python -m tennis chat <out_dir> [--web] [--ask "..."]   # ask questions (Claude API)
 """
 from __future__ import annotations
 
@@ -17,6 +18,10 @@ VIDEO_EXT = {".mp4", ".mov", ".m4v", ".mkv", ".avi", ".webm"}
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] == "chat":
+        from .chat import main as chat_main
+        return chat_main(argv[1:])
     ap = argparse.ArgumentParser(prog="tennis", description="Tennis match video analytics")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -25,8 +30,9 @@ def main(argv=None):
     a.add_argument("--out", default=None, help="output dir (default out/<video_stem>)")
     a.add_argument("--a-name", default=None, help="name for player A (default: top row of score bug)")
     a.add_argument("--b-name", default=None, help="name for player B")
-    a.add_argument("--a-hand", default="R", choices=["R", "L"])
-    a.add_argument("--b-hand", default="R", choices=["R", "L"])
+    a.add_argument("--a-hand", default=None, choices=["R", "L"],
+                   help="player A's playing hand; if not given, right is assumed and the report says so")
+    a.add_argument("--b-hand", default=None, choices=["R", "L"], help="player B's playing hand")
     a.add_argument("--no-ad", action="store_true", help="no-ad scoring (college dual matches)")
     a.add_argument("--final-set", default="tb", choices=["tb", "match_tb10", "adv"])
     a.add_argument("--best-of", type=int, default=3)
@@ -43,6 +49,8 @@ def main(argv=None):
     v = sub.add_parser("review", help="start the review UI")
     v.add_argument("out_dir")
     v.add_argument("--port", type=int, default=8765)
+
+    sub.add_parser("chat", help="ask questions about an analyzed match (see: python -m tennis chat --help)")
 
     args = ap.parse_args(argv)
 
@@ -73,4 +81,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

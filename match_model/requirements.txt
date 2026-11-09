@@ -9,3 +9,5 @@ pyobjc-framework-Vision==12.2.2
 torch==2.15.0
 torchvision==0.29.2
 ultralytics==8.4.193
+# chat only (python -m tennis chat), needs Python 3.10 or newer
+anthropic==2.6.0

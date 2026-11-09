@@ -1,0 +1,8 @@
+# Run notes, frames, the second match's outputs and the API usage log stay on this computer
+# (this file keeps them out of git even if the root .gitignore change is undone)
+.overnight/
+# an API key file, if one is ever put in this folder
+.env
+# score board crops cut from match 1's video: frames stay out of the repo (tests/test_scoreboard_crops.py
+# skips itself when they are missing; labels.json, which says where each crop came from, can still be tracked)
+tests/fixtures/scorebug_crops/*.png

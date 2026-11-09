@@ -6,8 +6,9 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tennis.contracts import MatchFormat, PointBoundary, PointVision, ScoreObs, Segment, ServeVision, ShotEvent
-from tennis.pipeline import (infer_winner, merge_point, merge_serve_attempts, orient_engine_ends,
-                             rally_window, serve_attempt_windows)
+from tennis.pipeline import (infer_winner, merge_point, merge_serve_attempts, orient_by_votes,
+                             orient_engine_ends, rally_window, score_stretches, serve_attempt_windows,
+                             serve_like_hit, setup_before)
 from tennis import scoring
 from tennis.chart import _unseen_reply
 
@@ -149,6 +150,115 @@ class UnseenReply(unittest.TestCase):
 
     def test_ball_that_never_cleared_the_net_is_an_error(self):
         self.assertFalse(_unseen_reply(hit(10.0, "far"), bounce(12.0, 2.7, 2.3), "net", 0.29, False))
+
+
+def pt(games, sets=(), ends=None, server="A", source="ocr", gap=False, in_tb=False):
+    sb = {"sets": [list(x) for x in sets], "games": list(games), "points": "0-0", "in_tb": in_tb,
+          "ends": dict(ends or {"A": "near", "B": "far"})}
+    return PointBoundary(index=0, t_end=0.0, t_start=None, winner="A", server=server,
+                         score_before=sb, score_after=dict(sb, ends=dict(sb["ends"])), side="deuce",
+                         flags={}, gap_before=gap, source=source)
+
+
+def vote(end, conf=0.9):
+    return {"hit_t": 1.0, "end": end, "conf": conf}
+
+
+class EndsVote(unittest.TestCase):
+    """Ends from the engine's schedule, turned the right way round by a vote."""
+
+    def test_filled_points_and_in_set_jumps_keep_the_stretch(self):
+        b = [pt([0, 0]), pt([0, 0], source="engine", gap=True), pt([2, 1], gap=True)]
+        self.assertEqual(score_stretches(b), [0, 0, 0])
+
+    def test_jump_into_another_set_or_backwards_starts_a_stretch(self):
+        b = [pt([3, 2]), pt([1, 0], sets=[(6, 4)], gap=True), pt([0, 0], sets=[(6, 4)], gap=True)]
+        self.assertEqual(score_stretches(b), [0, 1, 2])
+
+    def test_votes_against_the_engine_flip_every_point_of_the_stretch(self):
+        b = [pt([0, 0]) for _ in range(8)]
+        for k in range(3, 8):                                        # an end change inside
+            b[k].score_before["ends"] = {"A": "far", "B": "near"}
+        votes = {k: vote("far") for k in (0, 1, 2)}                  # A serves from the far end
+        votes.update({k: vote("near") for k in (4, 5)})
+        votes[6] = vote("near", conf=0.5)                            # too weak to vote
+        voted, _ = orient_by_votes(b, votes)
+        self.assertEqual(set(voted), set(range(8)))
+        self.assertEqual(voted[0], 1.0)
+        self.assertEqual(b[0].score_before["ends"], {"A": "far", "B": "near"})
+        self.assertEqual(b[3].score_before["ends"], {"A": "near", "B": "far"})
+
+    def test_agreeing_votes_keep_the_engine_ends(self):
+        b = [pt([0, 0]) for _ in range(5)]
+        voted, _ = orient_by_votes(b, {k: vote("near") for k in range(5)})
+        self.assertEqual(len(voted), 5)
+        self.assertEqual(b[2].score_before["ends"]["A"], "near")
+
+    def test_split_votes_leave_the_stretch_undecided(self):
+        b = [pt([0, 0]) for _ in range(6)]
+        votes = {0: vote("near"), 1: vote("near"), 2: vote("near"), 3: vote("far"), 4: vote("far")}
+        voted, _ = orient_by_votes(b, votes)
+        self.assertEqual(voted, {})
+        self.assertEqual(b[0].score_before["ends"]["A"], "near")
+
+    def test_short_stretch_takes_the_whole_match_decision(self):
+        b = [pt([0, 0]) for _ in range(6)] + [pt([1, 0], sets=[(6, 4)], gap=True), pt([1, 0], sets=[(6, 4)])]
+        votes = {k: vote("far") for k in range(6)}
+        votes[7] = vote("near")                     # one stray vote in the short stretch
+        voted, _ = orient_by_votes(b, votes)
+        self.assertEqual(set(voted), set(range(8)))
+        self.assertEqual(b[7].score_before["ends"]["A"], "far")
+
+    def test_too_few_votes_decide_nothing(self):
+        b = [pt([0, 0]) for _ in range(4)]
+        voted, _ = orient_by_votes(b, {0: vote("far"), 1: vote("far")})
+        self.assertEqual(voted, {})
+        self.assertEqual(b[0].score_before["ends"]["A"], "near")
+
+
+class Det:
+    def __init__(self, t, end, x, y, interp=False):
+        self.t, self.end, self.court_xy, self.interp = t, end, (x, y), interp
+
+
+def setup_dets(t0, t1, srv_end="near", fps=5.0):
+    out, t = [], t0
+    while t < t1 - 1e-9:
+        out.append(Det(t, srv_end, 0.3, -12.0 if srv_end == "near" else 12.0))
+        out.append(Det(t, "far" if srv_end == "near" else "near", 3.5, 12.0 if srv_end == "near" else -12.0))
+        t += 1.0 / fps
+    return out
+
+
+class SetupBeforeHit(unittest.TestCase):
+    def test_reads_the_set_up_before_the_hit(self):
+        self.assertEqual(setup_before(setup_dets(0.0, 10.0, "far"), 8.0, 0.0)[0], "far")
+
+    def test_never_looks_before_the_window_start(self):
+        dets = setup_dets(0.0, 5.0, "near") + setup_dets(5.0, 10.0, "far")
+        dets.sort(key=lambda d: d.t)
+        self.assertEqual(setup_before(dets, 7.0, 5.0)[0], "far")
+
+    def test_short_window_uses_the_last_frames_before_the_hit(self):
+        dets = setup_dets(5.0, 6.0, "near")       # 0.6 s before the hit at 6.0
+        self.assertEqual(setup_before(dets, 6.0, 5.0)[0], "near")
+        self.assertEqual(setup_before(setup_dets(5.0, 5.3), 6.0, 5.0), (None, 0.0))
+
+
+class ServeLikeHit(unittest.TestCase):
+    def test_first_hit_with_a_bounce_in_the_other_service_area(self):
+        h0, h1 = hit(1.0, "near"), hit(5.0, "near")
+        h0.court_xy = (0.5, -10.0)                 # not behind the baseline
+        h1.court_xy = (0.5, -12.2)
+        self.assertIs(serve_like_hit([h0, h1, bounce(5.6, -2.0, 5.0)]), h1)
+
+    def test_bounce_on_the_own_half_or_none_is_not_serve_like(self):
+        h1 = hit(5.0, "far")
+        h1.court_xy = (0.5, 12.2)
+        self.assertIsNone(serve_like_hit([h1, bounce(5.6, -2.0, 5.0)]))
+        h2 = hit(6.2, "near")
+        h2.court_xy = (0.5, 11.0)                  # reply from the other end within 2 s
+        self.assertIs(serve_like_hit([h1, h2]), h1)
 
 
 class FinishedSetOnBug(unittest.TestCase):

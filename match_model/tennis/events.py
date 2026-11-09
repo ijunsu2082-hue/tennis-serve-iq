@@ -26,13 +26,24 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from .contracts import BallObs, CourtFit, ShotEvent, HALF_LEN, SERVICE_LINE
+import copy
 
-# tunables (full-frame px at 1280x720; scaled by frame height)
+from .contracts import (BallObs, CourtFit, ShotEvent, HALF_LEN, SERVICE_LINE, SINGLES_HALF_W,
+                        REF_FRAME_H, px_unit)
+
+# Bounce-led serve (_bounce_led_serves): when the serve hit itself was not seen, a
+# bounce in the receiver's half with no hit before it stands for the serve.
+BL_SERVE = True
+BL_DEPTH_SLACK = 3.0      # m past the service line: far-court bounces read too deep (round 1)
+BL_FLIGHT_S = 0.45        # s from serve hit to bounce (pro serves 0.30 to 0.65 s; 0.35 and 0.55 scored the same)
+
+# tunables in pixels of a 720-row frame. detect_events measures any other video in
+# these units (contracts.px_unit), so they hold at 1080p and 4K too.
 MIN_FLIGHT_PX = 22.0      # image travel for a run to count as a flight
 HIT_DIST_PX = 70.0        # max distance between reversal point and hitter bbox
 BOUNCE_DVY = 2.2          # px/frame drop of vy for a bounce
 SERVE_BEHIND = HALF_LEN - 1.2
+KNOCK_BACK_S = 3.0        # a receiver knocks a fault back within this time after the serve
 
 
 def _to_court(H: np.ndarray, x: float, y: float) -> tuple[float, float]:
@@ -415,14 +426,173 @@ def _kink_hits(ball, f, players, fps, k: int = 3):
     return [best] if best else []
 
 
+def mark_serves(events: list, server_end: Optional[str], toss_seen: bool, serve_ok=None) -> None:
+    """Mark the serve hits among time-sorted events (in place).
+
+    Without serve_ok: the first hit of the window is the serve when it is by the
+    server end from behind the baseline. With serve_ok (a check of a hit that
+    answers True when a serve set-up was seen before it, False when it was not,
+    None when there is too little footage to tell): the serve is the first such
+    hit anywhere in the window that does not fail the check, so stray hits before
+    the serve (knocking a ball back, a warm-up hit) no longer stop the search.
+    Second serve, both ways: another server-end hit from behind the baseline more
+    than 3 s later with no opponent hit in between (the first serve was a fault),
+    and with serve_ok it must not fail the check. With serve_ok, one opponent hit
+    within KNOCK_BACK_S of the serve is allowed (the receiver often hits a fault
+    back); the next serve must then come more than KNOCK_BACK_S after that hit and
+    the check must answer True. A later or a second opponent hit ends the search."""
+    def behind(h):
+        return ((server_end is None or h._end == server_end) and h.court_xy is not None
+                and abs(h.court_xy[1]) >= SERVE_BEHIND)
+
+    def mark(h):
+        h.kind, h.stroke, h.wing = "serve", "serve", None
+
+    hits = [e for e in events if e.kind == "hit"]
+    first = None
+    if serve_ok is None:
+        first = hits[0] if hits and behind(hits[0]) else None
+    else:
+        first = next((h for h in hits if behind(h) and serve_ok(h) is not False), None)
+    if first is None:
+        return
+    mark(first)
+    first.conf = float(min(0.9, first.conf + (0.15 if toss_seen else 0.0)))
+    s_end, last_t, opp_t = first._end, first.t, None
+    for ev in events:
+        if ev.t <= last_t or ev.kind == "bounce":
+            continue
+        if ev._end != s_end:
+            if serve_ok is None or opp_t is not None or ev.t - last_t > KNOCK_BACK_S:
+                break
+            opp_t = ev.t          # one receiver hit soon after the serve: a fault knocked back
+            continue
+        if ev.t - last_t > 3.0 and ev.court_xy is not None and abs(ev.court_xy[1]) >= SERVE_BEHIND:
+            if opp_t is None:
+                ok = serve_ok is None or serve_ok(ev) is not False
+            else:
+                ok = ev.t - opp_t > KNOCK_BACK_S and serve_ok(ev) is True
+            if ok:
+                mark(ev)
+                last_t, opp_t = ev.t, None
+
+
+def _bounce_led_serves(events: list, players, H: np.ndarray, server_end: str, hand: dict,
+                       serve_ok) -> list:
+    """Serve candidates for serve hits the hit finder missed, one per bounce that
+    looks like a serve bounce: on the receiver's half, no deeper than the service
+    line plus BL_DEPTH_SLACK and inside the singles side lines plus 0.5 m; no hit
+    (either end) from 1.2 s to 0.15 s before it; no server-end hit from 0.15 s before
+    to 0.3 s after it; not inside the server's reach, measured as the hit finder
+    does with the box stretched upward by half a body height (then it is his racket
+    meeting the ball above his head, not a bounce). The candidate is placed BL_FLIGHT_S before the bounce
+    at the server, who must stand behind the baseline, and is kept only when the
+    set-up check answers True (not "no answer")."""
+    sg = 1.0 if server_end == "near" else -1.0
+    Hi = np.linalg.inv(H)
+
+    def px_of(xy):
+        q = Hi @ np.array([xy[0], xy[1], 1.0])
+        return float(q[0] / q[2]), float(q[1] / q[2])
+
+    hit_ts = [e.t for e in events if e.kind == "hit"]
+    srv_ts = [e.t for e in events if e.kind == "hit" and e._end == server_end]
+    out = []
+    for b in [e for e in events if e.kind == "bounce" and e.court_xy is not None]:
+        bx, by = b.court_xy
+        if not (0.8 < sg * by <= SERVICE_LINE + BL_DEPTH_SLACK and abs(bx) <= SINGLES_HALF_W + 0.5):
+            continue
+        if any(b.t - 1.2 <= t <= b.t - 0.15 for t in hit_ts) or \
+                any(b.t - 0.15 < t <= b.t + 0.3 for t in srv_ts):
+            continue
+        ps = _player_at(players, server_end, b.t)
+        if ps is not None:
+            qx, qy = px_of(b.court_xy)
+            if _dist_to_player(server_end, ps["bbox"], qx, qy) <= _hit_lim(server_end, ps["bbox"]):
+                continue
+        th = b.t - BL_FLIGHT_S
+        p = _player_at(players, server_end, th)
+        if p is None or abs(float(p["court_xy"][1])) < SERVE_BEHIND:
+            continue
+        bb = p["bbox"]
+        ev = _mk_hit(th, server_end, p, 0.5 * (bb[0] + bb[2]), None, hand, 0.35)
+        ev._bounce_led = True
+        if serve_ok(ev) is True:
+            out.append(ev)
+    return out
+
+
+def _drop_unpicked(events: list) -> list:
+    """Bounce-led candidates that mark_serves did not pick are removed, so they
+    change nothing else (rally, wings, ending)."""
+    return [e for e in events if not (getattr(e, "_bounce_led", False) and e.kind != "serve")]
+
+
+def to_ref_units(fit: CourtFit, players, ball, u: float):
+    """The same scene measured in pixels of a 720-row frame: image coordinates divided
+    by u, the homography changed so every court position in metres stays the same.
+    Copies; the inputs are not changed."""
+    H = (np.asarray(fit.H, float) @ np.diag([u, u, 1.0])).tolist()
+    fit_r = CourtFit(H=H, frame_w=int(round(fit.frame_w / u)), frame_h=REF_FRAME_H,
+                     err_px=fit.err_px / u, conf=fit.conf)
+    pl = []
+    for d in players or []:
+        c = copy.copy(d)
+        c.bbox = tuple(float(v) / u for v in d.bbox)
+        pl.append(c)
+    bl = []
+    for b in ball or []:
+        c = copy.copy(b)
+        c.xy_px = (float(b.xy_px[0]) / u, float(b.xy_px[1]) / u)
+        bl.append(c)
+    return fit_r, pl, bl
+
+
+def events_to_px(evs, u: float) -> None:
+    """Pixel values kept on events (_bbox, _pc, _out), from 720-row units back to the
+    video's own pixels (in place, each event once)."""
+    seen = set()
+    for ev in evs or []:
+        if id(ev) in seen:
+            continue
+        seen.add(id(ev))
+        bb = getattr(ev, "_bbox", None)
+        if bb is not None:
+            ev._bbox = tuple(float(v) * u for v in bb)
+        pc = getattr(ev, "_pc", None)
+        if pc is not None:
+            ev._pc = tuple(float(v) * u for v in pc)
+        out = getattr(ev, "_out", None)
+        if isinstance(out, (int, float)):
+            ev._out = float(out) * u
+
+
 def detect_events(ball: Sequence[BallObs], players, fit: CourtFit, fps: float = 25.0,
-                  hand: Optional[dict] = None, server_end: Optional[str] = None) -> list[ShotEvent]:
-    """Detect serve / hit / bounce events.
+                  hand: Optional[dict] = None, server_end: Optional[str] = None,
+                  serve_ok=None) -> list[ShotEvent]:
+    """Detect serve / hit / bounce events (any frame size: a video that is not 720 rows
+    high is measured in 720-row pixels, see to_ref_units; pixel values on the returned
+    events are in the video's own pixels)."""
+    u = px_unit(getattr(fit, "frame_h", None))
+    if u == 1.0:
+        return _detect_events(ball, players, fit, fps, hand, server_end, serve_ok)
+    fit_r, pl, bl = to_ref_units(fit, players, ball, u)
+    # serve_ok (the set-up check) reads times and court metres only, the same in both units
+    evs = _detect_events(bl, pl, fit_r, fps, hand, server_end, serve_ok)
+    events_to_px(evs, u)
+    return evs
+
+
+def _detect_events(ball: Sequence[BallObs], players, fit: CourtFit, fps: float = 25.0,
+                   hand: Optional[dict] = None, server_end: Optional[str] = None,
+                   serve_ok=None) -> list[ShotEvent]:
+    """Detect serve / hit / bounce events in 720-row pixels.
 
     ball:     BallObs list (full-frame px), sorted by t
     players:  PlayerObs-like list with .t .end .bbox .court_xy .pid
     hand:     {"near": "R"|"L", "far": "R"|"L"} (default right-handed)
     server_end: if known ("near"/"far"), only that player can serve.
+    serve_ok: optional set-up check of a candidate serve hit (see mark_serves).
     Internal attributes on hit events: _end (near/far), _wconf, _bbox, _implied,
     _pc (contact px), _out (outgoing image travel px), _n_out (outgoing points),
     _out_end_t (end of the outgoing flight).
@@ -566,27 +736,17 @@ def detect_events(ball: Sequence[BallObs], players, fit: CourtFit, fps: float = 
         if all(abs(b.t - t) > 0.2 for t in hit_ts) and all(abs(b.t - e.t) > 0.2 for e in events if e.kind == "bounce"):
             events.append(b)
     events.sort(key=lambda e: e.t)
-    # ---- serve: first hit, by the server end, from behind the baseline ---------
-    hits = [e for e in events if e.kind == "hit"]
-    if hits:
-        h0 = hits[0]
-        ok_end = server_end is None or h0._end == server_end
-        if ok_end and h0.court_xy is not None and abs(h0.court_xy[1]) >= SERVE_BEHIND:
-            h0.kind, h0.stroke, h0.wing = "serve", "serve", None
-            h0.conf = float(min(0.9, h0.conf + (0.15 if toss_t is not None else 0.0)))
-    # second serve: another server hit from behind the baseline > 3 s later with no
-    # opponent hit in between (the first serve was a fault)
-    serves = [e for e in events if e.kind == "serve"]
-    if serves:
-        s_end, last_t = serves[0]._end, serves[0].t
-        for ev in events:
-            if ev.t <= last_t or ev.kind == "bounce":
-                continue
-            if ev._end != s_end:
-                break
-            if ev.t - last_t > 3.0 and ev.court_xy is not None and abs(ev.court_xy[1]) >= SERVE_BEHIND:
-                ev.kind, ev.stroke, ev.wing = "serve", "serve", None
-                last_t = ev.t
+    # ---- serve hits the hit finder missed, found from their bounce ------------
+    added = []
+    if BL_SERVE and serve_ok is not None and server_end in ("near", "far"):
+        added = _bounce_led_serves(events, players, H, server_end, hand, serve_ok)
+        if added:
+            events.extend(added)
+            events.sort(key=lambda e: e.t)
+    # ---- serves: by the server end, from behind the baseline (mark_serves) -----
+    mark_serves(events, server_end, toss_t is not None, serve_ok)
+    if added:
+        events = _drop_unpicked(events)
     # ---- volleys: hitter inside ~service line, no bounce since the last hit ----
     last_hit_t, bounced = None, True
     for ev in events:

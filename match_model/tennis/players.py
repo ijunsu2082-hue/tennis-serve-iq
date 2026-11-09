@@ -212,20 +212,31 @@ def _zone_score(cx: float, cy: float, end: str) -> float:
     return s
 
 
-def _raw_detections(path, start, end, fit, fps, imgsz, crop):
+def _raw_detections(path, start, end, fit, fps, imgsz, crop, keep_frames: bool = True):
+    """YOLO person boxes on the court crop at `fps`, in batches of 16 frames as
+    they are decoded. The pictures are kept only when keep_frames is set (the
+    appearance features need them); otherwise each batch is dropped once
+    detected, so a long window does not hold all its pictures in memory."""
     model = _model()
     dev = _device()
-    frames, times = [], []
-    for t, f in iter_frames(path, fps=fps, start=start, end=end, crop=crop):
-        frames.append(f)
-        times.append(t)
-    res = []
+    frames, times, res, batch = [], [], [], []
     B = 16
-    for i in range(0, len(frames), B):
-        r = model.predict(frames[i:i + B], device=dev, imgsz=imgsz, classes=[0],
-                          conf=0.08, verbose=False)
+
+    def run(b):
+        r = model.predict(b, device=dev, imgsz=imgsz, classes=[0], conf=0.08, verbose=False)
         for x in r:
             res.append((x.boxes.xyxy.cpu().numpy(), x.boxes.conf.cpu().numpy()))
+
+    for t, f in iter_frames(path, fps=fps, start=start, end=end, crop=crop):
+        times.append(t)
+        if keep_frames:
+            frames.append(f)
+        batch.append(f)
+        if len(batch) == B:
+            run(batch)
+            batch = []
+    if batch:
+        run(batch)
     return times, frames, res
 
 
@@ -237,7 +248,7 @@ def detect_players(path: str, start: float, end: float, fit: CourtFit, fps: floa
     have interp=True). pid is filled from `ends` ({"A":"near","B":"far"}) if given."""
     t0 = time.time()
     crop = court_crop(fit)
-    times, frames, res = _raw_detections(path, start, end, fit, fps, imgsz, crop)
+    times, frames, res = _raw_detections(path, start, end, fit, fps, imgsz, crop, keep_frames=with_features)
     t1 = time.time()
     ox, oy = crop[0], crop[1]
     per_end = {"near": [None] * len(times), "far": [None] * len(times)}

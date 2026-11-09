@@ -66,6 +66,13 @@ class BugLayout:
     rows: list[tuple[int, int]]      # y-range per row (full-frame px)
     cols: list[tuple[int, int]]      # x-range per score column (full-frame px), left->right
     dot_rois: list[tuple[int, int, int, int]] = field(default_factory=list)  # (x0,y0,x1,y1) per row
+    # True when the highlighted cell holds the points and the set columns follow it,
+    # current set last (e.g. NAME | 40 | 6 | 2). False: the highlighted cell is the
+    # current set's games, finished sets left of it, points right of it.
+    points_first: bool = False
+    # True when the highlighted cell holds the points and is the last column, after the
+    # games (NAME | 6 | 2 | [40]). Found by locate_bug like points_first.
+    points_hl: bool = False
 
 
 @dataclass
@@ -130,6 +137,20 @@ class PointBoundary:
 
 
 # ---- court / players / ball -------------------------------------------------
+# The pixel rules after detection (ball linking, shot events, charting) were set on
+# 1280x720 video. A video of another size is measured in these units: px_unit is how
+# many of its pixels make one pixel of a 720-row frame (1.5 for 1080p, 3.0 for 4K).
+REF_FRAME_H = 720
+
+
+def px_unit(frame_h) -> float:
+    try:
+        h = float(frame_h)
+    except (TypeError, ValueError):
+        return 1.0
+    return h / REF_FRAME_H if h > 0 else 1.0
+
+
 @dataclass
 class CourtFit:
     """Homography from image pixels (in the given frame size) to court metres."""

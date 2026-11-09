@@ -1,0 +1,12 @@
+{
+ "source": "match 1 (ABN AMRO 2023, 1280x720, 30 fps), saved ball candidates and player boxes of the window 7094.0 to 7103.5 s; numbers only, no pictures",
+ "t_start": 7094.0,
+ "t_end": 7103.5,
+ "server": "A",
+ "side": "deuce",
+ "ends": {
+  "A": "far",
+  "B": "near"
+ },
+ "winner": "A"
+}

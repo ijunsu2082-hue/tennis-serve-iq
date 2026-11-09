@@ -1,0 +1,883 @@
+{
+ "description": "Tiny real crops of the score board (the area read_stream reads) from the ABN AMRO Open 2023 qualifying match Halys against Barrere. Every label was read by eye from the picture.",
+ "source": "https://www.youtube.com/watch?v=pIIU5YSgh5E, Creative Commons Attribution license as reported by the video site's metadata, ABNAMROOpen",
+ "crop_rect": [
+  126,
+  604,
+  356,
+  668
+ ],
+ "layout": {
+  "x0": 128,
+  "y0": 606,
+  "x1": 353,
+  "y1": 666,
+  "names": [
+   "HALYS",
+   "BARRERE"
+  ],
+  "rows": [
+   [
+    606,
+    636
+   ],
+   [
+    636,
+    666
+   ]
+  ],
+  "cols": [
+   [
+    225,
+    248
+   ],
+   [
+    263,
+    286
+   ],
+   [
+    296,
+    318
+   ],
+   [
+    323,
+    352
+   ]
+  ],
+  "dot_rois": [
+   [
+    129,
+    606,
+    152,
+    636
+   ],
+   [
+    129,
+    636,
+    152,
+    666
+   ]
+  ]
+ },
+ "conventions": "expect null means no reading is right (board hidden, in an animation, or cleared). Row 0 is the top name.",
+ "crops": [
+  {
+   "file": "t00108.0.png",
+   "t": 108.0,
+   "kind": "ordinary_set1",
+   "seen": "0-40",
+   "expect": {
+    "sets": [],
+    "games": [
+     0,
+     0
+    ],
+    "points": [
+     "0",
+     "40"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t00397.5.png",
+   "t": 397.5,
+   "kind": "cleared_board",
+   "seen": "cleared board: no points box, no serve dot",
+   "expect": null,
+   "note": "cleared board"
+  },
+  {
+   "file": "t00849.5.png",
+   "t": 849.5,
+   "kind": "ordinary_set1",
+   "seen": "30-0",
+   "expect": {
+    "sets": [],
+    "games": [
+     1,
+     2
+    ],
+    "points": [
+     "30",
+     "0"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t01391.0.png",
+   "t": 1391.0,
+   "kind": "deuce",
+   "seen": "40-40",
+   "expect": {
+    "sets": [],
+    "games": [
+     3,
+     3
+    ],
+    "points": [
+     "40",
+     "40"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t01834.0.png",
+   "t": 1834.0,
+   "kind": "advantage",
+   "seen": "AD-",
+   "expect": {
+    "sets": [],
+    "games": [
+     3,
+     4
+    ],
+    "points": [
+     "A",
+     "40"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t01905.0.png",
+   "t": 1905.0,
+   "kind": "at_change",
+   "seen": "AD-",
+   "expect": {
+    "sets": [],
+    "games": [
+     3,
+     4
+    ],
+    "points": [
+     "A",
+     "40"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t02405.0.png",
+   "t": 2405.0,
+   "kind": "advantage",
+   "seen": "-AD",
+   "expect": {
+    "sets": [],
+    "games": [
+     4,
+     5
+    ],
+    "points": [
+     "40",
+     "A"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t02950.5.png",
+   "t": 2950.5,
+   "kind": "ordinary_set1",
+   "seen": "40-0",
+   "expect": {
+    "sets": [],
+    "games": [
+     5,
+     6
+    ],
+    "points": [
+     "40",
+     "0"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03059.0.png",
+   "t": 3059.0,
+   "kind": "cleared_board",
+   "expect": null,
+   "seen": "hidden"
+  },
+  {
+   "file": "t03088.5.png",
+   "t": 3088.5,
+   "kind": "tiebreak_set1",
+   "seen": "no points box, serve dot",
+   "expect": {
+    "sets": [],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "0",
+     "0"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t03099.5.png",
+   "t": 3099.5,
+   "kind": "tiebreak_set1",
+   "seen": "0-1",
+   "expect": {
+    "sets": [],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "0",
+     "1"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03390.0.png",
+   "t": 3390.0,
+   "kind": "tiebreak_set1",
+   "seen": "5-4",
+   "expect": {
+    "sets": [],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "5",
+     "4"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03420.0.png",
+   "t": 3420.0,
+   "kind": "tiebreak_set1",
+   "seen": "6-4",
+   "expect": {
+    "sets": [],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "6",
+     "4"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03440.5.png",
+   "t": 3440.5,
+   "kind": "cleared_board",
+   "seen": "cleared board: no points box, no serve dot",
+   "expect": null,
+   "note": "cleared board"
+  },
+  {
+   "file": "t03565.5.png",
+   "t": 3565.5,
+   "kind": "set_change",
+   "expect": null,
+   "seen": "unreadable"
+  },
+  {
+   "file": "t03566.5.png",
+   "t": 3566.5,
+   "kind": "set_change",
+   "seen": "no points box, serve dot",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     0,
+     0
+    ],
+    "points": [
+     "0",
+     "0"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03586.5.png",
+   "t": 3586.5,
+   "kind": "set_change",
+   "seen": "15-0",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     0,
+     0
+    ],
+    "points": [
+     "15",
+     "0"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t03693.5.png",
+   "t": 3693.5,
+   "kind": "cleared_board",
+   "seen": "cleared board: no points box, no serve dot",
+   "expect": null,
+   "note": "cleared board, sliver of the points cell closing"
+  },
+  {
+   "file": "t04189.5.png",
+   "t": 4189.5,
+   "kind": "ordinary_set2",
+   "seen": "30-15",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     3,
+     1
+    ],
+    "points": [
+     "30",
+     "15"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t04448.0.png",
+   "t": 4448.0,
+   "kind": "ordinary_set2",
+   "seen": "15-40",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     4,
+     1
+    ],
+    "points": [
+     "15",
+     "40"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t05038.5.png",
+   "t": 5038.5,
+   "kind": "deuce",
+   "seen": "40-40",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     4,
+     3
+    ],
+    "points": [
+     "40",
+     "40"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t05068.0.png",
+   "t": 5068.0,
+   "kind": "advantage",
+   "seen": "AD-",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     4,
+     3
+    ],
+    "points": [
+     "A",
+     "40"
+    ],
+    "server": 1
+   },
+   "note": "BREAK POINT label above"
+  },
+  {
+   "file": "t05451.0.png",
+   "t": 5451.0,
+   "kind": "at_change",
+   "expect": null,
+   "seen": "unreadable"
+  },
+  {
+   "file": "t05633.0.png",
+   "t": 5633.0,
+   "kind": "new_game_no_points_box",
+   "seen": "no points box, serve dot",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     6,
+     5
+    ],
+    "points": [
+     "0",
+     "0"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t05761.0.png",
+   "t": 5761.0,
+   "kind": "ordinary_set2",
+   "seen": "40-30",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     6,
+     5
+    ],
+    "points": [
+     "40",
+     "30"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t05928.0.png",
+   "t": 5928.0,
+   "kind": "tiebreak_set2",
+   "seen": "0-1",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "0",
+     "1"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t05983.5.png",
+   "t": 5983.5,
+   "kind": "at_change",
+   "seen": "0-3",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "0",
+     "3"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t06213.5.png",
+   "t": 6213.5,
+   "kind": "tiebreak_set2",
+   "seen": "2-6",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "2",
+     "6"
+    ],
+    "server": 0
+   },
+   "note": "SET POINT label above"
+  },
+  {
+   "file": "t06415.5.png",
+   "t": 6415.5,
+   "kind": "set_change",
+   "expect": null,
+   "seen": "unreadable"
+  },
+  {
+   "file": "t06417.5.png",
+   "t": 6417.5,
+   "kind": "set_change",
+   "seen": "no points box, serve dot",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     0,
+     0
+    ],
+    "points": [
+     "0",
+     "0"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t07158.0.png",
+   "t": 7158.0,
+   "kind": "ordinary_set3",
+   "seen": "30-15",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     1,
+     2
+    ],
+    "points": [
+     "30",
+     "15"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t07427.5.png",
+   "t": 7427.5,
+   "kind": "advantage",
+   "seen": "-AD",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     1,
+     2
+    ],
+    "points": [
+     "40",
+     "A"
+    ],
+    "server": 0
+   },
+   "note": "BREAK POINT label above"
+  },
+  {
+   "file": "t07458.5.png",
+   "t": 7458.5,
+   "kind": "deuce",
+   "seen": "40-40",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     1,
+     2
+    ],
+    "points": [
+     "40",
+     "40"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t07901.0.png",
+   "t": 7901.0,
+   "kind": "cleared_board",
+   "seen": "cleared board: no points box, no serve dot",
+   "expect": null,
+   "note": "cleared board"
+  },
+  {
+   "file": "t08029.5.png",
+   "t": 8029.5,
+   "kind": "anywhere",
+   "seen": "30-30",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     2,
+     2
+    ],
+    "points": [
+     "30",
+     "30"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t08834.0.png",
+   "t": 8834.0,
+   "kind": "advantage",
+   "seen": "AD-",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     3,
+     4
+    ],
+    "points": [
+     "A",
+     "40"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t09102.0.png",
+   "t": 9102.0,
+   "kind": "advantage",
+   "seen": "-AD",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     4,
+     4
+    ],
+    "points": [
+     "40",
+     "A"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t09500.5.png",
+   "t": 9500.5,
+   "kind": "cleared_board",
+   "expect": null,
+   "seen": "hidden"
+  },
+  {
+   "file": "t09761.0.png",
+   "t": 9761.0,
+   "kind": "tiebreak_set3",
+   "seen": "1-1",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "1",
+     "1"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t09793.5.png",
+   "t": 9793.5,
+   "kind": "tiebreak_set3",
+   "seen": "1-2",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "1",
+     "2"
+    ],
+    "server": 1
+   }
+  },
+  {
+   "file": "t09871.0.png",
+   "t": 9871.0,
+   "kind": "tiebreak_set3",
+   "seen": "1-4",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "1",
+     "4"
+    ],
+    "server": 0
+   }
+  },
+  {
+   "file": "t09983.5.png",
+   "t": 9983.5,
+   "kind": "tiebreak_set3",
+   "seen": "1-6",
+   "expect": {
+    "sets": [
+     [
+      7,
+      6
+     ],
+     [
+      6,
+      7
+     ]
+    ],
+    "games": [
+     6,
+     6
+    ],
+    "points": [
+     "1",
+     "6"
+    ],
+    "server": 1
+   }
+  }
+ ]
+}

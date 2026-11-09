@@ -12,16 +12,24 @@ Routes
                           -> writes corrections.json, applies them to the
                           uncorrected base, re-renders report.html/points.csv/match.json
 
+Request checks: the server only listens on this computer (a loopback address such
+as 127.0.0.1; --host refuses any other), the Host header must name this computer
+(localhost or a loopback address, so a web page that points its own name at
+127.0.0.1 cannot read or save anything, and no other device can use it), and POST /save needs Content-Type application/json and, when the
+browser sends an Origin, the same host and port as the Host header. A web page on
+another site can therefore not send a save that overwrites corrections.json.
+
 Base file policy: corrections always apply to the uncorrected pipeline output,
 kept as out_dir/match_auto.json, so undoing an edit restores the automatic value.
-At startup, a match.json without meta.review_saved_at is treated as fresh
-pipeline output. It is copied to match_auto.json, and any existing
+At startup, a match.json without meta.review_saved_at or meta.corrections_applied
+is treated as fresh pipeline output. It is copied to match_auto.json, and any existing
 corrections.json is re-applied right away, so re-running the pipeline keeps
 manual edits.
 """
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import mimetypes
 import os
@@ -58,7 +66,9 @@ class ReviewApp:
 
     def _init_base(self):
         m = self._read(self.match_path)
-        fresh = not (m.get("meta") or {}).get("review_saved_at")
+        meta = m.get("meta") or {}
+        # "python -m tennis rebuild" writes corrections_applied, the UI writes review_saved_at
+        fresh = not (meta.get("review_saved_at") or meta.get("corrections_applied"))
         if fresh or not self.base_path.exists():
             shutil.copyfile(self.match_path, self.base_path)
             if fresh and self.corr_path.exists():
@@ -89,9 +99,13 @@ class ReviewApp:
                     "n_insights": len(m.get("insights") or [])}
 
     def video_path(self) -> Path | None:
+        from .pipeline import local_video_path
         cands = []
         if self._video_override:
             cands.append(Path(self._video_override))
+        lp = local_video_path(self.out)          # saved by analyze in cache/
+        if lp is not None:
+            cands.append(lp)
         try:
             v = (self._read(self.match_path).get("meta") or {}).get("video")
         except (OSError, ValueError):
@@ -109,9 +123,40 @@ class ReviewApp:
         return None
 
 
+def _is_loopback(name: str) -> bool:
+    """localhost, a name under .localhost, or a loopback address (127.x.x.x, ::1)."""
+    n = name.strip().strip("[]").lower()
+    if n == "localhost" or n.endswith(".localhost"):
+        return True
+    try:
+        return ipaddress.ip_address(n).is_loopback
+    except ValueError:
+        return False
+
+
+def _host_ok(host: str | None) -> bool:
+    """Host header names this computer: localhost or a loopback address (any port).
+    Any other address, a LAN one included, is another device or a renamed page."""
+    if not host:
+        return False
+    h = host.strip()
+    if h.startswith("["):                       # [::1]:8765
+        name = h[1:h.find("]")] if "]" in h else h[1:]
+    else:
+        name = h.rsplit(":", 1)[0] if h.count(":") == 1 else h
+    return _is_loopback(name)
+
+
 def make_handler(app: ReviewApp):
     class H(BaseHTTPRequestHandler):
         server_version = "TennisReview/1.0"
+
+        def _guard(self) -> bool:
+            """False (and a 403 sent) when the request may come from another site."""
+            if not _host_ok(self.headers.get("Host")):
+                self._json(403, {"error": "unknown host"})
+                return False
+            return True
 
         def log_message(self, fmt, *args):
             if os.environ.get("TENNIS_REVIEW_LOG"):
@@ -141,6 +186,8 @@ def make_handler(app: ReviewApp):
 
         def do_GET(self):
             path = urlparse(self.path).path
+            if not self._guard():
+                return
             try:
                 if path in ("/", "/index.html"):
                     return self._file(UI_FILE, "text/html; charset=utf-8")
@@ -207,8 +254,16 @@ def make_handler(app: ReviewApp):
 
         def do_POST(self):
             path = urlparse(self.path).path
+            if not self._guard():
+                return
             if path != "/save":
                 return self._json(404, {"error": "not found"})
+            ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            if ctype != "application/json":
+                return self._json(415, {"error": "send JSON (Content-Type: application/json)"})
+            origin = self.headers.get("Origin")
+            if origin is not None and urlparse(origin).netloc != (self.headers.get("Host") or ""):
+                return self._json(403, {"error": "request from another site"})
             try:
                 n = int(self.headers.get("Content-Length") or 0)
                 body = json.loads(self.rfile.read(n) or b"{}")
@@ -225,6 +280,10 @@ def make_handler(app: ReviewApp):
 
 
 def serve(out_dir, port: int = 8765, host: str = "127.0.0.1", video: str | None = None):
+    if not _is_loopback(host):
+        # the page can read the match, stream the video and save corrections: it is
+        # for this computer only
+        raise ValueError(f"--host must be a loopback address such as 127.0.0.1, not {host!r}")
     app = ReviewApp(out_dir, video)
     httpd = ThreadingHTTPServer((host, port), make_handler(app))
     vp = app.video_path()
@@ -237,7 +296,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m tennis.review_server")
     ap.add_argument("out_dir")
     ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--host", default="127.0.0.1", help="loopback address to listen on (this computer only)")
     ap.add_argument("--video", default=None, help="override the video path from match.json")
     a = ap.parse_args(argv)
     httpd = serve(a.out_dir, a.port, a.host, a.video)

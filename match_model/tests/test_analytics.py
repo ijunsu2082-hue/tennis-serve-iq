@@ -305,6 +305,15 @@ class TestStats(unittest.TestCase):
         self.assertEqual(st["coverage"]["winner"]["known"], 7)
         self.assertEqual(st["coverage"]["winner"]["total"], 8)
 
+    def test_two_faults_on_a_point_the_server_won_are_not_a_double_fault(self):
+        two = [{"n": 1, "result": "fault"}, {"n": 2, "result": "fault"}]
+        lost = an.point_attrs(P(20, "A", "B", played_on=None, serves=copy.deepcopy(two)))
+        self.assertEqual((lost["first_in"], lost["second_in"], lost["df"]), (False, False, True))
+        won = an.point_attrs(P(21, "A", "A", played_on=None, serves=copy.deepcopy(two), ending="ace"))
+        self.assertEqual((won["first_in"], won["second_in"], won["df"]), (False, None, None))
+        no_winner = an.point_attrs(P(22, "A", None, played_on=None, serves=copy.deepcopy(two)))
+        self.assertIs(no_winner["df"], True)
+
     def test_wilson_and_rate(self):
         r = an.rate(5, 8)
         self.assertEqual(r["pct"], 62.5)
@@ -348,9 +357,25 @@ class TestInsights(unittest.TestCase):
         self.assertEqual(r["confidence"], "low")
         self.assertEqual(len(r["evidence_point_ids"]), 8)
         self.assertAlmostEqual(r["effect"], 62.5 - 11.1, places=1)
+        # a low note (here a small sample) gives no plan line
         recs = an.recommendations(None, ins, self.players)
-        self.assertTrue(any("Serve to Alcaraz's backhand: down the T on the deuce side" in x["text"]
-                            for x in recs if x["for"] == "A"))
+        self.assertFalse([x for x in recs if "backhand" in x["text"]])
+        # with 12 and 12 points the gap is unlikely to be chance (Fisher p 0.009), so it is
+        # a high note and the plan serves to that wing; the hand was never entered, so
+        # the line says that it assumes a right-hander
+        ins = self._ins(_return_points(8, 12, 1, 12))
+        r = [i for i in ins if i["key"] == "ret_wing_bh"][0]
+        self.assertEqual(r["confidence"], "high")
+        self.assertAlmostEqual(r["chance_p"], 0.0094, places=4)
+        recs = an.recommendations(None, ins, self.players)
+        line = [x["text"] for x in recs if x["for"] == "A" and "backhand" in x["text"]]
+        self.assertEqual(len(line), 1)
+        self.assertIn("Serve to Alcaraz's backhand: down the T on the deuce side", line[0])
+        self.assertIn("assumes Alcaraz is right-handed, which was not entered or checked", line[0])
+        given = {"A": dict(self.players["A"]), "B": dict(self.players["B"], hand_given=True)}
+        recs = an.recommendations(None, ins, given)
+        line = [x["text"] for x in recs if x["for"] == "A" and "backhand" in x["text"]]
+        self.assertNotIn("assumes", line[0])
 
     def test_min_sample(self):
         ins = self._ins(_return_points(4, 4, 0, 9))     # bh n=4 < 5

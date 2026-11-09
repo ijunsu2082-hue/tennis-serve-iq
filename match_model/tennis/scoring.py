@@ -51,7 +51,9 @@ Reconcile gap policy
 * An observation is ignored as a transient misread if (a) the following
   observation reverts to the current state, or (b) it is unreadable or more
   than one point away while the following observation is the current state
-  or one point from it.
+  or one point from it. Rule (a) has one exception: at deuce and advantage,
+  going back is a legal next point (40-40, AD-40, 40-40), so a reading that
+  stayed on the board for at least ``MIN_HOLD_S`` seconds is a real point.
 * The reading is 2..``max_fill`` points away (default 3), and exactly one
   sequence of winners of the shortest length reaches it (e.g. 15-0 -> 40-0
   can only be A, A). The missed points are then emitted with
@@ -87,6 +89,7 @@ PT_LABELS = ["0", "15", "30", "40"]
 _IDX = {"A": 0, "B": 1}
 _PT_PARSE = {"0": 0, "00": 0, "O": 0, "LOVE": 0, "15": 1, "30": 2, "40": 3}
 _ADV_STR = {"A", "AD", "ADV", "AV"}
+MIN_HOLD_S = 5.0        # shorter than any real point, longer than a board animation
 
 
 # ---------------------------------------------------------------------------
@@ -507,6 +510,13 @@ def _retro_fix_server(out: list, cur: ScoreState, fmt: MatchFormat) -> None:
         b.flags = flags(st, fmt)
 
 
+def _can_go_back(cur: ScoreState, winner: str, fmt: MatchFormat) -> bool:
+    """After `winner` wins a point from cur, can the next point restore cur's score?
+    True only around deuce (40-40 to advantage and back, advantage to 40-40 and back)."""
+    after = apply(cur, winner, fmt)
+    return not after.match_over and any(state_key(apply(after, p, fmt)) == state_key(cur) for p in "AB")
+
+
 def _is_start(s: ScoreState) -> bool:
     return not s.sets and s.games == [0, 0] and s.points == [0, 0]
 
@@ -560,8 +570,10 @@ def reconcile(obs_list: list, fmt: Optional[MatchFormat] = None,
             one = [] if cur.match_over else [p for p in "AB" if state_key(apply(cur, p, fmt)) == k]
             # transient: reverts on the next reading
             if nxt is not None and state_key(nxt) == state_key(cur):
-                i += 1
-                continue
+                held = float(parsed[i + 1][0].t) - float(o.t)
+                if not (held >= MIN_HOLD_S and len(one) == 1 and _can_go_back(cur, one[0], fmt)):
+                    i += 1
+                    continue
             if len(one) == 1:
                 conf = min(0.98, 0.98 * float(o.conf if o.conf is not None else 1.0))
                 out.append(_boundary(len(out), cur, one[0], o.t, fmt, gap, conf, "ocr"))

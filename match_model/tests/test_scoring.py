@@ -287,6 +287,49 @@ class TestReconcile(unittest.TestCase):
         self.assertTrue(b[0].gap_before)       # first reading wasn't the match start
         self.assertFalse(b[1].gap_before)
 
+    def test_deuce_back_and_forth_is_real(self):
+        """40-40, AD-40, 40-40 goes back to an earlier score and that is legal. Readings
+        that stay on the board this long are points, not misreads."""
+        fmt = MatchFormat()
+        o = [obs(0, [], [1, 1], [40, 30], 0),
+             obs(30, [], [1, 1], [40, 40], 0),
+             obs(60, [], [1, 1], ["A", 40], 0),
+             obs(90, [], [1, 1], [40, 40], 0),
+             obs(120, [], [1, 1], [40, "A"], 0),
+             obs(150, [], [1, 1], [40, 40], 0),
+             obs(180, [], [1, 1], ["A", 40], 0),
+             obs(210, [], [2, 1], [0, 0], 1)]
+        b = sc.reconcile(o, fmt)
+        self.assertEqual([x.winner for x in b], ["B", "A", "B", "B", "A", "A", "A"])
+        self.assertEqual([x.score_before["points"] for x in b],
+                         ["40-30", "40-40", "AD-40", "40-40", "40-AD", "40-40", "AD-40"])
+        self.assertEqual([x.side for x in b], ["ad", "deuce", "ad", "deuce", "ad", "deuce", "ad"])
+        self.assertEqual([x.flags["break_point"] for x in b], [False, False, False, False, True, False, False])
+        self.assertTrue(all(x.source == "ocr" for x in b))
+
+    def test_blink_of_advantage_is_a_misread(self):
+        """A one second advantage that goes straight back is not a point."""
+        fmt = MatchFormat()
+        o = [obs(0, [], [1, 1], [40, 40], 0),
+             obs(30, [], [1, 1], ["A", 40], 0),       # reverts after 1 s -> ignored
+             obs(31, [], [1, 1], [40, 40], 0),
+             obs(60, [], [1, 1], [40, "A"], 0),
+             obs(90, [], [1, 2], [0, 0], 1)]
+        b = sc.reconcile(o, fmt)
+        self.assertEqual([x.score_before["points"] for x in b], ["40-40", "40-AD"])
+        self.assertEqual([x.t_end for x in b], [60, 90])
+
+    def test_long_held_score_that_cannot_go_back_is_still_a_misread(self):
+        """Away from deuce a score can never go back, however long the wrong one stayed."""
+        fmt = MatchFormat()
+        o = [obs(0, [], [2, 1], [15, 0], 0),
+             obs(5, [], [2, 1], [30, 0], 0),          # stays 40 s, but 30-0 back to 15-0 is impossible
+             obs(45, [], [2, 1], [15, 0], 0),
+             obs(70, [], [2, 1], [15, 15], 0)]
+        b = sc.reconcile(o, fmt)
+        self.assertEqual([x.score_before["points"] for x in b], ["15-0"])
+        self.assertEqual(b[0].winner, "B")
+
     def test_gap_unique_fill_and_resync(self):
         fmt = MatchFormat()
         o = [obs(0, [], [0, 0], [0, 0], 0),

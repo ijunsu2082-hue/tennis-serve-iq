@@ -1,6 +1,7 @@
 """Classical, fast tennis-ball tracking for the main broadcast camera.
 
-Pipeline (per rally window, every frame at the native 25 fps):
+Pipeline (per rally window, every frame up to 40 fps; a faster video is read at about
+30 fps, see work_fps):
   1. decode at a working size (default 640x360) via tennis.video.iter_frames
   2. 3-frame differencing on a "ball channel" (bright + yellow-ish: max(R,G) - 0.5 B
      blended with luma), so the static court, scoreboard and ads vanish
@@ -12,19 +13,24 @@ Pipeline (per rally window, every frame at the native 25 fps):
      of the best non-conflicting track, and short-gap filling.
 
 Pixel coordinates in the returned BallObs are full-frame (fit.frame_w x fit.frame_h).
+The pixel rules were set on 1280x720 video. A taller video is measured in pixels of a
+720-row frame (contracts.px_unit): the far half is read at that size instead of full
+size, and the track linking divides its coordinates by the unit.
 """
 from __future__ import annotations
 
 import time
+from functools import lru_cache
 from typing import Optional, Sequence
 
 import cv2
 import numpy as np
 
-from .contracts import BallObs, CourtFit, HALF_LEN, DOUBLES_HALF_W
+from .contracts import BallObs, CourtFit, HALF_LEN, DOUBLES_HALF_W, px_unit
 from .video import iter_frames, probe
 
 WORK_W, WORK_H = 640, 360
+TUNED_FPS = 30.0      # the per-frame rules below were set on 25 to 30 fps broadcasts
 
 # last-run diagnostics (frames, seconds, fps) for tests / reports
 LAST_STATS: dict = {}
@@ -33,7 +39,9 @@ LAST_STATS: dict = {}
 def _court_roi(fit: CourtFit, scale: float, shape: tuple[int, int],
                up_px: float = 150.0) -> np.ndarray:
     """Binary mask (work res) of the region where the ball can appear: the floor
-    around the court plus a band above it (balls in the air project upward)."""
+    around the court plus a band above it (balls in the air project upward).
+    up_px is in pixels of a 720-row frame."""
+    up_px = up_px * px_unit(fit.frame_h)
     Hi = np.linalg.inv(np.asarray(fit.H, float))
     xm, yn, yf = DOUBLES_HALF_W + 4.5, -(HALF_LEN + 6.5), HALF_LEN + 6.5
     pts = np.array([[-xm, yn], [xm, yn], [xm, yf], [-xm, yf]], float).reshape(-1, 1, 2)
@@ -108,7 +116,7 @@ def _far_split(fit: CourtFit) -> tuple[int, int, int, int]:
     img = cv2.perspectiveTransform(pts, Hi).reshape(-1, 2)
     x0, x1 = int(img[:, 0].min()) // 2 * 2, int(img[:, 0].max() + 1) // 2 * 2
     y1 = int(img[:2, 1].max()) // 2 * 2
-    y0 = int(img[2:, 1].min() - 110) // 2 * 2
+    y0 = int(img[2:, 1].min() - 110 * px_unit(fit.frame_h)) // 2 * 2   # 110 px of a 720-row frame
     return max(0, x0), max(0, y0), min(fit.frame_w, x1), min(fit.frame_h, y1)
 
 
@@ -130,6 +138,22 @@ def _blobs(m: np.ndarray, valid: np.ndarray, thr: int, max_area: int, max_side: 
     return out
 
 
+@lru_cache(maxsize=8)
+def _src_fps(path: str) -> float:
+    return probe(path).fps
+
+
+def work_fps(src_fps: float) -> Optional[float]:
+    """Frame rate the ball is looked for at: None (every frame) up to 40 fps. Above
+    that every k-th frame, so a 60 fps video is read at 30 fps: the 3-frame
+    differencing, the linking gates and the gap filling count in frames, and at 60 fps
+    the ball moves half as far per frame as they were set for (a slow ball cancels
+    itself out in the difference). It also halves this work on such a video."""
+    if src_fps <= 40.0:
+        return None
+    return src_fps / max(1, int(round(src_fps / TUNED_FPS)))
+
+
 def detect_candidates(path: str, start: float, end: float, fit: CourtFit, players=None,
                       size=(WORK_W, WORK_H), diff_thr: int = 14, max_cands: int = 12,
                       suppress_players: bool = True):
@@ -137,17 +161,27 @@ def detect_candidates(path: str, start: float, end: float, fit: CourtFit, player
     (x, y, score, area) in FULL-FRAME px for frame i.
 
     Near half: processed at the working size (default 640x360).
-    Far half (beyond the net, ball ~3 px): processed at full resolution."""
+    Far half (beyond the net, ball ~3 px): processed at full resolution up to 720
+    rows; a taller video's far half is shrunk to the size it would have at 720 rows,
+    so the blob size limits keep their meaning."""
     w, h = size
     scale = w / float(fit.frame_w)
     roi = _court_roi(fit, scale, (h, w))
     fx0, fy0, fx1, fy1 = _far_split(fit)
     split_y = fy1                      # full-res y separating far / near processing
+    r_hi = min(1.0, 1.0 / px_unit(fit.frame_h))
+    hw = max(1, int(round((fx1 - fx0) * r_hi)))
+    hh = max(1, int(round((fy1 - fy0) * r_hi)))
+    sx_hi = hw / float(max(1, fx1 - fx0))       # far-half size / full size, per axis
+    sy_hi = hh / float(max(1, fy1 - fy0))
     # decode only the court band at full res; build both resolutions from it
     cx0, cy0, cx1, cy1 = 0, max(0, fy0) // 2 * 2, fit.frame_w, fit.frame_h
     lo_parts, hi_parts, times = [], [], []
-    for t, f in iter_frames(path, fps=None, start=start, end=end, crop=(cx0, cy0, cx1, cy1)):
-        hi_parts.append(_ball_channel(f[fy0 - cy0:fy1 - cy0, fx0:fx1]))
+    for t, f in iter_frames(path, fps=work_fps(_src_fps(path)), start=start, end=end, crop=(cx0, cy0, cx1, cy1)):
+        far = f[fy0 - cy0:fy1 - cy0, fx0:fx1]
+        if r_hi < 1.0:
+            far = cv2.resize(far, (hw, hh), interpolation=cv2.INTER_AREA)
+        hi_parts.append(_ball_channel(far))
         small = cv2.resize(f, (w, int(round((cy1 - cy0) * scale))), interpolation=cv2.INTER_AREA)
         lo_parts.append(_ball_channel(small))
         times.append(t)
@@ -158,7 +192,10 @@ def detect_candidates(path: str, start: float, end: float, fit: CourtFit, player
     roi_lo = roi[lo_off:lo_off + lo_parts[0].shape[0]]
     # far region at full res: its ROI is the full-res ROI rescaled
     roi_hi = cv2.resize(roi.astype(np.uint8), (fit.frame_w, fit.frame_h),
-                        interpolation=cv2.INTER_NEAREST)[fy0:fy1, fx0:fx1] > 0
+                        interpolation=cv2.INTER_NEAREST)[fy0:fy1, fx0:fx1]
+    if r_hi < 1.0:
+        roi_hi = cv2.resize(roi_hi, (hw, hh), interpolation=cv2.INTER_NEAREST)
+    roi_hi = roi_hi > 0
     roi_lo = roi_lo.copy()
     roi_lo[: max(0, int(split_y * scale) - lo_off - 2)] = False   # far part handled at hi-res
 
@@ -188,6 +225,11 @@ def detect_candidates(path: str, start: float, end: float, fit: CourtFit, player
             X, Y = x * inv, (y + lo_off) * inv
             rows.append((X, Y, peak / 255.0 + min(area, 12) / 24.0 - 0.1 * max(0.0, asp - 2.5), area * inv * inv))
         for (x, y, peak, area, asp) in _blobs(diffs(hi_parts, i), valid_hi, diff_thr - 2, 80, 16):
+            if r_hi < 1.0:
+                X, Y = x / sx_hi + fx0, y / sy_hi + fy0
+                rows.append((X, Y, peak / 255.0 + min(area, 24) / 48.0 - 0.1 * max(0.0, asp - 2.5),
+                             area / (sx_hi * sy_hi)))
+                continue
             X, Y = x + fx0, y + fy0
             rows.append((X, Y, peak / 255.0 + min(area, 24) / 48.0 - 0.1 * max(0.0, asp - 2.5), area))
         if suppress_players and players:
@@ -324,13 +366,21 @@ def suppress_players(times, cands, players):
     return out
 
 
-def track_from_candidates(times, cands) -> list[BallObs]:
+def track_from_candidates(times, cands, unit: float = 1.0) -> list[BallObs]:
+    """Ball track from per-frame candidates (full-frame px). unit: contracts.px_unit of
+    the video; the linking gates and track scores are in pixels of a 720-row frame,
+    so the candidates are divided by it and the track is turned back into full-frame px."""
     n = len(times)
     if n == 0:
         return []
+    if unit != 1.0:
+        cands = [np.asarray(c, float) / np.array([unit, unit, 1.0, unit * unit])[:np.asarray(c).shape[1]]
+                 if len(c) else c for c in cands]
     tracks = _link(cands)
     pos, conf, _ = _select(tracks, n)
     pos, conf = _fill_gaps(pos, conf)
+    if unit != 1.0:
+        pos = pos * unit
     return [BallObs(t=float(times[i]), xy_px=(float(pos[i, 0]), float(pos[i, 1])),
                     conf=float(conf[i]))
             for i in range(n) if not np.isnan(pos[i, 0])]
@@ -343,7 +393,7 @@ def track_ball(path: str, start: float, end: float, fit: CourtFit, players=None,
     t0 = time.time()
     times, cands = detect_candidates(path, start, end, fit, players=players, size=size)
     t1 = time.time()
-    out = track_from_candidates(times, cands)
+    out = track_from_candidates(times, cands, px_unit(fit.frame_h))
     n = len(times)
     dt = time.time() - t0
     LAST_STATS.update(frames=n, seconds=dt, detect_s=t1 - t0, fps=n / max(dt, 1e-6),

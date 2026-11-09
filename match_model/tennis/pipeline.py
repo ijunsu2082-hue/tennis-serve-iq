@@ -12,8 +12,8 @@ Stages (each cached as JSON in <out>/cache/ so re-runs take seconds):
 """
 from __future__ import annotations
 
-import inspect
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Optional
 
 from .contracts import (BugLayout, CourtFit, MatchFormat, PointRecord, ScoreObs, Segment,
-                        PointBoundary, PointVision, ServeVision, ShotEvent, other)
+                        PointBoundary, PointVision, ServeVision, ShotEvent, other, px_unit)
 
 PIPELINE_VERSION = "1.0"
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,8 +32,10 @@ ROOT = Path(__file__).resolve().parent.parent
 class Options:
     a_name: Optional[str] = None
     b_name: Optional[str] = None
-    a_hand: str = "R"
-    b_hand: str = "R"
+    # None: not given. The vision rules then take the player as right-handed, and the
+    # report and the chat say that this is an unchecked default.
+    a_hand: Optional[str] = None
+    b_hand: Optional[str] = None
     no_ad: bool = False
     final_set: str = "tb"
     best_of: int = 3
@@ -77,6 +79,15 @@ def _jd(o):
     if hasattr(o, "tolist"):
         return o.tolist()
     raise TypeError(type(o))
+
+
+def DETECT(vpath: str, a: float, b: float, fit: CourtFit, with_features: bool):
+    """Detection for one rally window -> (times, ball candidates, player dets).
+    The only step of the vision stage that decodes the window. A module-level
+    function so a development script can wrap it (for example to keep the
+    detections of a run on disk and re-chart without decoding again)."""
+    from . import chart
+    return chart.detect_window(vpath, a, b, fit, with_features=with_features)
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +236,174 @@ def resolve_ends(vpath: str, fit: CourtFit, jobs: list) -> tuple[dict, object]:
     log(f"identity: {len(rule)}/{len(jobs)} windows by serve geometry, appearance model "
         f"{'fitted' if ident else 'not fitted'}; agree {agree}, disagree {disagree}")
     return out, ident
+
+
+# ---------------------------------------------------------------------------
+# ends from the score engine, turned the right way round by a vote
+# ---------------------------------------------------------------------------
+# The engine changes ends by the rules (after odd games, every 6 tiebreak points,
+# after each set as its game total says), so within a stretch of continuous score
+# only one thing is unknown: which end each player started at. Each window votes
+# on that with the serve set-up seen just before its first serve-like hit.
+VOTE_CONF = 0.8           # serve_setup_end confidence a window needs to vote
+VOTE_SHARE = 0.75         # share of the votes one way needed to decide
+STRETCH_MIN_VOTES = 5     # a stretch with fewer votes takes the whole match's decision
+MATCH_MIN_VOTES = 3       # the whole match's decision needs at least this many votes
+SETUP_LOOK_S = 3.0        # the set-up check looks at [hit - 3.0 s, hit - 0.5 s]
+SETUP_GAP_S = (0.5, 0.2)  # end of that stretch before the hit; 0.2 s when the window is short
+
+
+def serve_like_hit(evs):
+    """First hit from behind a baseline that is followed, before any other hit,
+    by a bounce in the other half within 0.25 to 1.5 s (no further than 2 m past
+    the service line, 1 m outside the singles line), or by a hit from the other
+    end within 2 s. Only used to place the set-up check in time."""
+    from .contracts import SERVICE_LINE, SINGLES_HALF_W
+    from .events import SERVE_BEHIND
+    hits = [e for e in evs if e.kind in ("serve", "hit") and getattr(e, "_end", None) in ("near", "far")]
+    bounces = [e for e in evs if e.kind == "bounce" and e.court_xy is not None]
+    for h in hits:
+        if h.court_xy is None or abs(h.court_xy[1]) < SERVE_BEHIND:
+            continue
+        nxt = next((x for x in hits if x.t > h.t + 0.15), None)
+        lim = nxt.t if nxt is not None else 1e9
+        b = next((x for x in bounces if h.t + 0.25 < x.t < min(lim, h.t + 1.5)), None)
+        ok = False
+        if b is not None:
+            bx, by = b.court_xy
+            other_half = by > 0 if h._end == "near" else by < 0
+            ok = other_half and abs(by) <= SERVICE_LINE + 2.0 and abs(bx) <= SINGLES_HALF_W + 1.0
+        if not ok and nxt is not None and nxt._end != h._end and nxt.t - h.t <= 2.0:
+            ok = True
+        if ok:
+            return h
+    return None
+
+
+def setup_prev_of(segments, prev_win, a: float, b: float):
+    """What the set-up check of window [a, b] may read from the window charted just
+    before it, prev_win = (its end, its player detections): (a - SETUP_LOOK_S, those
+    detections from then on) when that window ended exactly at a (a score change
+    inside one camera shot) and [a, b] lies in a main-camera shot that started before
+    a (no camera cut at a); else None. A serve hit early in the window then still has
+    its set-up footage, which is in the window before."""
+    if prev_win is None or abs(prev_win[0] - a) > 1e-6:
+        return None
+    if not any(s.kind == "main" and s.start < a - 1e-6 and b <= s.end + 1e-6 for s in segments):
+        return None
+    t_min = a - SETUP_LOOK_S
+    return t_min, [d for d in prev_win[1] if d.t >= t_min]
+
+
+def setup_slice(dets, t: float, t_min: float):
+    """The player detections in [t - 3.0, t - 0.5], never before t_min (the
+    window start: earlier frames can be another camera shot). When the window
+    starts too late for 3 real detections a side, the stretch ends 0.2 s before t
+    instead. None when there is too little footage."""
+    for gap in SETUP_GAP_S:
+        sub = [d for d in dets if max(t_min, t - SETUP_LOOK_S) <= d.t <= t - gap]
+        if all(sum(1 for d in sub if d.end == e and not d.interp) >= 3 for e in ("near", "far")):
+            return sub
+    return None
+
+
+def setup_before(dets, t: float, t_min: float) -> tuple[Optional[str], float]:
+    """serve_setup_end on setup_slice(dets, t, t_min); (None, 0.0) when there is
+    too little footage."""
+    sub = setup_slice(dets, t, t_min)
+    return serve_setup_end(sub) if sub is not None else (None, 0.0)
+
+
+def window_vote(fit: CourtFit, t_start: float, dets, ball) -> Optional[dict]:
+    """One window's vote: the end of the player serving at its first serve-like
+    hit, by the set-up rule. The ball events are made without a server end, so
+    the toss check looks at both players."""
+    from . import events as E
+    from .chart import FPS_BALL
+    h = serve_like_hit(E.detect_events(ball, dets, fit, fps=FPS_BALL, server_end=None))
+    if h is None:
+        return None
+    se, c = setup_before(dets, h.t, t_start)
+    return {"hit_t": round(float(h.t), 3), "end": se, "conf": round(float(c), 3)}
+
+
+def score_stretches(bounds) -> list[int]:
+    """Stretch number per point. A new stretch starts after a resync across which
+    the engine could not count the end changes (a jump into another set, into or
+    out of a tiebreak, or a score going back). Points the engine filled in and
+    forward jumps inside one set keep the stretch."""
+    sid, out = 0, []
+    for k, b in enumerate(bounds):
+        if k > 0 and b.gap_before and b.source != "engine":
+            p, c = bounds[k - 1].score_after, b.score_before
+            carried = (len(p.get("sets", [])) == len(c.get("sets", []))
+                       and not p.get("in_tb") and not c.get("in_tb")
+                       and sum(c.get("games", [0, 0])) >= sum(p.get("games", [0, 0])))
+            if not carried:
+                sid += 1
+        out.append(sid)
+    return out
+
+
+def orient_by_votes(bounds, votes: dict) -> tuple[dict, list]:
+    """Turn the engine's ends the right way round, per stretch of continuous score.
+
+    votes: {point index: window_vote(...) or None}. A vote agrees with the engine
+    when the server end it saw is the engine's end for that point's server. A
+    stretch with at least STRETCH_MIN_VOTES votes is decided by its own votes when
+    VOTE_SHARE of them go one way, and stays undecided when they are split. A
+    stretch with fewer votes takes the whole match's decision (at least
+    MATCH_MIN_VOTES votes, VOTE_SHARE one way). Flips the engine ends of the
+    stretches that disagree, in place. Returns ({point index: share} for the
+    points of decided stretches, log lines)."""
+    sids = score_stretches(bounds)
+    tally: dict = {}
+    for i, v in votes.items():
+        if not v or v.get("end") not in ("near", "far") or v.get("conf", 0.0) < VOTE_CONF:
+            continue
+        if not (0 <= i < len(bounds)):
+            continue
+        eng = (bounds[i].score_before.get("ends") or {}).get(bounds[i].server)
+        if eng not in ("near", "far"):
+            continue
+        tally.setdefault(sids[i], [0, 0])[0 if v["end"] == eng else 1] += 1
+
+    def decide(t):
+        n = t[0] + t[1]
+        if n and t[1] >= VOTE_SHARE * n:
+            return True, t[1] / n
+        if n and t[0] >= VOTE_SHARE * n:
+            return False, t[0] / n
+        return None
+
+    tot = [sum(t[0] for t in tally.values()), sum(t[1] for t in tally.values())]
+    whole = decide(tot) if sum(tot) >= MATCH_MIN_VOTES else None
+    voted, flip, lines = {}, set(), []
+    for s in sorted(set(sids)):
+        t = tally.get(s, [0, 0])
+        if sum(t) >= STRETCH_MIN_VOTES:
+            d, how = decide(t), "own votes"
+        else:
+            d, how = whole, "whole match"
+        n_pts = sum(1 for x in sids if x == s)
+        if d is None:
+            lines.append(f"ends: stretch {s} ({n_pts} points) votes agree {t[0]}, disagree {t[1]}: "
+                         f"undecided, per-window ends")
+            continue
+        if d[0]:
+            flip.add(s)
+        lines.append(f"ends: stretch {s} ({n_pts} points) votes agree {t[0]}, disagree {t[1]}: "
+                     f"{'flip' if d[0] else 'keep'} the engine's ends ({how}, share {d[1]:.2f})")
+        for k, x in enumerate(sids):
+            if x == s:
+                voted[k] = round(d[1], 2)
+    done = set()                       # score dicts may be shared between points
+    for k, b in enumerate(bounds):
+        ee = b.score_before.get("ends")
+        if sids[k] in flip and ee and id(b.score_before) not in done:
+            done.add(id(b.score_before))
+            b.score_before["ends"] = {p: ("far" if e == "near" else "near") for p, e in ee.items()}
+    return voted, lines
 
 
 def split_rallies(vpath: str, fit: CourtFit, seg: Segment, fps: float = 2.0) -> list[tuple[float, float]]:
@@ -492,8 +671,8 @@ def analyze(video: str, out_dir: Optional[str] = None, opts: Optional[Options] =
         names["B"] = names["B"] or _title(layout.names[1])
     names["A"] = names["A"] or "Player A"
     names["B"] = names["B"] or "Player B"
-    players = {"A": {"name": names["A"], "hand": opts.a_hand},
-               "B": {"name": names["B"], "hand": opts.b_hand}}
+    players = {"A": {"name": names["A"], "hand": opts.a_hand or "R", "hand_given": opts.a_hand is not None},
+               "B": {"name": names["B"], "hand": opts.b_hand or "R", "hand_given": opts.b_hand is not None}}
 
     # 4. points ---------------------------------------------------------------
     has_bug = bool(layout and obs)
@@ -503,10 +682,14 @@ def analyze(video: str, out_dir: Optional[str] = None, opts: Optional[Options] =
             f"({sum(b.source == 'ocr' for b in bounds)} seen, {sum(b.source != 'ocr' for b in bounds)} inferred)")
     else:
         bounds = []
+    bug_warnings = scorebug_warnings(layout, obs, bounds)
+    for w in bug_warnings:
+        log(f"WARNING: {w}")
 
     # 5. vision -----------------------------------------------------------------
-    hands = {"A": opts.a_hand, "B": opts.b_hand}
+    hands = {"A": opts.a_hand or "R", "B": opts.b_hand or "R"}
     visions: dict[int, PointVision] = {}
+    voted: dict = {}           # point index -> ends confidence, for points whose ends came from the vote
     if not opts.quick and fit is not None:
         from . import chart
         c = cache.get("vision")
@@ -526,30 +709,75 @@ def analyze(video: str, out_dir: Optional[str] = None, opts: Optional[Options] =
         else:
             jobs, ident_nb = no_bug_jobs(vpath, fit, segs)
         todo = [j for j in jobs if j[0] not in cached]
+        tracked: dict = {}
         if has_bug:
-            ends_by, ident = (resolve_ends(vpath, fit, todo) if todo else ({}, None))
+            # pass 1: detect and track every window. This is the only video pass
+            # of the vision stage; nothing here depends on who is at which end.
+            # No clothing features: the player pictures are dropped as they are
+            # detected, which keeps long windows from filling the memory.
+            for n, (i, (a, bnd), *_rest) in enumerate(todo):
+                try:
+                    times, cands, dets = DETECT(vpath, a, bnd, fit, False)
+                    tracked[i] = (dets, chart.track_window(times, cands, dets, px_unit(fit.frame_h)))
+                    del times, cands
+                except Exception as ex:  # one bad window must not kill a 3-hour run
+                    log(f"  detection failed on point {i} [{a:.1f}-{bnd:.1f}]: {ex!r}")
+                if (n + 1) % 10 == 0 or n + 1 == len(todo):
+                    log(f"  detect {n + 1}/{len(todo)} windows ({time.time() - ts:.0f}s)")
+            # ends: the engine's end changes, turned the right way round by a vote
+            votes = {int(k): v for k, v in (cache.get("ends_votes") or {}).items()}
+            for i, (a, bnd), *_rest in todo:
+                if i in tracked:
+                    votes[i] = window_vote(fit, a, *tracked[i])
+            cache.put("ends_votes", votes)
+            voted, lines = orient_by_votes(bounds, votes)
+            for line in lines:
+                log(line)
+            rest = [j for j in todo if j[0] in tracked and j[0] not in voted]
+            ends_by, ident = (resolve_ends(vpath, fit, rest) if rest else ({}, None))
+            if ident is not None:
+                # the appearance model needs clothing features, which pass 1 does
+                # not make (it keeps no pictures): detect those windows' players again
+                from . import players as P
+                for i, (a, bnd), *_rest in rest:
+                    tracked[i] = (P.detect_players(vpath, a, bnd, fit, 5, 480, None, True), tracked[i][1])
         else:
+            voted = {}
             ends_by, ident = {}, ident_nb
+        prev_win = None        # (end, player detections) of the window charted just before
         for n, (i, (a, bnd), server, side, ends) in enumerate(jobs):
             if i in cached:
                 visions[i] = _pv_from_dict(cached[i])
                 continue
-            if i in ends_by:
+            idn, e_conf = ident, None
+            if i in voted:
+                ends, idn, e_conf = bounds[i].score_before.get("ends"), None, voted[i]
+            elif i in ends_by:
                 ends = ends_by[i][0]
-            kw = {}
-            if has_bug and "known_winner" in inspect.signature(chart.chart_point).parameters:
-                kw["known_winner"] = bounds[i].winner
             try:
-                pv = chart.chart_point(vpath, a, bnd, fit, server=server, side=side,
-                                       ends=ends or {"A": "near", "B": "far"},
-                                       players_hand=hands, identity=ident, **kw)
+                if has_bug:
+                    if i not in tracked:
+                        continue
+                    dets, ball = tracked.pop(i)
+                    sp = setup_prev_of(segs, prev_win, a, bnd)
+                    prev_win = (bnd, dets)
+                else:
+                    sp = None
+                    times, cands, dets = DETECT(vpath, a, bnd, fit, ident is not None)
+                    ball = chart.track_window(times, cands, dets, px_unit(fit.frame_h))
+                    del times, cands
+                pv = chart.chart_tracked(vpath, a, bnd, fit, server, side,
+                                         ends or {"A": "near", "B": "far"}, dets, ball,
+                                         players_hand=hands, identity=idn,
+                                         known_winner=(bounds[i].winner if has_bug else None),
+                                         ends_conf=e_conf, setup_prev=sp)
                 if i in ends_by:
                     pv.conf["ends"] = round(max(pv.conf.get("ends", 0.0), ends_by[i][1]), 2)
                 tries = []
                 for (sa, sb) in attempts_of.get(i, []):
                     apv = chart.chart_point(vpath, sa, sb, fit, server=server, side=side,
                                             ends=pv.ends or ends or {"A": "near", "B": "far"},
-                                            players_hand=hands, identity=ident)
+                                            players_hand=hands, identity=idn)
                     if apv.serves or is_serve_setup(vpath, fit, sa, sb):
                         tries.append(apv)
                 pv = merge_serve_attempts(pv, tries)
@@ -602,23 +830,29 @@ def analyze(video: str, out_dir: Optional[str] = None, opts: Optional[Options] =
             f"(scores reconstructed from 0-0 - set unknown winners in the review UI)")
 
     # 6. merge --------------------------------------------------------------------
-    orient_engine_ends(bounds, visions)
+    if not voted:
+        orient_engine_ends(bounds, visions)
     points = []
     for i, b in enumerate(bounds):
         engine_ends = b.score_before.get("ends")
         points.append(asdict(merge_point(b, visions.get(i), i, engine_ends)))
 
     match = {
-        "meta": {"video": _rel(vpath, out), "video_abs": str(Path(vpath).resolve()),
-                 "video_info": asdict(info), "players": players, "format": asdict(fmt),
+        "meta": {"video": _rel(vpath, out),
+                 "video_info": dict(asdict(info), path=_rel(vpath, out)), "players": players, "format": asdict(fmt),
                  "pipeline_version": PIPELINE_VERSION,
                  "generated_at": datetime.now().isoformat(timespec="seconds"),
                  "runtime_s": round(time.time() - t0, 1), "has_scorebug": has_bug,
+                 "scorebug_warning": " ".join(bug_warnings) or None,
                  "quick": opts.quick,
                  "court": asdict(fit) if fit else None},
         "segments": [asdict(s) for s in segs],
         "points": points,
     }
+    # match.json can be shared, so it names the video without this computer's folders;
+    # the full path is kept in cache/ (never shared), where the report link and the
+    # review page look for it
+    (cache.dir / VIDEO_PATH_FILE).write_text(str(Path(vpath).resolve()))
     paths = render(match, out)
     # match_auto.json = the uncorrected base the review UI applies corrections to
     (out / "match_auto.json").write_text((out / "match.json").read_text())
@@ -643,21 +877,91 @@ def rebuild(out_dir: str) -> dict:
     corr = json.loads(corr_f.read_text()) if corr_f.exists() else {}
     m = apply_corrections(match, corr)
     paths = render(m, out)
-    log(f"rebuilt with {len(corr)} corrected points -> {paths['html']}")
+    meta = m.get("meta") or {}
+    if meta.get("corrections_stale"):
+        log(f"WARNING: {meta['corrections_stale']} ({corr_f})")
+    # count the point entries that were applied, not every key ("_meta" is not a point)
+    n_added = (m.get("stats") or {}).get("n_added") or 0
+    log(f"rebuilt with corrections on {meta.get('corrections_applied') or 0} points"
+        f"{f' ({n_added} added)' if n_added else ''} -> {paths['html']}")
     return m
 
 
 # ---------------------------------------------------------------------------
 def _title(name: str) -> str:
-    name = name.replace("•", "").strip()
+    # a team or country code in brackets is not part of the name: "LANE (UNI)" -> "Lane"
+    name = re.sub(r"\s*\([^)]*\)", "", name.replace("•", "")).strip()
     return name.title() if name.isupper() else name
 
 
+NO_BOARD_WARNING = ("No score board was found in the video. Without one, the points and who won them are "
+                    "guessed from the video, and every score (and so every break point, game point or 40-0) "
+                    "is worked out from those guesses, not read, so check them before you trust any number "
+                    "split by score. One known cause: a board whose player names are not written in capital "
+                    "letters is not found yet.")
+
+
+def scorebug_warnings(layout, obs, bounds) -> list[str]:
+    """Plain warnings when no score board was found, or when one was found but its
+    readings look wrong: no reading at all, the serve marker never read, or the score
+    often jumping in a way the engine could not follow (a sign of misread columns)."""
+    if not layout:
+        return [NO_BOARD_WARNING]
+    out = []
+    names = " and ".join(str(n) for n in (layout.names or []))
+    if not obs:
+        return [f"A score board was found ({names}), but no score could be read from it, so the "
+                f"points were found from the video alone and the score is a guess."]
+    if not any(getattr(o, "server", None) is not None for o in obs):
+        top = (layout.names or ["the top-row player"])[0]
+        out.append(f"The serve marker on the score board was not read in any of {len(obs)} readings, so "
+                   f"who served each point comes from the score alone, starting from a guess that "
+                   f"{top} (top row) served first. Check the server of the first points.")
+    gaps = sum(1 for b in bounds or [] if getattr(b, "gap_before", False))
+    if len(bounds or []) >= 5 and gaps > max(2, 0.1 * len(bounds)):
+        out.append(f"The score jumped in a way the program could not follow {gaps} times in {len(bounds)} "
+                   f"points. That happens when the board is read wrongly, so check the scores next to "
+                   f"the rows of the point list that say points may be missing.")
+    return out
+
+
+VIDEO_PATH_FILE = "video_path.txt"     # in <out>/cache/: the video's full path on this computer
+
+
 def _rel(vpath: str, out: Path) -> str:
+    """The video as match.json names it: relative to the project when it is inside it,
+    else the file name alone (a full path would put this computer's folders in a file
+    that is meant to be shared)."""
     try:
         return str(Path(vpath).resolve().relative_to(ROOT))
     except ValueError:
-        return str(Path(vpath).resolve())
+        return Path(vpath).name
+
+
+def local_video_path(out_dir) -> Optional[Path]:
+    """The video's full path saved by analyze in <out>/cache/, when that file exists."""
+    f = Path(out_dir) / "cache" / VIDEO_PATH_FILE
+    try:
+        p = Path(f.read_text().strip())
+    except OSError:
+        return None
+    return p if p.is_file() else None
+
+
+_LOCAL_META_KEYS = ("video_abs",)
+
+
+def public_meta(meta: dict) -> dict:
+    """meta without this computer's folders: drops video_abs and turns a full video path
+    into its file name (outputs made before this rule had them)."""
+    m = {k: v for k, v in (meta or {}).items() if k not in _LOCAL_META_KEYS}
+    v = m.get("video")
+    if isinstance(v, str) and Path(v).is_absolute():
+        m["video"] = Path(v).name
+    vi = m.get("video_info")
+    if isinstance(vi, dict) and isinstance(vi.get("path"), str) and Path(vi["path"]).is_absolute():
+        m["video_info"] = dict(vi, path=Path(vi["path"]).name)
+    return m
 
 
 def _pv_from_dict(d: dict) -> PointVision:

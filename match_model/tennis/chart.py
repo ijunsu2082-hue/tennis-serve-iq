@@ -11,13 +11,14 @@ from typing import Optional
 import numpy as np
 
 from .contracts import (CourtFit, PlayerId, PointVision, ServeVision, ShotEvent, HALF_LEN,
-                        SERVICE_LINE, SINGLES_HALF_W, other)
+                        SERVICE_LINE, SINGLES_HALF_W, other, px_unit)
 from . import players as P
 from . import ball as B
 from . import events as E
 
 LAST_STATS: dict = {}
 LINE_TOL = 0.12          # metres of slack for homography / bounce-timing error
+FAR_DEPTH_UNSURE = True   # far-court serve bounce past the service line: in or fault unknown
 FPS_BALL = 25.0
 
 
@@ -157,6 +158,45 @@ def _trim_tail(rally: list, ball, H) -> list:
 MAX_SHOT_GAP = 2.6       # s; longest plausible time between a shot and the reply (deep lob ~2.5 s)
 
 
+SERVE_GATE = True         # a serve must not fail the set-up check (serve_setup_ok)
+SETUP_CONF = 0.8          # serve_setup_end confidence the set-up check needs
+STILL_MPS = 1.0           # both players' median foot speed before a serve, m/s
+
+
+def serve_setup_ok(dets, t: float, t_min: float, server_end: str, side: str) -> Optional[bool]:
+    """Was the hit at t preceded by a serve set-up? Looks at the players in the
+    2.5 s ending 0.5 s before t, inside the window (pipeline.setup_slice). True
+    when all three hold, by the rules of tennis:
+      - the set-up rule (serve_setup_end) names the server's end with
+        confidence >= SETUP_CONF (both players near their baselines, the server
+        nearer the centre mark);
+      - the server stands on the half the score requires (deuce: his right) and
+        the receiver on the other half;
+      - both stand nearly still (median foot speed <= STILL_MPS).
+    False when one fails. None when the window has too little footage before t."""
+    from .pipeline import serve_setup_end, setup_slice
+    sub = setup_slice(dets, t, t_min)
+    if sub is None:
+        return None
+    se, c = serve_setup_end(sub)
+    if se != server_end or c < SETUP_CONF:
+        return False
+    sign = 1.0 if side == "deuce" else -1.0
+    if server_end == "far":
+        sign = -sign
+    recv_end = "far" if server_end == "near" else "near"
+    for end, want in ((server_end, sign), (recv_end, -sign)):
+        seq = sorted((d.t, d.court_xy) for d in sub if d.end == end and not d.interp)
+        tt = np.array([q[0] for q in seq])
+        xy = np.array([q[1] for q in seq], float)
+        if np.sign(np.median(xy[:, 0])) != want:
+            return False
+        sp = np.hypot(*np.diff(xy, axis=0).T) / np.maximum(np.diff(tt), 1e-3)
+        if float(np.median(sp)) > STILL_MPS:
+            return False
+    return True
+
+
 def _zone_from_x(ax: float) -> str:
     third = SINGLES_HALF_W / 3.0
     return "T" if ax < third else ("body" if ax < 2 * third else "wide")
@@ -174,35 +214,68 @@ def chart_point(path: str, t_start: float, t_end: float, fit: CourtFit, server: 
     winner by known_winner or an error/double fault by the other player, so
     the remaining question is who hit the last ball and whether it landed in."""
     t0 = time.time()
+    times, cands, dets = detect_window(path, t_start, t_end, fit, player_fps,
+                                       with_features=identity is not None)
+    t1 = time.time()
+    ball = track_window(times, cands, dets, px_unit(fit.frame_h))
+    t2 = time.time()
+    pv = chart_tracked(path, t_start, t_end, fit, server, side, ends, dets, ball,
+                       players_hand=players_hand, identity=identity, known_winner=known_winner)
+    LAST_STATS.update(detect_s=t1 - t0, ball_s=t2 - t1, n_ball=len(ball), n_players=len(dets))
+    LAST_STATS["total_s"] = time.time() - t0
+    return pv
+
+
+def detect_window(path: str, t_start: float, t_end: float, fit: CourtFit,
+                  player_fps: float = 5.0, with_features: bool = False):
+    """The only part of charting that reads the video: player boxes at player_fps
+    and the raw ball candidates (before the player-box removal) of one window.
+    Returns (times, cands, dets)."""
     # YOLO (MPS) and classical ball candidates (CPU) run concurrently; player-body
     # suppression is applied to the candidates afterwards.
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=1) as ex:
         fut = ex.submit(P.detect_players, path, t_start, t_end, fit, player_fps,
-                        480, None, identity is not None)
+                        480, None, with_features)
         times, cands = B.detect_candidates(path, t_start, t_end, fit, players=None)
         dets = fut.result()
-    t1 = time.time()
-    ends_obs, ends_conf = None, 0.0
+    return times, cands, dets
+
+
+def track_window(times, cands, dets, unit: float = 1.0):
+    """Ball track of one window from its detections (no video access, does not
+    depend on who is at which end). unit: contracts.px_unit of the video."""
+    return B.track_from_candidates(times, B.suppress_players(times, cands, dets), unit=unit)
+
+
+def chart_tracked(path: str, t_start: float, t_end: float, fit: CourtFit, server: str,
+                  side: str, ends: dict, dets, ball, players_hand: Optional[dict] = None,
+                  identity: Optional[P.IdentityModel] = None,
+                  known_winner: Optional[PlayerId] = None,
+                  ends_conf: Optional[float] = None, setup_prev=None) -> PointVision:
+    """Chart one window from its detections and ball track. Reads the video only
+    for the pose fallback of the wings. With an appearance model (identity), a
+    confident appearance vote overrides `ends`."""
+    t2 = time.time()
+    ends_obs, obs_conf = None, 0.0
     if identity is not None:
-        ends_obs, ends_conf = identity.assign_ends(dets)
-    use_ends = ends if (ends_obs is None or ends_conf < 0.5) else ends_obs
+        ends_obs, obs_conf = identity.assign_ends(dets)
+    use_ends = ends if (ends_obs is None or obs_conf < 0.5) else ends_obs
+    if ends_obs is not None:
+        ends_conf = obs_conf
     pid_of = {e: p for p, e in use_ends.items()}
     for d in dets:
         d.pid = pid_of.get(d.end)
-    ball = B.track_from_candidates(times, B.suppress_players(times, cands, dets))
-    t2 = time.time()
     pv = chart_from_tracks(t_start, t_end, fit, server, side, use_ends, dets, ball,
                            players_hand=players_hand, known_winner=known_winner,
-                           ends_conf=(ends_conf if ends_obs is not None else None))
+                           ends_conf=ends_conf, setup_prev=setup_prev)
     t3 = time.time()
     n_pose = 0
     if POSE_WING:
         n_pose = _pose_wings(path, pv, players_hand or {"A": "R", "B": "R"})
     t4 = time.time()
-    LAST_STATS.update(total_s=t4 - t0, detect_s=t1 - t0, ball_s=t2 - t1, events_s=t3 - t2,
-                      pose_s=t4 - t3, n_pose=n_pose, n_ball=len(ball), n_players=len(dets),
-                      n_events=len(pv.shots))
+    LAST_STATS.update(total_s=t4 - t2, events_s=t3 - t2, pose_s=t4 - t3, n_pose=n_pose,
+                      n_ball=len(ball), n_players=len(dets), n_events=len(pv.shots))
     return pv
 
 
@@ -249,15 +322,51 @@ def _pose_wings(path, pv, players_hand) -> int:
 
 def chart_from_tracks(t_start: float, t_end: float, fit: CourtFit, server: str, side: str,
                       use_ends: dict, dets, ball, players_hand: Optional[dict] = None,
-                      known_winner: Optional[str] = None, ends_conf: Optional[float] = None) -> PointVision:
-    """Everything after detection: events, serves, rally, ending (no video access)."""
+                      known_winner: Optional[str] = None, ends_conf: Optional[float] = None,
+                      setup_prev=None) -> PointVision:
+    """Everything after detection: events, serves, rally, ending (no video access).
+    setup_prev: None, or (t_min, player detections) from the end of the window just
+    before when it is the same camera shot (pipeline.setup_prev_of); the set-up check
+    of a hit early in this window may then read them, from t_min on.
+    The pixel rules here and in events.py were set on 720-row video; a video of
+    another size is charted in 720-row pixels (events.to_ref_units) and the pixel
+    values kept on the events are turned back into its own pixels."""
+    u = px_unit(getattr(fit, "frame_h", None))
+    if u == 1.0:
+        return _chart_from_tracks(t_start, t_end, fit, server, side, use_ends, dets, ball,
+                                  players_hand, known_winner, ends_conf, setup_prev)
+    fit_r, dets_r, ball_r = E.to_ref_units(fit, dets, ball, u)
+    sp_r = None
+    if setup_prev is not None:
+        sp_r = (setup_prev[0], E.to_ref_units(fit, setup_prev[1], [], u)[1])
+    pv = _chart_from_tracks(t_start, t_end, fit_r, server, side, use_ends, dets_r, ball_r,
+                            players_hand, known_winner, ends_conf, sp_r)
+    E.events_to_px(list(pv.shots or []) + list(getattr(pv, "_rally", None) or []), u)
+    return pv
+
+
+def _chart_from_tracks(t_start: float, t_end: float, fit: CourtFit, server: str, side: str,
+                       use_ends: dict, dets, ball, players_hand: Optional[dict] = None,
+                       known_winner: Optional[str] = None, ends_conf: Optional[float] = None,
+                       setup_prev=None) -> PointVision:
+    """chart_from_tracks in 720-row pixels."""
     players_hand = players_hand or {"A": "R", "B": "R"}
     H = np.asarray(fit.H, float)
     server_end = use_ends.get(server)
     recv = other(server)
     recv_end = use_ends.get(recv)
     hand = {e: players_hand.get(p, "R") for p, e in use_ends.items()}
-    evs = E.detect_events(ball, dets, fit, fps=FPS_BALL, hand=hand, server_end=server_end)
+    gate = None
+    if SERVE_GATE and server_end in ("near", "far") and side in ("deuce", "ad"):
+        g_dets, g_min = dets, t_start
+        if setup_prev is not None:
+            g_min, prev = setup_prev
+            g_dets = list(prev) + list(dets)
+
+        def gate(h):
+            return serve_setup_ok(g_dets, h.t, g_min, server_end, side)
+    evs = E.detect_events(ball, dets, fit, fps=FPS_BALL, hand=hand, server_end=server_end,
+                          serve_ok=gate)
 
     pv = PointVision(t_start=t_start, t_end=t_end, shots=evs)
     conf: dict = {}
@@ -326,6 +435,7 @@ def chart_from_tracks(t_start: float, t_end: float, fit: CourtFit, server: str, 
                     b = None       # only trusted on the receiver's half
         sv = ServeVision(n=k + 1, t=s.t, result="unknown", conf=0.2)
         bounce_zone = None
+        depth_unsure = False
         if b is not None:
             res, zone, fault, c = classify_serve_bounce(b.court_xy, server_end, side)
             sv.bounce_xy = tuple(round(v, 2) for v in b.court_xy)
@@ -334,14 +444,26 @@ def chart_from_tracks(t_start: float, t_end: float, fit: CourtFit, server: str, 
                 bounce_zone = zone
             else:
                 sv.result, sv.fault, sv.conf = "fault", fault, round(c * min(1.0, b.conf + 0.3) * 0.8, 2)
+                x0, x1, _, _ = service_box(server_end, side)
+                inside_x = x0 - LINE_TOL <= b.court_xy[0] <= x1 + LINE_TOL
                 # the box call is unreliable (far-court bounce timing ~1 m), but a
                 # receiver often plays a fault back: only a rally (the server
                 # hitting again) overrules the bounce
                 if rallied:
                     sv.result, sv.fault, sv.conf = "in", None, 0.6
-                    x0, x1, _, _ = service_box(server_end, side)
-                    if x0 - LINE_TOL <= b.court_xy[0] <= x1 + LINE_TOL:
+                    if inside_x:
                         bounce_zone = sv.zone = _zone_from_x(abs(b.court_xy[0]))
+                elif FAR_DEPTH_UNSURE and server_end == "near" and fault == "long" and inside_x:
+                    # In the far court the ball is small and seen through the net, and
+                    # the bounce is found late, so it is placed too deep: on the tune
+                    # games the found bounces of serves that were in lay a median 7.6 m
+                    # from the net, past the 6.4 m service line, and overlapped the
+                    # faults almost completely. Depth cannot tell in from long there, so
+                    # in or fault is "could not tell". The side to side position is
+                    # still good and gives the direction.
+                    sv.result, sv.fault = "unknown", None
+                    bounce_zone = sv.zone = _zone_from_x(abs(b.court_xy[0]))
+                    depth_unsure = True
         if sv.result != "fault" and ret_ev is not None and ret_ev.court_xy is not None:
             # receiver position at the return: pulled outside the singles line ->
             # wide, still near the centre -> T. Used when no bounce was seen and
@@ -354,9 +476,10 @@ def chart_from_tracks(t_start: float, t_end: float, fit: CourtFit, server: str, 
             elif bounce_zone is not None and pos_zone is not None and \
                     {bounce_zone, pos_zone} == {"T", "wide"}:
                 sv.conf = round(min(sv.conf, 0.4), 2)     # contradictory evidence
-            if sv.result == "unknown":
+            if sv.result == "unknown" and not depth_unsure:
                 sv.result, sv.conf = "in", max(sv.conf, 0.35)
-        if sv.result == "unknown" and returned:
+        # a return alone does not make it "in": a receiver often knocks a fault back
+        if sv.result == "unknown" and returned and not depth_unsure:
             sv.result, sv.conf = "in", (0.55 if rallied else 0.35)
         if sv.result == "in" and rallied:
             sv.conf = round(max(sv.conf, 0.6), 2)
